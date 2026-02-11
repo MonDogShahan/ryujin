@@ -53,7 +53,7 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input { user-select: auto; -webkit-user-select: auto; outline: none; }
-        .grid-pos-btn { aspect-ratio: 1/1; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+        .grid-pos-btn { aspect-ratio: 1/1; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; }
         .grid-pos-btn.active { background-color: #f59e0b; color: #0f172a; border-color: #f59e0b; }
     </style>
 </head>
@@ -144,7 +144,7 @@
                                 <i data-lucide="wrench" className="text-industrial-accent w-5 h-5"></i>
                                 <h1 className="text-lg font-bold tracking-tighter text-white">龍神<span className="text-industrial-accent">空調</span>幫手</h1>
                             </div>
-                            <span className="text-[10px] text-industrial-600 font-mono">V1.5.1 FIXED</span>
+                            <span className="text-[10px] text-industrial-600 font-mono">V1.5.2 FIXED</span>
                         </div>
                     </header>
 
@@ -393,8 +393,9 @@
         function CoolingTimeCalculator({ state, setState, addToHistory }) {
             const calculate = () => {
                 const { ping, height, currentTemp, targetTemp, acKw } = state;
-                const p = parseFloat(ping), h = parseFloat(height), kw = parseFloat(acKw), dt = currentTemp - targetTemp;
-                if (!p || !kw || dt <= 0) return alert('請確認數值是否填寫正確');
+                const p = parseFloat(ping), h = parseFloat(height), kw = parseFloat(acKw), dt = parseFloat(currentTemp) - parseFloat(targetTemp);
+                if (!p || !kw || dt <= 0) return alert('請確認數值是否填寫正確（目標溫度需低於室溫）');
+                // 物理估算公式
                 const time = Math.round(((p * 3.3 * h) * 1.2 * 1.0 * dt * 10) / kw / 60);
                 setState(p=>({...p, minutes: time}));
                 addToHistory(`降溫估算: ${time} 分鐘`, 'cooling', { ping: p, height: h, acKw: kw, minutes: time, currentTemp, targetTemp });
@@ -412,15 +413,21 @@
                             <input type="number" value={state.ping} onChange={e=>setState(p=>({...p, ping:e.target.value}))} placeholder="坪數" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-white text-sm" />
                             <input type="number" value={state.height} onChange={e=>setState(p=>({...p, height:e.target.value}))} placeholder="高度(m)" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-white text-sm" />
                         </div>
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                            <input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} placeholder="室溫°C" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-red-300 text-sm" />
-                            <input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} placeholder="目標°C" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-blue-300 text-sm" />
+                        <div className="grid grid-cols-2 gap-3 mb-6 text-white">
+                            <div className="relative">
+                                <span className="absolute left-2 top-0 text-[8px] text-red-500 uppercase">室溫 °C</span>
+                                <input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-red-300 text-sm" />
+                            </div>
+                            <div className="relative">
+                                <span className="absolute left-2 top-0 text-[8px] text-blue-500 uppercase">目標 °C</span>
+                                <input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-blue-300 text-sm" />
+                            </div>
                         </div>
                         <div className="mb-6">
-                            <label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">冷氣制冷能力 (KW)</label>
+                            <label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">冷氣能力 (KW)</label>
                             <input type="number" value={state.acKw} onChange={e=>setState(p=>({...p, acKw:e.target.value}))} className="w-full bg-industrial-900 border-2 border-industrial-700 focus:border-purple-500 rounded-2xl p-4 text-center text-white font-bold text-xl shadow-inner" placeholder="0.0" />
                         </div>
-                        <button onClick={calculate} className="w-full py-4 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm">執行數據估算</button>
+                        <button onClick={calculate} className="w-full py-4 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm">執行模擬估算</button>
                     </div>
 
                     {state.minutes !== null && (
@@ -459,7 +466,23 @@
                         <div className="space-y-6">
                             <div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest">1. 出風口法蘭量測尺寸 (cm)</label><div className="grid grid-cols-2 gap-3"><input type="number" value={state.flangeW} onChange={e=>setState(p=>({...p, flangeW:e.target.value}))} placeholder="寬度" className="w-full bg-industrial-900 border border-industrial-700 rounded-xl py-3 text-center text-white text-sm" /><input type="number" value={state.flangeH} onChange={e=>setState(p=>({...p, flangeH:e.target.value}))} placeholder="高度" className="w-full bg-industrial-900 border border-industrial-700 rounded-xl py-3 text-center text-white text-sm" /></div></div>
                             <div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest">2. 安裝空間型態</label><div className="grid grid-cols-3 gap-2">{[{id:'long',l:'長距離'},{id:'narrow',l:'窄空間'},{id:'square',l:'方形'}].map(t => <button key={t.id} onClick={()=>setState(p=>({...p, spaceType:t.id}))} className={`p-2 rounded-xl border text-[10px] font-bold transition-all ${state.spaceType===t.id ? 'bg-blue-600 border-blue-400 text-white shadow-md' : 'bg-industrial-900 border-industrial-700 text-gray-500'}`}>{t.l}</button>)}</div></div>
-                            <div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">3. 選擇主機位置</label><div className="bg-industrial-950 p-4 rounded-2xl flex justify-center"><div className="grid grid-cols-3 gap-2 w-40">{[...Array(9)].map((_, i) => <button key={i} onClick={() => setState(p => ({ ...p, unitPos: i }))} className={`grid-pos-btn ${state.unitPos === i ? 'active' : 'bg-industrial-900 hover:border-industrial-accent'}`}>{i===4 && <i data-lucide="air-vent" className="w-3 h-3"></i>}{state.unitPos===i && i!==4 && <i data-lucide="check" className="w-3 h-3"></i>}</button>)}</div></div></div>
+                            <div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">3. 選擇主機位置</label>
+                                <div className="bg-industrial-950 p-4 rounded-2xl flex justify-center">
+                                    <div className="grid grid-cols-3 gap-2 w-40">
+                                        {[...Array(9)].map((_, i) => (
+                                            <button 
+                                                key={i} 
+                                                type="button"
+                                                onClick={() => setState(p => ({ ...p, unitPos: i }))} 
+                                                className={`grid-pos-btn ${state.unitPos === i ? 'active' : 'bg-industrial-900 hover:border-industrial-accent'}`}
+                                            >
+                                                {i===4 && <i data-lucide="air-vent" className="w-3 h-3"></i>}
+                                                {state.unitPos===i && i!==4 && <i data-lucide="check" className="w-3 h-3 text-industrial-900"></i>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                             <button onClick={calculate} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><i data-lucide="zap" className="w-4 h-4"></i> 生成專業建議</button>
                         </div>
                     </div>
@@ -479,7 +502,7 @@
 
         function NavBtn({ active, onClick, icon, label }) {
             return (
-                <button onClick={onClick} className={`flex flex-col items-center justify-center w-full transition-all duration-300 ${active ? 'text-industrial-accent scale-110' : 'text-gray-500 hover:text-gray-300'}`}>
+                <button onClick={onClick} className={`flex flex-col items-center justify-center w-full transition-all duration-300 ${active ? 'text-industrial-accent scale-110' : 'text-gray-500 hover:text-gray-400'}`}>
                     <i data-lucide={icon} className={`w-5 h-5 mb-1 ${active ? 'fill-current/10' : ''}`}></i>
                     <span className="text-[9px] font-bold tracking-tighter uppercase">{label}</span>
                 </button>
