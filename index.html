@@ -193,7 +193,7 @@
             // 監聽依賴變化重新渲染圖示
             useEffect(() => {
                 if (window.lucide) window.lucide.createIcons();
-            }, [activeTab, searchResults, selectedHistoryItem, history]);
+            }, [activeTab, searchResults, selectedHistoryItem, history, searchTerm]);
 
             // 獨立出來的搜尋邏輯：根據關鍵字返回結果
             const getSearchResults = (term) => {
@@ -274,9 +274,10 @@
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i data-lucide="search" className="text-gray-400 w-5 h-5"></i>
                                     </div>
+                                    {/* 修正：增加右側 padding 避免文字被叉叉擋住 */}
                                     <input
                                         type="text"
-                                        className="block w-full pl-10 pr-3 py-3 border border-industrial-600 rounded-lg leading-5 bg-industrial-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent sm:text-sm transition-colors"
+                                        className="block w-full pl-10 pr-10 py-3 border border-industrial-600 rounded-lg leading-5 bg-industrial-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent sm:text-sm transition-colors"
                                         placeholder="輸入品牌 (如:大金) 或 型號..."
                                         value={searchTerm}
                                         onChange={(e) => handleSearch(e.target.value)}
@@ -286,6 +287,16 @@
                                             }
                                         }}
                                     />
+                                    {/* 新增：清除按鈕 (只有當有文字時顯示) */}
+                                    {searchTerm && (
+                                        <button
+                                            onClick={() => handleSearch('')}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+                                            title="清除搜尋"
+                                        >
+                                            <i data-lucide="x" className="w-5 h-5"></i>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* 搜尋結果列表 */}
