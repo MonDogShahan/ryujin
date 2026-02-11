@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的個人網站 | 創意工作室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#ec4899',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #4f46e5, #ec4899);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- 導航欄 -->
+    <nav class="fixed w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0 font-bold text-2xl tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <span class="text-primary">My</span>Website
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="hover:text-primary transition px-3 py-2 rounded-md font-medium">首頁</a>
+                        <a href="#demo" class="hover:text-primary transition px-3 py-2 rounded-md font-medium">功能演示</a> <!-- 新增 -->
+                        <a href="#about" class="hover:text-primary transition px-3 py-2 rounded-md font-medium">關於我</a>
+                        <a href="#contact" class="hover:text-primary transition px-3 py-2 rounded-md font-medium">聯絡</a>
+                        
+                        <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <svg id="sun-icon-desktop" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <svg id="moon-icon-desktop" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="-mr-2 flex md:hidden gap-2">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                        <svg id="sun-icon-mobile" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="moon-icon-mobile" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </button>
+                    <button onclick="toggleMenu()" class="inline-flex items-center justify-center p-2 rounded-md hover:text-primary hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-900 shadow-lg border-t dark:border-gray-700">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home" onclick="toggleMenu()" class="block hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium">首頁</a>
+                <a href="#demo" onclick="toggleMenu()" class="block hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium">功能演示</a>
+                <a href="#about" onclick="toggleMenu()" class="block hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium">關於我</a>
+                <a href="#contact" onclick="toggleMenu()" class="block hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md text-base font-medium">聯絡</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center pt-16 px-4">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div class="text-center md:text-left">
+                <h2 id="welcome-msg" class="text-sm font-semibold text-primary uppercase tracking-wide mb-2">Welcome</h2>
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-6">
+                    打造完美的 <br>
+                    <span class="text-gradient">數位體驗</span>
+                </h1>
+                <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                    這個網站現在可以記住你的偏好設定與操作紀錄。試試看下方的功能演示！
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                    <a href="#demo" class="px-8 py-3 bg-primary hover:bg-indigo-700 text-white font-semibold rounded-full shadow-lg transition text-center">
+                        體驗功能
+                    </a>
+                </div>
+            </div>
+            <div class="relative order-first md:order-last">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-2xl blur opacity-30"></div>
+                <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+                     alt="Profile" class="relative rounded-2xl shadow-2xl w-full object-cover h-[400px] md:h-[500px]">
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW: 功能演示區塊 (Local Storage Demo) -->
+    <section id="demo" class="py-20 bg-gray-100 dark:bg-gray-800 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">資料儲存演示</h2>
+                <p class="text-gray-600 dark:text-gray-400">以下操作會被瀏覽器記住，你可以嘗試重新整理頁面，資料不會消失。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- 1. 記住用戶名稱 -->
+                <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        設定您的暱稱
+                    </h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="username-input" placeholder="輸入您的名字" class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-secondary outline-none">
+                        <button onclick="saveName()" class="bg-secondary text-white px-4 py-2 rounded-lg hover:opacity-90">儲存</button>
+                    </div>
+                    <p class="text-sm text-gray-500">儲存後，上方的 Welcome 訊息會改變，且下次來訪時網站會記得你。</p>
+                </div>
+
+                <!-- 2. 搜尋歷史紀錄 -->
+                <div class="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        模擬搜尋功能
+                    </h3>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="search-input" placeholder="搜尋文章..." class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none">
+                        <button onclick="simulateSearch()" class="bg-primary text-white px-4 py-2 rounded-lg hover:opacity-90">搜尋</button>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-semibold text-gray-500">最近搜尋紀錄：</span>
+                            <button onclick="clearHistory()" class="text-xs text-red-500 hover:underline">清除紀錄</button>
+                        </div>
+                        <ul id="search-history" class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                            <!-- 歷史紀錄會透過 JS 插入這裡 -->
+                            <li class="italic text-gray-400">尚無紀錄...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 關於區塊 -->
+    <section id="about" class="py-20 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-8">關於技術</h2>
+            <p class="text-lg text-gray-600 dark:text-gray-300">
+                本網站使用 <code>localStorage</code> 技術，這是一種瀏覽器內建的儲存機制。您的資料只會保存在您自己的電腦或手機中，不會上傳到任何伺服器，因此非常安全且快速。
+            </p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+        <div class="max-w-3xl mx-auto px-4">
+            <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 md:p-12 text-center">
+                <h2 class="text-3xl font-bold mb-6">聯絡我</h2>
+                <p class="mb-6">即使重新整理頁面，我也會記得你的名字與深色模式設定！</p>
+                <button class="bg-gradient-to-r from-primary to-secondary text-white font-bold py-3 px-8 rounded-lg hover:opacity-90 transition">
+                    發送訊息
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-8 text-center">
+        <p class="text-gray-500 dark:text-gray-400">© 2024 MyWebsite. Powered by Vercel & LocalStorage.</p>
+    </footer>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // 1. 選單切換
+        function toggleMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // 2. 深色模式邏輯 (含記憶功能)
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light'); // 儲存設定
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark'); // 儲存設定
+            }
+        }
+
+        // 3. 用戶名稱記憶功能
+        function saveName() {
+            const nameInput = document.getElementById('username-input');
+            const name = nameInput.value.trim();
+            if (name) {
+                localStorage.setItem('username', name);
+                updateWelcomeMsg(name);
+                alert('名字已儲存！試著重新整理頁面看看。');
+                nameInput.value = '';
+            }
+        }
+
+        function updateWelcomeMsg(name) {
+            const msgElement = document.getElementById('welcome-msg');
+            if (name) {
+                msgElement.textContent = `Welcome back, ${name}`;
+                msgElement.classList.add('text-secondary');
+            }
+        }
+
+        // 4. 搜尋歷史記憶功能
+        function simulateSearch() {
+            const searchInput = document.getElementById('search-input');
+            const keyword = searchInput.value.trim();
+            
+            if (!keyword) return;
+
+            // 取得舊紀錄 (如果沒有則為空陣列)
+            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            
+            // 新增搜尋詞到最前面
+            history.unshift(keyword);
+            
+            // 只保留最近 5 筆
+            if (history.length > 5) history.pop();
+            
+            // 存回 LocalStorage
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            
+            renderHistory();
+            searchInput.value = '';
+            alert(`已搜尋：${keyword} (已加入紀錄)`);
+        }
+
+        function renderHistory() {
+            const listElement = document.getElementById('search-history');
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            
+            if (history.length === 0) {
+                listElement.innerHTML = '<li class="italic text-gray-400">尚無紀錄...</li>';
+                return;
+            }
+
+            listElement.innerHTML = history.map(item => `
+                <li class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <span>🔍 ${item}</span>
+                    <span class="text-xs text-gray-400">剛剛</span>
+                </li>
+            `).join('');
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('searchHistory');
+            renderHistory();
+        }
+
+        // 5. 初始化頁面 (讀取所有儲存的資料)
+        window.onload = function() {
+            // 讀取主題
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // 讀取名字
+            const savedName = localStorage.getItem('username');
+            if (savedName) {
+                updateWelcomeMsg(savedName);
+            }
+
+            // 讀取搜尋紀錄
+            renderHistory();
+        }
+    </script>
+</body>
+</html>
