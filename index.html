@@ -16,6 +16,31 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script>
+        // --- 基本防護腳本 (防君子) ---
+        // 禁用右鍵
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // 禁用常見開發者工具快捷鍵
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if(e.keyCode == 123) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I, Ctrl+Shift+J (開啟開發者工具)
+            if(e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'i' || e.key === 'j')) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (檢視原始碼)
+            if(e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -51,7 +76,12 @@
         }
     </script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; }
+        body { 
+            background-color: #0f172a; 
+            color: #e2e8f0; 
+            user-select: none; /* 禁止選取文字 */
+            -webkit-user-select: none;
+        }
         /* 自定義捲軸 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
@@ -64,6 +94,12 @@
             -webkit-appearance: none; 
             margin: 0; 
         }
+        
+        /* 允許輸入框內的文字被選取，否則無法編輯 */
+        input {
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
     </style>
 </head>
 <body>
@@ -72,63 +108,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- 模擬資料庫 (Mock Data) ---
+        // --- 模擬資料庫 ---
         const AC_DATABASE = [
-            {
-                id: 'daikin-001',
-                brand: 'Daikin',
-                brandCN: '大金',
-                model: 'RXV36UVLT',
-                type: '冷暖變頻',
-                pipes: '2分 / 3分',
-                dims: '寬825 x 高283 x 深233 mm',
-                power: '220V / 4.5A',
-                refrigerant: 'R32'
-            },
-            {
-                id: 'hitachi-001',
-                brand: 'Hitachi',
-                brandCN: '日立',
-                model: 'RAC-40NK',
-                type: '冷專變頻',
-                pipes: '2分 / 4分',
-                dims: '寬900 x 高300 x 深250 mm',
-                power: '220V / 5.2A',
-                refrigerant: 'R410A'
-            },
-            {
-                id: 'panasonic-001',
-                brand: 'Panasonic',
-                brandCN: '國際牌',
-                model: 'CU-PX28FCA2',
-                type: '冷暖旗艦',
-                pipes: '2分 / 3分',
-                dims: '寬780 x 高290 x 深240 mm',
-                power: '220V / 3.8A',
-                refrigerant: 'R32'
-            },
-            {
-                id: 'midea-001',
-                brand: 'Midea',
-                brandCN: '美的',
-                model: 'MV-36HP',
-                type: '定頻冷氣',
-                pipes: '3分 / 5分',
-                dims: '寬850 x 高270 x 深220 mm',
-                power: '220V / 6.0A',
-                refrigerant: 'R410A'
-            },
-             {
-                id: 'teco-001',
-                brand: 'TECO',
-                brandCN: '東元',
-                model: 'MA-28IH-ZR',
-                type: '變頻冷暖',
-                pipes: '2分 / 3分',
-                dims: '寬815 x 高275 x 深210 mm',
-                power: '110V / 8.5A',
-                refrigerant: 'R32'
-            }
+            { id: 'daikin-001', brand: 'Daikin', brandCN: '大金', model: 'RXV36UVLT', type: '冷暖變頻', pipes: '2分 / 3分', dims: '寬825 x 高283 x 深233 mm', power: '220V / 4.5A', refrigerant: 'R32' },
+            { id: 'hitachi-001', brand: 'Hitachi', brandCN: '日立', model: 'RAC-40NK', type: '冷專變頻', pipes: '2分 / 4分', dims: '寬900 x 高300 x 深250 mm', power: '220V / 5.2A', refrigerant: 'R410A' },
+            { id: 'panasonic-001', brand: 'Panasonic', brandCN: '國際牌', model: 'CU-PX28FCA2', type: '冷暖旗艦', pipes: '2分 / 3分', dims: '寬780 x 高290 x 深240 mm', power: '220V / 3.8A', refrigerant: 'R32' },
+            { id: 'midea-001', brand: 'Midea', brandCN: '美的', model: 'MV-36HP', type: '定頻冷氣', pipes: '3分 / 5分', dims: '寬850 x 高270 x 深220 mm', power: '220V / 6.0A', refrigerant: 'R410A' },
+            { id: 'teco-001', brand: 'TECO', brandCN: '東元', model: 'MA-28IH-ZR', type: '變頻冷暖', pipes: '2分 / 3分', dims: '寬815 x 高275 x 深210 mm', power: '110V / 8.5A', refrigerant: 'R32' }
         ];
 
         // --- 共用元件: 機型卡片 ---
@@ -168,7 +154,7 @@
                                 <i data-lucide="box" className="w-3 h-3"></i> {item.dims}
                             </span>
                         </div>
-                            <div className="col-span-2">
+                        <div className="col-span-2">
                             <span className="block text-gray-500 text-xs mb-1">冷媒種類</span>
                             <span className="font-mono text-white">{item.refrigerant}</span>
                         </div>
@@ -216,10 +202,7 @@
             const triggerSearchAndSave = () => {
                 if (searchTerm) {
                     const currentResults = getSearchResults(searchTerm);
-                    addToHistory(`搜尋: ${searchTerm}`, 'search', { 
-                        term: searchTerm, 
-                        results: currentResults 
-                    });
+                    addToHistory(`搜尋: ${searchTerm}`, 'search', { term: searchTerm, results: currentResults });
                 }
             };
 
@@ -243,7 +226,6 @@
                 }
             };
 
-            // 依據類型渲染不同的圖示
             const renderHistoryIcon = (type) => {
                 switch(type) {
                     case 'calc': return <i data-lucide="calculator" className="text-green-400 w-5 h-5"></i>;
@@ -254,7 +236,6 @@
                 }
             };
 
-            // 依據類型渲染不同的標籤
             const renderHistoryBadge = (type) => {
                 switch(type) {
                     case 'calc': return <span className="bg-green-900 text-green-300 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">冷媒</span>;
@@ -275,15 +256,11 @@
                                     龍神<span className="text-industrial-accent">空調</span>幫手
                                 </h1>
                             </div>
-                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">
-                                V1.1
-                            </div>
+                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">V1.2</div>
                         </div>
                     </header>
 
                     <main className="flex-1 max-w-md mx-auto w-full p-4 pb-24 relative">
-                        
-                        {/* Tab Content: Search */}
                         {activeTab === 'search' && (
                             <div className="animate-fade-in">
                                 <div className="relative mb-6">
@@ -293,21 +270,13 @@
                                     <input
                                         type="text"
                                         className="block w-full pl-10 pr-10 py-3 border border-industrial-600 rounded-lg leading-5 bg-industrial-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent sm:text-sm transition-colors"
-                                        placeholder="輸入品牌 (如:大金) 或 型號..."
+                                        placeholder="輸入品牌或型號..."
                                         value={searchTerm}
                                         onChange={(e) => handleSearch(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                triggerSearchAndSave();
-                                            }
-                                        }}
+                                        onKeyDown={(e) => e.key === 'Enter' && triggerSearchAndSave()}
                                     />
                                     {searchTerm && (
-                                        <button
-                                            onClick={() => handleSearch('')}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
-                                            title="清除搜尋"
-                                        >
+                                        <button onClick={() => handleSearch('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors">
                                             <i data-lucide="x" className="w-5 h-5"></i>
                                         </button>
                                     )}
@@ -346,36 +315,20 @@
                             </div>
                         )}
 
-                        {/* Tab Content: Capacity Calculator (NEW 功能) */}
-                        {activeTab === 'capacity' && (
-                            <CapacityCalculator addToHistory={addToHistory} />
-                        )}
+                        {activeTab === 'capacity' && <CapacityCalculator addToHistory={addToHistory} />}
+                        {activeTab === 'calc' && <RefrigerantCalculator addToHistory={addToHistory} />}
+                        {activeTab === 'cooling' && <CoolingTimeCalculator addToHistory={addToHistory} />}
 
-                        {/* Tab Content: Refrigerant Calculator (功能 B) */}
-                        {activeTab === 'calc' && (
-                            <Calculator addToHistory={addToHistory} />
-                        )}
-
-                        {/* Tab Content: Cooling Time Calculator (NEW 功能) */}
-                        {activeTab === 'cooling' && (
-                            <CoolingTimeCalculator addToHistory={addToHistory} />
-                        )}
-
-                        {/* Tab Content: History (功能 D) */}
                         {activeTab === 'history' && (
                             <div className="animate-fade-in">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-xl font-bold">操作紀錄</h2>
                                     {history.length > 0 && (
-                                        <button 
-                                            onClick={clearHistory}
-                                            className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-900 bg-red-900/20 px-2 py-1 rounded"
-                                        >
+                                        <button onClick={clearHistory} className="text-xs text-red-400 flex items-center gap-1 border border-red-900 bg-red-900/20 px-2 py-1 rounded">
                                             <i data-lucide="trash-2" className="w-3 h-3"></i> 清除
                                         </button>
                                     )}
                                 </div>
-
                                 {history.length === 0 ? (
                                     <div className="text-center py-12 text-gray-500">
                                         <i data-lucide="history" className="w-12 h-12 mx-auto mb-2 opacity-50"></i>
@@ -384,11 +337,7 @@
                                 ) : (
                                     <div className="space-y-3">
                                         {history.map(item => (
-                                            <div 
-                                                key={item.id} 
-                                                onClick={() => setSelectedHistoryItem(item)}
-                                                className="bg-industrial-800 p-4 rounded-lg border-l-4 border-industrial-600 flex justify-between items-center cursor-pointer hover:bg-industrial-700 transition-colors group"
-                                            >
+                                            <div key={item.id} onClick={() => setSelectedHistoryItem(item)} className="bg-industrial-800 p-4 rounded-lg border-l-4 border-industrial-600 flex justify-between items-center cursor-pointer hover:bg-industrial-700 transition-colors group">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         {renderHistoryBadge(item.type)}
@@ -403,121 +352,72 @@
                                 )}
                             </div>
                         )}
-                        
-                        {/* History Detail Modal */}
+
                         {selectedHistoryItem && (
                             <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
-                                <div 
-                                    className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                                    onClick={() => setSelectedHistoryItem(null)}
-                                ></div>
-                                <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden transform transition-all animate-slide-up flex flex-col max-h-[85vh]">
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedHistoryItem(null)}></div>
+                                <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden transform animate-slide-up flex flex-col max-h-[85vh]">
                                     <div className="p-4 border-b border-industrial-700 flex justify-between items-center bg-industrial-800">
                                         <h3 className="text-lg font-bold flex items-center gap-2">
-                                            {renderHistoryIcon(selectedHistoryItem.type)}
-                                            詳細紀錄
+                                            {renderHistoryIcon(selectedHistoryItem.type)} 詳細紀錄
                                         </h3>
-                                        <button 
-                                            onClick={() => setSelectedHistoryItem(null)}
-                                            className="p-1 rounded-full hover:bg-industrial-700 text-gray-400 hover:text-white"
-                                        >
+                                        <button onClick={() => setSelectedHistoryItem(null)} className="p-1 rounded-full hover:bg-industrial-700 text-gray-400 hover:text-white">
                                             <i data-lucide="x" className="w-6 h-6"></i>
                                         </button>
                                     </div>
-
                                     <div className="p-5 overflow-y-auto text-sm">
                                         <div className="mb-4 text-xs text-gray-500 flex items-center gap-1">
-                                            <i data-lucide="clock" className="w-3 h-3"></i>
-                                            記錄時間: {selectedHistoryItem.date}
+                                            <i data-lucide="clock" className="w-3 h-3"></i> 記錄時間: {selectedHistoryItem.date}
                                         </div>
-
-                                        {/* Render Logic based on type */}
                                         {selectedHistoryItem.type === 'search' && (
                                             <div>
                                                 <div className="mb-4">
-                                                    <span className="text-gray-500 text-sm">搜尋關鍵字：</span>
+                                                    <span className="text-gray-500">搜尋關鍵字：</span>
                                                     <span className="text-industrial-accent font-bold text-lg ml-2">{selectedHistoryItem.data?.term}</span>
                                                 </div>
-                                                <h4 className="text-sm font-bold text-gray-300 mb-3 border-b border-industrial-700 pb-1">當時搜尋結果</h4>
+                                                <h4 className="font-bold text-gray-300 mb-3 border-b border-industrial-700 pb-1">當時搜尋結果</h4>
                                                 <div className="space-y-3">
-                                                    {selectedHistoryItem.data?.results?.map(item => (
-                                                        <div key={item.id} className="scale-95 origin-left w-full"><ResultCard item={item} /></div>
-                                                    ))}
+                                                    {selectedHistoryItem.data?.results?.map(item => <ResultCard key={item.id} item={item} />)}
                                                 </div>
                                             </div>
                                         )}
-
                                         {selectedHistoryItem.type === 'calc' && (
                                             <div className="space-y-4">
-                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700">
-                                                    <span className="block text-gray-500 text-xs mb-1">計算結果 (需補充)</span>
-                                                    <div className="text-4xl font-mono font-bold text-green-400 flex items-baseline gap-2">
-                                                        {selectedHistoryItem.data?.result} <span className="text-sm text-gray-400">g</span>
-                                                    </div>
+                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
+                                                    <span className="block text-gray-500 text-xs mb-1">需補充冷媒量</span>
+                                                    <div className="text-4xl font-mono font-bold text-green-400">{selectedHistoryItem.data?.result} g</div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
-                                                    <div className="bg-industrial-950 p-3 rounded border border-industrial-800">
-                                                        <span className="block text-gray-500 text-xs mb-1">實際管長</span>
-                                                        <span className="text-white font-mono">{selectedHistoryItem.data?.totalLen} m</span>
-                                                    </div>
-                                                    <div className="bg-industrial-950 p-3 rounded border border-industrial-800">
-                                                        <span className="block text-gray-500 text-xs mb-1">原廠基準</span>
-                                                        <span className="text-white font-mono">{selectedHistoryItem.data?.baseLen} m</span>
-                                                    </div>
+                                                    <div className="bg-industrial-950 p-3 rounded">實際管長: {selectedHistoryItem.data?.totalLen}m</div>
+                                                    <div className="bg-industrial-950 p-3 rounded">原廠基準: {selectedHistoryItem.data?.baseLen}m</div>
                                                 </div>
                                             </div>
                                         )}
-
                                         {selectedHistoryItem.type === 'capacity' && (
                                             <div className="space-y-4">
                                                 <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700">
                                                     <span className="block text-gray-500 text-xs mb-1">建議能力</span>
-                                                    <div className="text-3xl font-mono font-bold text-yellow-400">
-                                                        {selectedHistoryItem.data?.kw} KW
-                                                    </div>
-                                                    <div className="text-gray-400 text-sm">
-                                                        約 {selectedHistoryItem.data?.tons} 頓
-                                                    </div>
+                                                    <div className="text-3xl font-mono font-bold text-yellow-400">{selectedHistoryItem.data?.kw} KW</div>
+                                                    <div className="text-gray-400 text-sm">約 {selectedHistoryItem.data?.tons} 頓</div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div className="bg-industrial-950 p-2 rounded">坪數: {selectedHistoryItem.data?.ping} 坪</div>
-                                                    <div className="bg-industrial-950 p-2 rounded">係數: +{Math.round((selectedHistoryItem.data?.multiplier - 1)*100)}%</div>
-                                                </div>
-                                                <div className="text-xs text-gray-400 mt-2">
-                                                    條件: {selectedHistoryItem.data?.conditions?.join(', ') || '無特殊條件'}
-                                                </div>
+                                                <div className="bg-industrial-950 p-3 rounded">條件: {selectedHistoryItem.data?.conditions?.join(', ') || '無特殊條件'}</div>
                                             </div>
                                         )}
-
                                         {selectedHistoryItem.type === 'cooling' && (
-                                            <div className="space-y-4">
+                                            <div className="space-y-4 text-center">
                                                 <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700">
                                                     <span className="block text-gray-500 text-xs mb-1">估計降溫時間</span>
-                                                    <div className="text-3xl font-mono font-bold text-purple-400">
-                                                        {selectedHistoryItem.data?.minutes} 分鐘
-                                                    </div>
-                                                </div>
-                                                <div className="bg-industrial-950 p-3 rounded border border-industrial-800">
-                                                    <div>溫差: {selectedHistoryItem.data?.deltaT}°C</div>
-                                                    <div>空間: {selectedHistoryItem.data?.ping} 坪 (高 {selectedHistoryItem.data?.height}m)</div>
-                                                    <div>冷氣能力: {selectedHistoryItem.data?.acKw} KW</div>
+                                                    <div className="text-3xl font-mono font-bold text-purple-400">{selectedHistoryItem.data?.minutes} 分鐘</div>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-                                    
                                     <div className="p-4 border-t border-industrial-700 bg-industrial-800">
-                                        <button 
-                                            onClick={() => setSelectedHistoryItem(null)}
-                                            className="w-full py-3 bg-industrial-700 hover:bg-industrial-600 text-white rounded-lg font-bold transition"
-                                        >
-                                            關閉
-                                        </button>
+                                        <button onClick={() => setSelectedHistoryItem(null)} className="w-full py-3 bg-industrial-700 text-white rounded-lg font-bold">關閉</button>
                                     </div>
                                 </div>
                             </div>
                         )}
-
                     </main>
 
                     <nav className="fixed bottom-0 w-full bg-industrial-900 border-t border-industrial-700 pb-safe z-40">
@@ -533,203 +433,81 @@
             );
         }
 
-        // --- NEW: Capacity Calculator (冷房能力試算) ---
+        // --- 負載試算元件 ---
         function CapacityCalculator({ addToHistory }) {
-            const [unit, setUnit] = useState('m'); // m or cm
+            const [unit, setUnit] = useState('m');
             const [length, setLength] = useState('');
             const [width, setWidth] = useState('');
             const [ping, setPing] = useState(0);
-            
-            // 環境因子
-            const [conditions, setConditions] = useState({
-                westSun: false,
-                allDaySun: false, // New: 白天都會曬到太陽
-                topFloor: false,
-                highCeiling: false,
-                ironSheet: false,
-                blackIron: false
-            });
-
+            const [conditions, setConditions] = useState({ westSun: false, allDaySun: false, topFloor: false, highCeiling: false, ironSheet: false, blackIron: false });
             const [result, setResult] = useState(null);
 
-            // 換算坪數
             useEffect(() => {
-                const l = parseFloat(length) || 0;
-                const w = parseFloat(width) || 0;
-                let areaM2 = 0;
-
-                if (unit === 'm') {
-                    areaM2 = l * w;
-                } else {
-                    areaM2 = (l / 100) * (w / 100);
-                }
-
-                // 1 平方公尺 = 0.3025 坪
+                const l = parseFloat(length) || 0, w = parseFloat(width) || 0;
+                let areaM2 = unit === 'm' ? l * w : (l / 100) * (w / 100);
                 setPing((areaM2 * 0.3025).toFixed(1));
             }, [length, width, unit]);
 
             const toggleCondition = (key) => {
                 setConditions(prev => {
                     const newState = { ...prev, [key]: !prev[key] };
-                    // 互斥邏輯: 如果選擇黑色鐵皮，鐵皮屋則不許選擇 (強制取消一般鐵皮)
-                    if (key === 'blackIron' && newState.blackIron) {
-                        newState.ironSheet = false;
-                    }
-                    // 反之亦然，如果選了一般鐵皮，取消黑色鐵皮 (可選，優化 UX)
-                    if (key === 'ironSheet' && newState.ironSheet) {
-                        newState.blackIron = false;
-                    }
+                    if (key === 'blackIron' && newState.blackIron) newState.ironSheet = false;
+                    if (key === 'ironSheet' && newState.ironSheet) newState.blackIron = false;
                     return newState;
                 });
             };
 
             const calculate = () => {
-                if(ping <= 0) {
-                    alert('請輸入有效的長寬');
-                    return;
-                }
-
-                // 基礎: 1坪約需 450 kcal/hr
-                let baseKcal = 450;
-                let multiplier = 1.0;
-                let conditionList = [];
-
+                if(ping <= 0) return alert('請輸入有效長寬');
+                let baseKcal = 450, multiplier = 1.0, conditionList = [];
                 if (conditions.westSun) { multiplier += 0.2; conditionList.push('西曬'); }
-                if (conditions.allDaySun) { multiplier += 0.3; conditionList.push('白天日曬'); } // 白天日曬加成較高
-                if (conditions.topFloor) { multiplier += 0.2; conditionList.push('頂樓'); }
+                if (conditions.allDaySun) { multiplier += 0.3; conditionList.push('白天日曬'); }
+                if (conditions.topFloor) { multiplier += 0.2; conditionList.push('頂樓/平房'); }
                 if (conditions.highCeiling) { multiplier += 0.2; conditionList.push('挑高'); } 
-                
-                // 鐵皮屋加成
-                if (conditions.blackIron) { 
-                    multiplier += 0.8; conditionList.push('黑色鐵皮'); 
-                } else if (conditions.ironSheet) {
-                    multiplier += 0.5; conditionList.push('一般鐵皮');
-                }
-
-                const totalKcalPerPing = baseKcal * multiplier;
-                const totalKcal = totalKcalPerPing * ping;
-                
-                // 1 kW = 860 kcal/hr
-                const requiredKW = (totalKcal / 860).toFixed(2);
-                
-                // 台灣俗稱噸數 (約2500kcal為一噸)
-                const requiredTons = (totalKcal / 2500).toFixed(1);
-
-                setResult({ kw: requiredKW, tons: requiredTons });
-
-                addToHistory(`負載計算: ${ping}坪 / 需 ${requiredKW} KW`, 'capacity', {
-                    ping,
-                    conditions: conditionList,
-                    multiplier,
-                    kw: requiredKW,
-                    tons: requiredTons
-                });
+                if (conditions.blackIron) { multiplier += 0.8; conditionList.push('黑色鐵皮'); } 
+                else if (conditions.ironSheet) { multiplier += 0.5; conditionList.push('一般鐵皮'); }
+                const totalKcal = baseKcal * multiplier * ping;
+                const kw = (totalKcal / 860).toFixed(2), tons = (totalKcal / 2500).toFixed(1);
+                setResult({ kw, tons });
+                addToHistory(`負載計算: ${ping}坪 / 需 ${kw} KW`, 'capacity', { ping, conditions: conditionList, multiplier, kw, tons });
             };
 
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-yellow-400">
-                            <i data-lucide="ruler" className="w-5 h-5"></i>
-                            空間與負載試算
-                        </h2>
-                        
-                        {/* 單位切換 */}
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-yellow-400"><i data-lucide="ruler" className="w-5 h-5"></i> 空間負載試算</h2>
                         <div className="flex bg-industrial-900 rounded-lg p-1 mb-4">
-                            <button 
-                                onClick={() => setUnit('m')}
-                                className={`flex-1 py-1 text-sm rounded transition ${unit==='m' ? 'bg-industrial-700 text-white shadow' : 'text-gray-500'}`}
-                            >公尺 (m)</button>
-                            <button 
-                                onClick={() => setUnit('cm')}
-                                className={`flex-1 py-1 text-sm rounded transition ${unit==='cm' ? 'bg-industrial-700 text-white shadow' : 'text-gray-500'}`}
-                            >公分 (cm)</button>
+                            {['m', 'cm'].map(u => <button key={u} onClick={() => setUnit(u)} className={`flex-1 py-1 text-sm rounded transition ${unit===u ? 'bg-industrial-700 text-white' : 'text-gray-500'}`}>{u === 'm' ? '公尺' : '公分'}</button>)}
                         </div>
-
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">長度 ({unit})</label>
-                                <input 
-                                    type="number" 
-                                    value={length} 
-                                    onChange={(e)=>setLength(e.target.value)} 
-                                    className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">寬度 ({unit})</label>
-                                <input 
-                                    type="number" 
-                                    value={width} 
-                                    onChange={(e)=>setWidth(e.target.value)} 
-                                    className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white"
-                                />
-                            </div>
+                            <input type="number" value={length} onChange={e=>setLength(e.target.value)} placeholder="長度" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
+                            <input type="number" value={width} onChange={e=>setWidth(e.target.value)} placeholder="寬度" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
                         </div>
-
                         <div className="text-center mb-6 py-2 bg-industrial-900/50 rounded border border-industrial-700/50">
                             <span className="text-sm text-gray-400">換算坪數</span>
                             <div className="text-3xl font-mono font-bold text-white">{ping} <span className="text-sm text-gray-500">坪</span></div>
                         </div>
-
-                        <div className="space-y-2 mb-6">
-                            <label className="text-xs text-gray-500 block mb-2">環境熱源條件 (可複選)</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.westSun} onChange={()=>toggleCondition('westSun')} className="rounded text-industrial-accent focus:ring-0" />
-                                    <span className="text-sm">🌞 西曬</span>
+                        <div className="grid grid-cols-2 gap-2 mb-6">
+                            {[
+                                { k: 'westSun', l: '🌞 西曬' }, { k: 'allDaySun', l: '☀️ 白天日曬' },
+                                { k: 'topFloor', l: '🏠 頂樓 / 平房' }, { k: 'highCeiling', l: '📏 挑高 (>3m)' },
+                                { k: 'ironSheet', l: '🏭 鐵皮屋', d: conditions.blackIron }, { k: 'blackIron', l: '🔥 黑色鐵皮' }
+                            ].map(c => (
+                                <label key={c.k} className={`flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer ${c.d ? 'opacity-30' : ''}`}>
+                                    <input type="checkbox" checked={conditions[c.k]} onChange={()=>!c.d && toggleCondition(c.k)} disabled={c.d} className="rounded text-industrial-accent" />
+                                    <span className="text-xs">{c.l}</span>
                                 </label>
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.allDaySun} onChange={()=>toggleCondition('allDaySun')} className="rounded text-industrial-accent focus:ring-0" />
-                                    <span className="text-sm">☀️ 白天日曬</span>
-                                </label>
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.topFloor} onChange={()=>toggleCondition('topFloor')} className="rounded text-industrial-accent focus:ring-0" />
-                                    <span className="text-sm">🏠 頂樓</span>
-                                </label>
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.highCeiling} onChange={()=>toggleCondition('highCeiling')} className="rounded text-industrial-accent focus:ring-0" />
-                                    <span className="text-sm">📏 挑高 (>3m)</span>
-                                </label>
-                                <label className={`flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer ${conditions.blackIron ? 'opacity-50 cursor-not-allowed' : 'hover:bg-industrial-700/50'}`}>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={conditions.ironSheet} 
-                                        onChange={() => !conditions.blackIron && toggleCondition('ironSheet')} 
-                                        disabled={conditions.blackIron}
-                                        className="rounded text-industrial-accent focus:ring-0" 
-                                    />
-                                    <span className="text-sm">🏭 鐵皮屋</span>
-                                </label>
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.blackIron} onChange={()=>toggleCondition('blackIron')} className="rounded text-industrial-accent focus:ring-0" />
-                                    <span className="text-sm">🔥 黑色鐵皮</span>
-                                </label>
-                            </div>
+                            ))}
                         </div>
-
-                        <button 
-                            onClick={calculate}
-                            className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg transition flex items-center justify-center gap-2"
-                        >
-                            計算建議冷房能力
-                        </button>
+                        <button onClick={calculate} className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg transition">計算冷房能力</button>
                     </div>
-
                     {result && (
                         <div className="bg-industrial-900 rounded-lg p-5 border border-yellow-600/50 text-center animate-slide-up relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-full h-1 bg-yellow-600"></div>
-                             <div className="text-sm text-gray-400 mb-2">建議安裝規格</div>
                              <div className="flex justify-center items-end gap-4">
-                                 <div>
-                                    <div className="text-4xl font-bold text-white font-mono">{result.kw}</div>
-                                    <div className="text-xs text-yellow-500">KW</div>
-                                 </div>
+                                 <div><div className="text-4xl font-bold text-white font-mono">{result.kw}</div><div className="text-xs text-yellow-500">KW</div></div>
                                  <div className="text-gray-500 pb-2">/</div>
-                                 <div>
-                                    <div className="text-2xl font-bold text-white font-mono">{result.tons}</div>
-                                    <div className="text-xs text-yellow-500">頓 (參考)</div>
-                                 </div>
+                                 <div><div className="text-2xl font-bold text-white font-mono">{result.tons}</div><div className="text-xs text-yellow-500">頓 (參考)</div></div>
                              </div>
                         </div>
                     )}
@@ -737,224 +515,43 @@
             );
         }
 
-        // --- NEW: Cooling Time Calculator (降溫時間估算) ---
-        function CoolingTimeCalculator({ addToHistory }) {
-            const [ping, setPing] = useState('');
-            const [height, setHeight] = useState(3.0); // 預設 3米
-            const [currentTemp, setCurrentTemp] = useState(32);
-            const [targetTemp, setTargetTemp] = useState(26);
-            const [acKw, setAcKw] = useState('');
-            const [resultMinutes, setResultMinutes] = useState(null);
-
-            const calculateTime = () => {
-                const p = parseFloat(ping);
-                const h = parseFloat(height);
-                const kw = parseFloat(acKw);
-                const deltaT = parseFloat(currentTemp) - parseFloat(targetTemp);
-
-                if (!p || !kw || deltaT <= 0) {
-                    alert('請檢查輸入數值 (冷氣能力必須大於0，且目標溫需低於室溫)');
-                    return;
-                }
-
-                // 1. 計算空間體積 (m3)
-                // 1坪 = 3.3058 m2
-                const areaM2 = p * 3.3058;
-                const volume = areaM2 * h;
-
-                // 2. 空氣熱能計算
-                // 空氣密度 ~ 1.2 kg/m3
-                // 空氣比熱 ~ 1.005 kJ/kg·K
-                // Q_air (kJ) = m * c * deltaT
-                const airMass = volume * 1.2;
-                const energyKJ = airMass * 1.005 * deltaT;
-
-                // 3. 牆壁/家具熱蓄積係數 (Thermal Mass Factor)
-                // 空氣降溫很快，但牆壁會持續放熱。經驗法則：負載約為空氣的 8~12倍
-                // 我們取 10 倍做為估算
-                const totalLoadKJ = energyKJ * 10; 
-
-                // 4. 計算時間 (假設冷氣全速運轉效率 100% - 理想值，實際會更慢)
-                // Power (KW) = Energy (kJ) / Time (s)
-                // Time (s) = Energy / Power
-                const timeSeconds = totalLoadKJ / kw;
-                const timeMinutes = Math.round(timeSeconds / 60);
-
-                setResultMinutes(timeMinutes);
-
-                addToHistory(`降溫估算: ${p}坪/${kw}KW -> 約 ${timeMinutes} 分鐘`, 'cooling', {
-                    ping: p,
-                    height: h,
-                    deltaT: deltaT,
-                    acKw: kw,
-                    minutes: timeMinutes
-                });
+        // --- 冷媒計算機元件 ---
+        function RefrigerantCalculator({ addToHistory }) {
+            const [baseLen, setBaseLen] = useState(5), [totalLen, setTotalLen] = useState(''), [gramPerMeter, setGramPerMeter] = useState(20), [result, setResult] = useState(null);
+            const calculate = () => {
+                const total = parseFloat(totalLen);
+                if (isNaN(total) || total < 0) return alert('請輸入有效管長');
+                const addAmount = Math.max(0, Math.round((total - baseLen) * gramPerMeter));
+                setResult(addAmount);
+                addToHistory(`冷媒計算: 需補 ${addAmount}g`, 'calc', { baseLen, totalLen: total, gramPerMeter, result: addAmount });
             };
-
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-purple-400">
-                            <i data-lucide="thermometer" className="w-5 h-5"></i>
-                            降溫時間估算 (物理模擬)
-                        </h2>
-                        
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        <h2 className="text-lg font-bold mb-6 text-green-400 flex items-center gap-2"><i data-lucide="scale" className="w-5 h-5"></i> 冷媒補充量計算</h2>
+                        <div className="space-y-4">
                             <div>
-                                <label className="text-xs text-gray-500 mb-1 block">空間坪數</label>
-                                <input type="number" value={ping} onChange={(e)=>setPing(e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" placeholder="例如 5" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">天花板高度 (m)</label>
-                                <input type="number" value={height} onChange={(e)=>setHeight(e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" step="0.1" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">目前室溫 (°C)</label>
-                                <input type="number" value={currentTemp} onChange={(e)=>setCurrentTemp(e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-red-300" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">目標溫度 (°C)</label>
-                                <input type="number" value={targetTemp} onChange={(e)=>setTargetTemp(e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-blue-300" />
-                            </div>
-                        </div>
-
-                        <div className="mb-6">
-                            <label className="text-xs text-gray-500 mb-1 block">冷氣能力 (KW)</label>
-                            <input type="number" value={acKw} onChange={(e)=>setAcKw(e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-3 text-center text-white font-bold text-lg" placeholder="例如 3.6" />
-                        </div>
-
-                        <button 
-                            onClick={calculateTime}
-                            className="w-full py-3 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg shadow-lg transition flex items-center justify-center gap-2"
-                        >
-                            開始模擬計算
-                        </button>
-                    </div>
-
-                    {resultMinutes !== null && (
-                         <div className="bg-industrial-900 rounded-lg p-5 border border-purple-500/50 text-center animate-slide-up relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                             <div className="text-sm text-gray-400 mb-2">理論降溫時間</div>
-                             <div className="text-4xl font-bold text-white font-mono mb-1">{resultMinutes} <span className="text-sm font-sans font-normal text-gray-400">分鐘</span></div>
-                             <div className="text-[10px] text-gray-500">*此為物理估算值，實際情況受隔熱、門窗開關影響</div>
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
-        // --- 子元件: 冷媒計算機 ---
-        function Calculator({ addToHistory }) {
-            const [baseLen, setBaseLen] = useState(5); 
-            const [totalLen, setTotalLen] = useState('');
-            const [gramPerMeter, setGramPerMeter] = useState(20); 
-            const [result, setResult] = useState(null);
-
-            const calculate = () => {
-                const total = parseFloat(totalLen);
-                const base = parseFloat(baseLen);
-                const rate = parseFloat(gramPerMeter);
-
-                if (isNaN(total) || total < 0) {
-                    alert('請輸入有效的實際管長');
-                    return;
-                }
-
-                let addAmount = 0;
-                if (total > base) {
-                    addAmount = (total - base) * rate;
-                }
-                
-                addAmount = Math.round(addAmount);
-                setResult(addAmount);
-
-                addToHistory(
-                    `計算: 需補 ${addAmount}g (管長${total}m)`, 
-                    'calc', 
-                    { baseLen: base, totalLen: total, gramPerMeter: rate, result: addAmount }
-                );
-            };
-
-            return (
-                <div className="animate-fade-in">
-                    <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                        <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-green-400">
-                            <i data-lucide="scale" className="w-5 h-5"></i>
-                            冷媒補充量計算
-                        </h2>
-                        
-                        <div className="space-y-5">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">原廠基準長度 (米)</label>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={()=>setBaseLen(5)} className={`flex-1 py-2 rounded text-sm font-bold border ${baseLen===5 ? 'bg-green-600 text-white border-green-500' : 'bg-industrial-900 border-industrial-600'}`}>5m</button>
-                                    <button onClick={()=>setBaseLen(8)} className={`flex-1 py-2 rounded text-sm font-bold border ${baseLen===8 ? 'bg-green-600 text-white border-green-500' : 'bg-industrial-900 border-industrial-600'}`}>8m</button>
-                                    <input 
-                                        type="number" 
-                                        value={baseLen}
-                                        onChange={(e)=>setBaseLen(e.target.value)}
-                                        className="w-20 py-2 px-3 bg-industrial-900 border border-industrial-600 rounded text-center font-mono"
-                                    />
+                                <label className="text-xs text-gray-500 mb-1 block">原廠基準長度 (m)</label>
+                                <div className="flex gap-2">
+                                    {[5, 8].map(l => <button key={l} onClick={()=>setBaseLen(l)} className={`flex-1 py-2 rounded text-sm font-bold border ${baseLen===l ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{l}m</button>)}
                                 </div>
                             </div>
-
                             <div>
-                                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">每米補充量 (g/m)</label>
+                                <label className="text-xs text-gray-500 mb-1 block">每米補充量 (g/m)</label>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {[15, 20, 30].map(val => (
-                                        <button 
-                                            key={val}
-                                            onClick={()=>setGramPerMeter(val)} 
-                                            className={`py-2 rounded text-sm font-bold border ${gramPerMeter===val ? 'bg-green-600 text-white border-green-500' : 'bg-industrial-900 border-industrial-600'}`}
-                                        >
-                                            {val}g
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="mt-2 flex items-center gap-2">
-                                     <span className="text-xs text-gray-500">自訂:</span>
-                                     <input 
-                                        type="number" 
-                                        value={gramPerMeter}
-                                        onChange={(e)=>setGramPerMeter(e.target.value)}
-                                        className="flex-1 py-1 px-3 bg-industrial-900 border border-industrial-600 rounded text-sm font-mono"
-                                        placeholder="輸入克數"
-                                    />
+                                    {[15, 20, 30].map(v => <button key={v} onClick={()=>setGramPerMeter(v)} className={`py-2 rounded text-sm font-bold border ${gramPerMeter===v ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{v}g</button>)}
                                 </div>
                             </div>
-
-                            <div className="pt-4 border-t border-industrial-700">
-                                <label className="block text-sm font-bold text-industrial-accent mb-2 uppercase">實際安裝管長 (米)</label>
-                                <input 
-                                    type="number" 
-                                    value={totalLen}
-                                    onChange={(e)=>setTotalLen(e.target.value)}
-                                    placeholder="例如: 12.5"
-                                    className="w-full text-2xl py-3 px-4 bg-industrial-900 border-2 border-industrial-600 focus:border-green-500 rounded-lg font-mono text-center outline-none"
-                                />
+                            <div>
+                                <label className="text-xs text-gray-500 mb-1 block">實際管長 (m)</label>
+                                <input type="number" value={totalLen} onChange={e=>setTotalLen(e.target.value)} className="w-full text-2xl py-3 px-4 bg-industrial-900 border-2 border-industrial-600 focus:border-green-500 rounded-lg text-center" />
                             </div>
-
-                            <button 
-                                onClick={calculate}
-                                className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg shadow-lg transform active:scale-95 transition flex items-center justify-center gap-2"
-                            >
-                                <i data-lucide="calculator" className="w-5 h-5"></i>
-                                開始計算
-                            </button>
+                            <button onClick={calculate} className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg shadow-lg transition flex items-center justify-center gap-2"><i data-lucide="calculator" className="w-5 h-5"></i> 開始計算</button>
                         </div>
-
                         {result !== null && (
                             <div className="mt-6 bg-industrial-900 rounded-lg p-4 border border-industrial-600 text-center animate-bounce-in">
                                 <span className="block text-gray-500 text-xs mb-1">需補充冷媒量</span>
-                                <div className="text-4xl font-mono font-bold text-green-400">
-                                    {result} <span className="text-lg">g</span>
-                                </div>
-                                <div className="text-xs text-gray-600 mt-2">
-                                    公式: (實際長 {totalLen}m - 基準 {baseLen}m) × {gramPerMeter}g
-                                </div>
+                                <div className="text-4xl font-mono font-bold text-green-400">{result} <span className="text-lg">g</span></div>
                             </div>
                         )}
                     </div>
@@ -962,20 +559,54 @@
             );
         }
 
-        // --- 子元件: 導航按鈕 ---
+        // --- 降溫時間估算元件 ---
+        function CoolingTimeCalculator({ addToHistory }) {
+            const [ping, setPing] = useState(''), [height, setHeight] = useState(3.0), [currentTemp, setCurrentTemp] = useState(32), [targetTemp, setTargetTemp] = useState(26), [acKw, setAcKw] = useState(''), [minutes, setMinutes] = useState(null);
+            const calculate = () => {
+                const p = parseFloat(ping), h = parseFloat(height), kw = parseFloat(acKw), dt = currentTemp - targetTemp;
+                if (!p || !kw || dt <= 0) return alert('請檢查數值');
+                const volume = p * 3.3058 * h;
+                const airMass = volume * 1.2;
+                const totalLoadKJ = airMass * 1.005 * dt * 10; // 加入熱蓄積係數
+                const timeMinutes = Math.round((totalLoadKJ / kw) / 60);
+                setMinutes(timeMinutes);
+                addToHistory(`降溫估算: 約 ${timeMinutes} 分鐘`, 'cooling', { ping: p, height: h, deltaT: dt, acKw: kw, minutes: timeMinutes });
+            };
+            return (
+                <div className="animate-fade-in space-y-4">
+                    <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-purple-400"><i data-lucide="thermometer" className="w-5 h-5"></i> 降溫時間估算</h2>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <input type="number" value={ping} onChange={e=>setPing(e.target.value)} placeholder="空間坪數" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
+                            <input type="number" value={height} onChange={e=>setHeight(e.target.value)} placeholder="高度 (m)" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" step="0.1" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <input type="number" value={currentTemp} onChange={e=>setCurrentTemp(e.target.value)} placeholder="目前室溫" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-red-300" />
+                            <input type="number" value={targetTemp} onChange={e=>setTargetTemp(e.target.value)} placeholder="目標溫" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-blue-300" />
+                        </div>
+                        <input type="number" value={acKw} onChange={e=>setAcKw(e.target.value)} placeholder="冷氣能力 (KW)" className="w-full bg-industrial-900 border border-industrial-600 rounded p-3 text-center text-white font-bold mb-6" />
+                        <button onClick={calculate} className="w-full py-3 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg shadow-lg transition">開始模擬計算</button>
+                    </div>
+                    {minutes !== null && (
+                        <div className="bg-industrial-900 rounded-lg p-5 border border-purple-500/50 text-center animate-slide-up relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                             <div className="text-4xl font-bold text-white font-mono mb-1">{minutes} <span className="text-sm font-sans font-normal text-gray-400">分鐘</span></div>
+                             <div className="text-[10px] text-gray-500">*此為物理估算值，實際情況受隔熱影響</div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
         function NavButton({ active, onClick, icon, label }) {
             return (
-                <button 
-                    onClick={onClick}
-                    className={`flex flex-col items-center justify-center w-full h-full transition-colors ${active ? 'text-industrial-accent' : 'text-gray-500 hover:text-gray-300'}`}
-                >
+                <button onClick={onClick} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${active ? 'text-industrial-accent' : 'text-gray-500 hover:text-gray-300'}`}>
                     <i data-lucide={icon} className={`w-6 h-6 mb-1 ${active ? 'fill-current/20' : ''}`}></i>
                     <span className="text-[10px] font-bold">{label}</span>
                 </button>
             );
         }
 
-        // Render
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
