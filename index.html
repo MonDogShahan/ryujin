@@ -195,30 +195,32 @@
                 if (window.lucide) window.lucide.createIcons();
             }, [activeTab, searchResults, selectedHistoryItem, history]);
 
-            // 功能 A & C: 搜尋邏輯
-            const handleSearch = (term) => {
-                setSearchTerm(term);
-                if (!term) {
-                    setSearchResults([]);
-                    return;
-                }
-
+            // 獨立出來的搜尋邏輯：根據關鍵字返回結果
+            const getSearchResults = (term) => {
+                if (!term) return [];
                 const lowerTerm = term.toLowerCase();
-                const results = AC_DATABASE.filter(item => 
+                return AC_DATABASE.filter(item => 
                     item.brand.toLowerCase().includes(lowerTerm) ||
                     item.brandCN.includes(lowerTerm) ||
                     item.model.toLowerCase().includes(lowerTerm)
                 );
+            };
+
+            // 功能 A & C: 處理搜尋輸入
+            const handleSearch = (term) => {
+                setSearchTerm(term);
+                const results = getSearchResults(term);
                 setSearchResults(results);
             };
 
-            // 觸發搜尋並存檔
+            // 觸發搜尋並存檔 (用於 Enter 鍵)
             const triggerSearchAndSave = () => {
                 if (searchTerm) {
-                    // 這裡我們儲存「當時」的搜尋結果，這樣歷史紀錄才能還原當下的狀態
+                    // 為了確保紀錄的是最新的結果，這裡再執行一次搜尋
+                    const currentResults = getSearchResults(searchTerm);
                     addToHistory(`搜尋: ${searchTerm}`, 'search', { 
                         term: searchTerm, 
-                        results: searchResults 
+                        results: currentResults 
                     });
                 }
             };
@@ -283,9 +285,6 @@
                                                 triggerSearchAndSave();
                                             }
                                         }}
-                                        onBlur={() => {
-                                            // Optional: 離開焦點時是否要自動存? 為了避免太頻繁，這裡先不存，只在Enter時存
-                                        }}
                                     />
                                 </div>
 
@@ -311,8 +310,13 @@
                                                         key={brand}
                                                         onClick={() => {
                                                             setSearchTerm(brand);
-                                                            handleSearch(brand);
-                                                            // 這裡不自動加入歷史，等使用者確認搜尋結果再按 Enter 加入比較合理，或者也可以這裡加
+                                                            const results = getSearchResults(brand);
+                                                            setSearchResults(results);
+                                                            // 修正：點擊品牌按鈕時，直接儲存到歷史紀錄
+                                                            addToHistory(`搜尋: ${brand}`, 'search', { 
+                                                                term: brand, 
+                                                                results: results 
+                                                            });
                                                         }}
                                                         className="px-3 py-1 bg-industrial-800 border border-industrial-600 rounded-full text-sm hover:bg-industrial-700 transition"
                                                     >
