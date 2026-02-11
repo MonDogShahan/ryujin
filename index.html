@@ -31,6 +31,20 @@
                     },
                     fontFamily: {
                         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
                     }
                 }
             }
@@ -43,12 +57,6 @@
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
     </style>
 </head>
 <body>
@@ -58,7 +66,6 @@
         const { useState, useEffect } = React;
 
         // --- 模擬資料庫 (Mock Data) ---
-        // 實際應用時，這裡的資料可以擴充成幾百筆
         const AC_DATABASE = [
             {
                 id: 'daikin-001',
@@ -117,12 +124,62 @@
             }
         ];
 
+        // --- 共用元件: 機型卡片 ---
+        function ResultCard({ item }) {
+            return (
+                <div className="bg-industrial-800 rounded-xl p-5 border border-industrial-700 shadow-lg relative overflow-hidden group hover:border-industrial-accent transition-colors">
+                    {/* 裝飾線條 */}
+                    <div className="absolute top-0 left-0 w-1 h-full bg-industrial-accent"></div>
+                    
+                    <div className="flex justify-between items-start mb-3">
+                        <div>
+                            <span className="text-xs font-bold text-industrial-accent uppercase tracking-wider bg-industrial-900 px-2 py-1 rounded">
+                                {item.brandCN} / {item.brand}
+                            </span>
+                            <h3 className="text-xl font-bold mt-2 font-mono">{item.model}</h3>
+                        </div>
+                        <div className="text-right">
+                            <span className={`inline-block px-2 py-1 text-xs rounded font-bold ${item.type.includes('暖') ? 'bg-red-900 text-red-200' : 'bg-blue-900 text-blue-200'}`}>
+                                {item.type}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-industrial-700">
+                        <div>
+                            <span className="block text-gray-500 text-xs mb-1">銅管規格</span>
+                            <span className="font-mono text-white flex items-center gap-1">
+                                <i data-lucide="circle-dot" className="w-3 h-3"></i> {item.pipes}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="block text-gray-500 text-xs mb-1">電源規格</span>
+                            <span className="font-mono text-white flex items-center gap-1">
+                                <i data-lucide="zap" className="w-3 h-3"></i> {item.power}
+                            </span>
+                        </div>
+                        <div className="col-span-2">
+                            <span className="block text-gray-500 text-xs mb-1">機體尺寸</span>
+                            <span className="font-mono text-white flex items-center gap-1">
+                                <i data-lucide="box" className="w-3 h-3"></i> {item.dims}
+                            </span>
+                        </div>
+                            <div className="col-span-2">
+                            <span className="block text-gray-500 text-xs mb-1">冷媒種類</span>
+                            <span className="font-mono text-white">{item.refrigerant}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         // --- 應用程式主元件 ---
         function App() {
             const [activeTab, setActiveTab] = useState('search'); // search, calc, history
             const [searchTerm, setSearchTerm] = useState('');
             const [searchResults, setSearchResults] = useState([]);
             const [history, setHistory] = useState([]);
+            const [selectedHistoryItem, setSelectedHistoryItem] = useState(null); // 用於顯示詳細 Modal
 
             // 初始化：從 LocalStorage 讀取歷史紀錄
             useEffect(() => {
@@ -130,14 +187,13 @@
                 if (savedHistory) {
                     setHistory(JSON.parse(savedHistory));
                 }
-                // 初始化圖示
                 if (window.lucide) window.lucide.createIcons();
             }, []);
 
-            // 監聽 Tab 變化以重新渲染圖示
+            // 監聽依賴變化重新渲染圖示
             useEffect(() => {
                 if (window.lucide) window.lucide.createIcons();
-            }, [activeTab, searchResults]);
+            }, [activeTab, searchResults, selectedHistoryItem, history]);
 
             // 功能 A & C: 搜尋邏輯
             const handleSearch = (term) => {
@@ -156,13 +212,25 @@
                 setSearchResults(results);
             };
 
-            // 功能 D: 儲存搜尋紀錄
-            const addToHistory = (text, type = 'search') => {
+            // 觸發搜尋並存檔
+            const triggerSearchAndSave = () => {
+                if (searchTerm) {
+                    // 這裡我們儲存「當時」的搜尋結果，這樣歷史紀錄才能還原當下的狀態
+                    addToHistory(`搜尋: ${searchTerm}`, 'search', { 
+                        term: searchTerm, 
+                        results: searchResults 
+                    });
+                }
+            };
+
+            // 功能 D: 儲存搜尋紀錄 (更新版：支援詳細資料 data)
+            const addToHistory = (title, type, data = {}) => {
                 const newEntry = {
                     id: Date.now(),
-                    text: text,
+                    title: title,
                     type: type, // 'search' or 'calc'
-                    date: new Date().toLocaleString()
+                    date: new Date().toLocaleString(),
+                    data: data // 儲存詳細參數
                 };
                 const newHistory = [newEntry, ...history].slice(0, 20); // 只留最近 20 筆
                 setHistory(newHistory);
@@ -195,7 +263,7 @@
                     </header>
 
                     {/* Main Content Area */}
-                    <main className="flex-1 max-w-md mx-auto w-full p-4 pb-24">
+                    <main className="flex-1 max-w-md mx-auto w-full p-4 pb-24 relative">
                         
                         {/* Tab Content: Search */}
                         {activeTab === 'search' && (
@@ -211,9 +279,12 @@
                                         value={searchTerm}
                                         onChange={(e) => handleSearch(e.target.value)}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && searchTerm) {
-                                                addToHistory(searchTerm, 'search');
+                                            if (e.key === 'Enter') {
+                                                triggerSearchAndSave();
                                             }
+                                        }}
+                                        onBlur={() => {
+                                            // Optional: 離開焦點時是否要自動存? 為了避免太頻繁，這裡先不存，只在Enter時存
                                         }}
                                     />
                                 </div>
@@ -227,49 +298,7 @@
                                         </div>
                                     ) : (
                                         searchResults.map(item => (
-                                            <div key={item.id} className="bg-industrial-800 rounded-xl p-5 border border-industrial-700 shadow-lg relative overflow-hidden group hover:border-industrial-accent transition-colors">
-                                                {/* 裝飾線條 */}
-                                                <div className="absolute top-0 left-0 w-1 h-full bg-industrial-accent"></div>
-                                                
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div>
-                                                        <span className="text-xs font-bold text-industrial-accent uppercase tracking-wider bg-industrial-900 px-2 py-1 rounded">
-                                                            {item.brandCN} / {item.brand}
-                                                        </span>
-                                                        <h3 className="text-xl font-bold mt-2 font-mono">{item.model}</h3>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className={`inline-block px-2 py-1 text-xs rounded font-bold ${item.type.includes('暖') ? 'bg-red-900 text-red-200' : 'bg-blue-900 text-blue-200'}`}>
-                                                            {item.type}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-industrial-700">
-                                                    <div>
-                                                        <span className="block text-gray-500 text-xs mb-1">銅管規格</span>
-                                                        <span className="font-mono text-white flex items-center gap-1">
-                                                            <i data-lucide="circle-dot" className="w-3 h-3"></i> {item.pipes}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="block text-gray-500 text-xs mb-1">電源規格</span>
-                                                        <span className="font-mono text-white flex items-center gap-1">
-                                                            <i data-lucide="zap" className="w-3 h-3"></i> {item.power}
-                                                        </span>
-                                                    </div>
-                                                    <div className="col-span-2">
-                                                        <span className="block text-gray-500 text-xs mb-1">機體尺寸</span>
-                                                        <span className="font-mono text-white flex items-center gap-1">
-                                                            <i data-lucide="box" className="w-3 h-3"></i> {item.dims}
-                                                        </span>
-                                                    </div>
-                                                     <div className="col-span-2">
-                                                        <span className="block text-gray-500 text-xs mb-1">冷媒種類</span>
-                                                        <span className="font-mono text-white">{item.refrigerant}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <ResultCard key={item.id} item={item} />
                                         ))
                                     )}
                                     
@@ -283,7 +312,7 @@
                                                         onClick={() => {
                                                             setSearchTerm(brand);
                                                             handleSearch(brand);
-                                                            addToHistory(brand, 'search');
+                                                            // 這裡不自動加入歷史，等使用者確認搜尋結果再按 Enter 加入比較合理，或者也可以這裡加
                                                         }}
                                                         className="px-3 py-1 bg-industrial-800 border border-industrial-600 rounded-full text-sm hover:bg-industrial-700 transition"
                                                     >
@@ -325,7 +354,11 @@
                                 ) : (
                                     <div className="space-y-3">
                                         {history.map(item => (
-                                            <div key={item.id} className="bg-industrial-800 p-4 rounded-lg border-l-4 border-industrial-600 flex justify-between items-center">
+                                            <div 
+                                                key={item.id} 
+                                                onClick={() => setSelectedHistoryItem(item)}
+                                                className="bg-industrial-800 p-4 rounded-lg border-l-4 border-industrial-600 flex justify-between items-center cursor-pointer hover:bg-industrial-700 transition-colors group"
+                                            >
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         {item.type === 'calc' ? (
@@ -335,19 +368,125 @@
                                                         )}
                                                         <span className="text-gray-400 text-xs">{item.date}</span>
                                                     </div>
-                                                    <div className="text-sm font-mono text-gray-200">{item.text}</div>
+                                                    <div className="text-sm font-mono text-gray-200">{item.title}</div>
                                                 </div>
+                                                <i data-lucide="chevron-right" className="text-gray-600 group-hover:text-industrial-accent w-5 h-5"></i>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
                         )}
+                        
+                        {/* History Detail Modal (歷史詳細彈窗) */}
+                        {selectedHistoryItem && (
+                            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                                {/* Backdrop */}
+                                <div 
+                                    className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                                    onClick={() => setSelectedHistoryItem(null)}
+                                ></div>
+                                
+                                {/* Modal Content */}
+                                <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden transform transition-all animate-slide-up flex flex-col max-h-[85vh]">
+                                    {/* Modal Header */}
+                                    <div className="p-4 border-b border-industrial-700 flex justify-between items-center bg-industrial-800">
+                                        <h3 className="text-lg font-bold flex items-center gap-2">
+                                            {selectedHistoryItem.type === 'calc' ? (
+                                                <i data-lucide="calculator" className="text-green-400 w-5 h-5"></i>
+                                            ) : (
+                                                <i data-lucide="search" className="text-blue-400 w-5 h-5"></i>
+                                            )}
+                                            詳細紀錄
+                                        </h3>
+                                        <button 
+                                            onClick={() => setSelectedHistoryItem(null)}
+                                            className="p-1 rounded-full hover:bg-industrial-700 text-gray-400 hover:text-white"
+                                        >
+                                            <i data-lucide="x" className="w-6 h-6"></i>
+                                        </button>
+                                    </div>
+
+                                    {/* Modal Body - Scrollable */}
+                                    <div className="p-5 overflow-y-auto">
+                                        <div className="mb-4 text-xs text-gray-500 flex items-center gap-1">
+                                            <i data-lucide="clock" className="w-3 h-3"></i>
+                                            記錄時間: {selectedHistoryItem.date}
+                                        </div>
+
+                                        {/* 內容：如果是搜尋紀錄 */}
+                                        {selectedHistoryItem.type === 'search' && (
+                                            <div>
+                                                <div className="mb-4">
+                                                    <span className="text-gray-500 text-sm">搜尋關鍵字：</span>
+                                                    <span className="text-industrial-accent font-bold text-lg ml-2">{selectedHistoryItem.data?.term}</span>
+                                                </div>
+                                                
+                                                <h4 className="text-sm font-bold text-gray-300 mb-3 border-b border-industrial-700 pb-1">當時搜尋結果 ({selectedHistoryItem.data?.results?.length || 0} 筆)</h4>
+                                                <div className="space-y-3">
+                                                    {selectedHistoryItem.data?.results && selectedHistoryItem.data.results.length > 0 ? (
+                                                        selectedHistoryItem.data.results.map(item => (
+                                                            <div key={item.id} className="scale-95 origin-left w-full">
+                                                                <ResultCard item={item} />
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-gray-500 italic">無符合資料</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 內容：如果是計算紀錄 */}
+                                        {selectedHistoryItem.type === 'calc' && (
+                                            <div className="space-y-4">
+                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700">
+                                                    <span className="block text-gray-500 text-xs mb-1">計算結果 (需補充)</span>
+                                                    <div className="text-4xl font-mono font-bold text-green-400 flex items-baseline gap-2">
+                                                        {selectedHistoryItem.data?.result} <span className="text-sm text-gray-400">g</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                                    <div className="bg-industrial-950 p-3 rounded border border-industrial-800">
+                                                        <span className="block text-gray-500 text-xs mb-1">實際管長</span>
+                                                        <span className="text-white font-mono">{selectedHistoryItem.data?.totalLen} m</span>
+                                                    </div>
+                                                    <div className="bg-industrial-950 p-3 rounded border border-industrial-800">
+                                                        <span className="block text-gray-500 text-xs mb-1">原廠基準</span>
+                                                        <span className="text-white font-mono">{selectedHistoryItem.data?.baseLen} m</span>
+                                                    </div>
+                                                    <div className="col-span-2 bg-industrial-950 p-3 rounded border border-industrial-800">
+                                                        <span className="block text-gray-500 text-xs mb-1">補充率</span>
+                                                        <span className="text-white font-mono">{selectedHistoryItem.data?.gramPerMeter} g/m</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-xs text-gray-500 mt-2 bg-blue-900/20 p-3 rounded border border-blue-900/30">
+                                                    <i data-lucide="info" className="w-3 h-3 inline mr-1 mb-0.5"></i>
+                                                    計算公式: (實際長 - 基準長) × 補充率
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Modal Footer */}
+                                    <div className="p-4 border-t border-industrial-700 bg-industrial-800">
+                                        <button 
+                                            onClick={() => setSelectedHistoryItem(null)}
+                                            className="w-full py-3 bg-industrial-700 hover:bg-industrial-600 text-white rounded-lg font-bold transition"
+                                        >
+                                            關閉
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                     </main>
 
                     {/* Bottom Navigation */}
-                    <nav className="fixed bottom-0 w-full bg-industrial-900 border-t border-industrial-700 pb-safe">
+                    <nav className="fixed bottom-0 w-full bg-industrial-900 border-t border-industrial-700 pb-safe z-40">
                         <div className="max-w-md mx-auto flex justify-around items-center h-16">
                             <NavButton 
                                 active={activeTab === 'search'} 
@@ -399,8 +538,17 @@
                 addAmount = Math.round(addAmount);
                 setResult(addAmount);
 
-                // 存入歷史
-                addToHistory(`管長${total}m (原廠${base}m) / 補充率${rate}g -> 需補 ${addAmount}g`, 'calc');
+                // 存入歷史 (更新：傳入詳細參數物件)
+                addToHistory(
+                    `計算: 需補 ${addAmount}g (管長${total}m)`, 
+                    'calc', 
+                    { 
+                        baseLen: base, 
+                        totalLen: total, 
+                        gramPerMeter: rate, 
+                        result: addAmount 
+                    }
+                );
             };
 
             return (
