@@ -543,6 +543,7 @@
             // 環境因子
             const [conditions, setConditions] = useState({
                 westSun: false,
+                allDaySun: false, // New: 白天都會曬到太陽
                 topFloor: false,
                 highCeiling: false,
                 ironSheet: false,
@@ -567,6 +568,21 @@
                 setPing((areaM2 * 0.3025).toFixed(1));
             }, [length, width, unit]);
 
+            const toggleCondition = (key) => {
+                setConditions(prev => {
+                    const newState = { ...prev, [key]: !prev[key] };
+                    // 互斥邏輯: 如果選擇黑色鐵皮，鐵皮屋則不許選擇 (強制取消一般鐵皮)
+                    if (key === 'blackIron' && newState.blackIron) {
+                        newState.ironSheet = false;
+                    }
+                    // 反之亦然，如果選了一般鐵皮，取消黑色鐵皮 (可選，優化 UX)
+                    if (key === 'ironSheet' && newState.ironSheet) {
+                        newState.blackIron = false;
+                    }
+                    return newState;
+                });
+            };
+
             const calculate = () => {
                 if(ping <= 0) {
                     alert('請輸入有效的長寬');
@@ -579,12 +595,13 @@
                 let conditionList = [];
 
                 if (conditions.westSun) { multiplier += 0.2; conditionList.push('西曬'); }
+                if (conditions.allDaySun) { multiplier += 0.3; conditionList.push('白天日曬'); } // 白天日曬加成較高
                 if (conditions.topFloor) { multiplier += 0.2; conditionList.push('頂樓'); }
-                if (conditions.highCeiling) { multiplier += 0.2; conditionList.push('挑高'); } // 假設挑高增加20%
+                if (conditions.highCeiling) { multiplier += 0.2; conditionList.push('挑高'); } 
                 
-                // 鐵皮屋加成較重
+                // 鐵皮屋加成
                 if (conditions.blackIron) { 
-                    multiplier += 0.8; conditionList.push('黑色鐵皮'); // 黑鐵皮極熱
+                    multiplier += 0.8; conditionList.push('黑色鐵皮'); 
                 } else if (conditions.ironSheet) {
                     multiplier += 0.5; conditionList.push('一般鐵皮');
                 }
@@ -607,10 +624,6 @@
                     kw: requiredKW,
                     tons: requiredTons
                 });
-            };
-
-            const toggleCondition = (key) => {
-                setConditions(prev => ({ ...prev, [key]: !prev[key] }));
             };
 
             return (
@@ -667,6 +680,10 @@
                                     <span className="text-sm">🌞 西曬</span>
                                 </label>
                                 <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
+                                    <input type="checkbox" checked={conditions.allDaySun} onChange={()=>toggleCondition('allDaySun')} className="rounded text-industrial-accent focus:ring-0" />
+                                    <span className="text-sm">☀️ 白天日曬</span>
+                                </label>
+                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
                                     <input type="checkbox" checked={conditions.topFloor} onChange={()=>toggleCondition('topFloor')} className="rounded text-industrial-accent focus:ring-0" />
                                     <span className="text-sm">🏠 頂樓</span>
                                 </label>
@@ -674,8 +691,14 @@
                                     <input type="checkbox" checked={conditions.highCeiling} onChange={()=>toggleCondition('highCeiling')} className="rounded text-industrial-accent focus:ring-0" />
                                     <span className="text-sm">📏 挑高 (>3m)</span>
                                 </label>
-                                <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
-                                    <input type="checkbox" checked={conditions.ironSheet} onChange={()=>toggleCondition('ironSheet')} className="rounded text-industrial-accent focus:ring-0" />
+                                <label className={`flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer ${conditions.blackIron ? 'opacity-50 cursor-not-allowed' : 'hover:bg-industrial-700/50'}`}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={conditions.ironSheet} 
+                                        onChange={() => !conditions.blackIron && toggleCondition('ironSheet')} 
+                                        disabled={conditions.blackIron}
+                                        className="rounded text-industrial-accent focus:ring-0" 
+                                    />
                                     <span className="text-sm">🏭 鐵皮屋</span>
                                 </label>
                                 <label className="flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer hover:bg-industrial-700/50">
