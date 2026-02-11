@@ -254,11 +254,11 @@
 
                     <nav className="fixed bottom-0 w-full bg-industrial-900 border-t border-industrial-700 pb-safe z-50">
                         <div className="max-w-md mx-auto grid grid-cols-5 h-16">
-                            <NavBtn active={activeTab === 'search'} onClick={() => setActiveTab('search')} icon="search" label="搜尋" />
-                            <NavBtn active={activeTab === 'capacity'} onClick={() => setActiveTab('capacity')} icon="ruler" label="負載" />
-                            <NavBtn active={activeTab === 'calc'} onClick={() => setActiveTab('calc')} icon="calculator" label="冷媒" />
-                            <NavBtn active={activeTab === 'ducted'} onClick={() => setActiveTab('ducted')} icon="box" label="吊隱" />
-                            <NavBtn active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon="history" label="紀錄" />
+                            <NavBtn active={activeTab === 'search'} onClick={() => setActiveTab('search'} icon="search" label="搜尋" />
+                            <NavBtn active={activeTab === 'capacity'} onClick={() => setActiveTab('capacity'} icon="ruler" label="負載" />
+                            <NavBtn active={activeTab === 'calc'} onClick={() => setActiveTab('calc'} icon="calculator" label="冷媒" />
+                            <NavBtn active={activeTab === 'ducted'} onClick={() => setActiveTab('ducted'} icon="box" label="吊隱" />
+                            <NavBtn active={activeTab === 'history'} onClick={() => setActiveTab('history'} icon="history" label="紀錄" />
                         </div>
                     </nav>
                 </div>
@@ -354,23 +354,42 @@
                 if (!p || !kw || dt <= 0) return alert('請輸入完整數值');
                 const time = Math.round(((p * 3.3 * h) * 1.2 * 1.0 * dt * 10) / kw / 60);
                 setState(p=>({...p, minutes: time}));
-                addToHistory(`降溫估算: ${time} 分鐘`, 'cooling', { ping: p, height: h, acKw: kw, minutes: time });
+                addToHistory(`降溫估算: ${time} 分鐘`, 'cooling', { ping: p, height: h, acKw: kw, minutes: time, currentTemp, targetTemp });
             };
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 p-6 rounded-2xl border border-industrial-700 shadow-xl">
-                        <div className="flex justify-between items-center mb-4"><h2 className="text-purple-400 font-bold flex items-center gap-2 text-sm"><i data-lucide="thermometer" className="w-4 h-4"></i> 物理降溫估算</h2><button onClick={()=>setState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null })} className="text-[10px] text-gray-500 hover:text-white transition-all">重置</button></div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-purple-400 font-bold flex items-center gap-2 text-sm">
+                                <i data-lucide="thermometer" className="w-4 h-4"></i> 物理降溫估算
+                            </h2>
+                            <button onClick={()=>setState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null })} className="text-[10px] text-gray-500 hover:text-white transition-all">
+                                重置
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             <input type="number" value={state.ping} onChange={e=>setState(p=>({...p, ping:e.target.value}))} placeholder="坪數" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-white text-sm" />
                             <input type="number" value={state.height} onChange={e=>setState(p=>({...p, height:e.target.value}))} placeholder="高(m)" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-white text-sm" />
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-6">
-                            <input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} placeholder="室溫" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-red-300 text-sm" />
-                            <input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} placeholder="目標" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-blue-300 text-sm" />
+                            <input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} placeholder="目前室溫" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-red-300 text-sm" />
+                            <input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} placeholder="目標溫度" className="bg-industrial-900 border border-industrial-700 rounded-xl p-3 text-center text-blue-300 text-sm" />
                         </div>
-                        <input type="number" value={state.acKw} onChange={e=>setState(p=>({...p, acKw:e.target.value}))} placeholder="冷氣能力 (KW)" className="w-full bg-industrial-900 border-2 border-industrial-700 focus:border-purple-500 rounded-2xl p-4 text-center text-white font-bold mb-6 text-xl shadow-inner" />
+                        <div className="mb-6">
+                            <label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">冷氣能力 (KW)</label>
+                            <input type="number" value={state.acKw} onChange={e=>setState(p=>({...p, acKw:e.target.value}))} placeholder="例如: 3.6" className="w-full bg-industrial-900 border-2 border-industrial-700 focus:border-purple-500 rounded-2xl p-4 text-center text-white font-bold text-xl shadow-inner" />
+                        </div>
                         <button onClick={calculate} className="w-full py-4 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm">執行模擬估算</button>
                     </div>
+
+                    {state.minutes !== null && (
+                        <div className="bg-industrial-900 rounded-2xl p-5 border border-purple-600/50 animate-slide-up shadow-2xl relative overflow-hidden text-center">
+                             <div className="absolute top-0 left-0 w-full h-1 bg-purple-600"></div>
+                             <div className="text-gray-500 text-[10px] mb-1 uppercase tracking-widest font-bold">預估降溫時間</div>
+                             <div className="text-5xl font-mono font-bold text-purple-400 leading-none my-2">{state.minutes}</div>
+                             <div className="text-[10px] text-gray-500 uppercase font-bold">分鐘 Minutes</div>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -383,7 +402,7 @@
                 let size = state.spaceType === 'square' ? 10 : 8, qty = 2, pType = "標準集風箱", note = "";
                 if (fh < 20) { pType = "三角形集風箱"; size = 8; qty = 2; note = "法蘭過窄，限制孔徑提升流速。"; }
                 else { qty = Math.max(2, Math.ceil(area / (Math.PI * Math.pow((size*2.54/2), 2) * 0.9))); }
-                if ([0, 2, 6, 8].includes(state.unitPos) && state.spaceType === 'long') note = "角落角落安裝且空間長，需縮小孔徑增加打風距離。";
+                if ([0, 2, 6, 8].includes(state.unitPos) && state.spaceType === 'long') note = "角落安裝且空間長，需縮小孔徑增加打風距離。";
                 setState(p => ({ ...p, result: { holeSize: size, holeQty: qty, plenumType: pType, airflowNote: note } }));
                 addToHistory(`吊隱: ${fw}x${fh} / ${qty}孔`, 'ducted', { flangeW: fw, flangeH: fh, holeSize: size, holeQty: qty, plenumType: pType, spaceTypeCN: state.spaceType });
             };
