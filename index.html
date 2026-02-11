@@ -66,6 +66,21 @@
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input { user-select: auto; -webkit-user-select: auto; }
+        
+        .grid-pos-btn {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .grid-pos-btn.active {
+            background-color: #f59e0b;
+            color: #0f172a;
+            border-color: #f59e0b;
+        }
     </style>
 </head>
 <body>
@@ -85,7 +100,7 @@
 
         function ResultCard({ item }) {
             return (
-                <div className="bg-industrial-800 rounded-xl p-5 border border-industrial-700 shadow-lg relative overflow-hidden group hover:border-industrial-accent transition-colors">
+                <div className="bg-industrial-800 rounded-xl p-5 border border-industrial-700 shadow-lg relative overflow-hidden group hover:border-industrial-accent transition-colors animate-fade-in">
                     <div className="absolute top-0 left-0 w-1 h-full bg-industrial-accent"></div>
                     <div className="flex justify-between items-start mb-3">
                         <div>
@@ -113,16 +128,7 @@
                                 <i data-lucide="zap" className="w-3 h-3"></i> {item.power}
                             </span>
                         </div>
-                        <div className="col-span-2">
-                            <span className="block text-gray-500 text-xs mb-1">機體尺寸</span>
-                            <span className="font-mono text-white flex items-center gap-1">
-                                <i data-lucide="box" className="w-3 h-3"></i> {item.dims}
-                            </span>
-                        </div>
-                        <div className="col-span-2">
-                            <span className="block text-gray-500 text-xs mb-1">冷媒種類</span>
-                            <span className="font-mono text-white">{item.refrigerant}</span>
-                        </div>
+                        <div className="col-span-2 text-xs">尺寸: {item.dims} | 冷媒: {item.refrigerant}</div>
                     </div>
                 </div>
             );
@@ -142,6 +148,14 @@
             });
             const [refrigerantState, setRefrigerantState] = useState({ baseLen: 5, totalLen: '', gramPerMeter: 20, result: null });
             const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null });
+            
+            // 吊隱式狀態
+            const [ductedState, setDuctedState] = useState({
+                flangeW: '', flangeH: '', 
+                spaceType: 'long', // long, narrow, square
+                unitPos: 4, // 0-8 代表九宮格
+                result: null
+            });
 
             useEffect(() => {
                 const savedHistory = localStorage.getItem('yiGeHistory');
@@ -150,7 +164,7 @@
 
             useEffect(() => {
                 if (window.lucide) window.lucide.createIcons();
-            }, [activeTab, searchState, history, selectedHistoryItem]);
+            }, [activeTab, searchState, history, selectedHistoryItem, ductedState]);
 
             const addToHistory = useCallback((title, type, data = {}) => {
                 const newEntry = { id: Date.now(), title, type, date: new Date().toLocaleString(), data };
@@ -174,7 +188,7 @@
                                 <i data-lucide="wrench" className="text-industrial-accent w-6 h-6"></i>
                                 <h1 className="text-xl font-bold tracking-wider">龍神<span className="text-industrial-accent">空調</span>幫手</h1>
                             </div>
-                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">V1.4</div>
+                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">V1.5</div>
                         </div>
                     </header>
 
@@ -199,11 +213,6 @@
                                                 ) : [];
                                                 setSearchState({ term, results });
                                             }}
-                                            onKeyDown={(e) => {
-                                                if(e.key === 'Enter' && searchState.term) {
-                                                    addToHistory(`搜尋: ${searchState.term}`, 'search', { term: searchState.term, results: searchState.results });
-                                                }
-                                            }}
                                         />
                                         {searchState.term && (
                                             <button onClick={() => setSearchState({ term: '', results: [] })} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
@@ -214,16 +223,13 @@
                                 </div>
                                 <div className="space-y-4">
                                     {searchState.term && searchState.results.length === 0 ? (
-                                        <div className="text-center py-10 text-gray-500">
-                                            <i data-lucide="archive-x" className="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                                            <p>找不到符合 "{searchState.term}" 的資料</p>
-                                        </div>
+                                        <div className="text-center py-10 text-gray-500"><p>找不到符合 "{searchState.term}" 的資料</p></div>
                                     ) : (
                                         searchState.results.map(item => <ResultCard key={item.id} item={item} />)
                                     )}
                                     {!searchState.term && (
                                         <div className="text-center py-10">
-                                            <p className="text-industrial-600 mb-4">快捷搜尋品牌</p>
+                                            <p className="text-industrial-600 mb-4 text-sm font-bold">熱門品牌查詢</p>
                                             <div className="flex flex-wrap justify-center gap-2">
                                                 {['大金', '日立', '國際牌', 'TECO'].map(brand => (
                                                     <button 
@@ -231,9 +237,8 @@
                                                         onClick={() => {
                                                             const results = AC_DATABASE.filter(item => item.brandCN.includes(brand));
                                                             setSearchState({ term: brand, results });
-                                                            addToHistory(`搜尋: ${brand}`, 'search', { term: brand, results });
                                                         }}
-                                                        className="px-3 py-1 bg-industrial-800 border border-industrial-600 rounded-full text-sm hover:bg-industrial-700 transition"
+                                                        className="px-4 py-1.5 bg-industrial-800 border border-industrial-700 rounded-full text-xs hover:border-industrial-accent transition"
                                                     >
                                                         {brand}
                                                     </button>
@@ -248,6 +253,7 @@
                         {activeTab === 'capacity' && <CapacityCalculator state={capacityState} setState={setCapacityState} addToHistory={addToHistory} />}
                         {activeTab === 'calc' && <RefrigerantCalculator state={refrigerantState} setState={setRefrigerantState} addToHistory={addToHistory} />}
                         {activeTab === 'cooling' && <CoolingTimeCalculator state={coolingState} setState={setCoolingState} addToHistory={addToHistory} />}
+                        {activeTab === 'ducted' && <DuctedCalculator state={ductedState} setState={setDuctedState} addToHistory={addToHistory} />}
 
                         {activeTab === 'history' && (
                             <div className="animate-fade-in">
@@ -260,21 +266,16 @@
                                     )}
                                 </div>
                                 {history.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">
-                                        <i data-lucide="history" className="w-12 h-12 mx-auto mb-2 opacity-50"></i>
-                                        <p>尚無操作紀錄</p>
-                                    </div>
+                                    <div className="text-center py-12 text-gray-500"><p>尚無操作紀錄</p></div>
                                 ) : (
                                     <div className="space-y-3">
                                         {history.map(item => (
                                             <div key={item.id} onClick={() => setSelectedHistoryItem(item)} className="bg-industrial-800 p-4 rounded-lg border-l-4 border-industrial-600 flex justify-between items-center cursor-pointer hover:bg-industrial-700 transition group">
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-gray-400 text-xs">{item.date}</span>
-                                                    </div>
+                                                    <span className="text-gray-500 text-[10px] block">{item.date}</span>
                                                     <div className="text-sm font-mono text-gray-200">{item.title}</div>
                                                 </div>
-                                                <i data-lucide="chevron-right" className="text-gray-600 group-hover:text-industrial-accent w-5 h-5"></i>
+                                                <i data-lucide="chevron-right" className="text-gray-600 group-hover:text-industrial-accent w-4 h-4"></i>
                                             </div>
                                         ))}
                                     </div>
@@ -283,46 +284,38 @@
                         )}
 
                         {selectedHistoryItem && (
-                            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
-                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedHistoryItem(null)}></div>
-                                <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden transform animate-slide-up flex flex-col max-h-[85vh]">
+                            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+                                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedHistoryItem(null)}></div>
+                                <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
                                     <div className="p-4 border-b border-industrial-700 flex justify-between items-center bg-industrial-800">
-                                        <h3 className="text-lg font-bold">歷史細節</h3>
-                                        <button onClick={() => setSelectedHistoryItem(null)} className="p-1 rounded-full hover:bg-industrial-700 text-gray-400 hover:text-white">
-                                            <i data-lucide="x" className="w-6 h-6"></i>
-                                        </button>
+                                        <h3 className="text-lg font-bold">歷史詳細內容</h3>
+                                        <button onClick={() => setSelectedHistoryItem(null)} className="p-1 text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
                                     </div>
                                     <div className="p-5 overflow-y-auto text-sm">
-                                        <div className="mb-4 text-xs text-gray-500 tracking-tight">紀錄時間: {selectedHistoryItem.date}</div>
                                         {selectedHistoryItem.type === 'search' && selectedHistoryItem.data?.results?.map(item => <ResultCard key={item.id} item={item} />)}
                                         {selectedHistoryItem.type === 'calc' && (
-                                            <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
-                                                <div className="text-4xl font-mono font-bold text-green-400">{selectedHistoryItem.data?.result} g</div>
-                                                <div className="text-xs text-gray-500 mt-2">管長: {selectedHistoryItem.data?.totalLen}m / 基準: {selectedHistoryItem.data?.baseLen}m</div>
+                                            <div className="bg-industrial-800 p-6 rounded-xl border border-industrial-700 text-center">
+                                                <div className="text-gray-500 text-xs mb-2">需補充冷媒量</div>
+                                                <div className="text-5xl font-mono font-bold text-green-400">{selectedHistoryItem.data?.result} <span className="text-lg">g</span></div>
                                             </div>
                                         )}
-                                        {selectedHistoryItem.type === 'capacity' && (
+                                        {selectedHistoryItem.type === 'ducted' && (
                                             <div className="space-y-4">
-                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
-                                                    <div className="text-3xl font-mono font-bold text-yellow-400">{selectedHistoryItem.data?.kw} KW</div>
-                                                    <div className="text-gray-400 text-sm">約 {selectedHistoryItem.data?.tons} 頓 / {selectedHistoryItem.data?.ping} 坪</div>
+                                                <div className="bg-industrial-800 p-6 rounded-xl border border-industrial-700 text-center">
+                                                    <div className="text-gray-500 text-xs mb-2">建議孔數與孔徑</div>
+                                                    <div className="text-3xl font-mono font-bold text-blue-400">
+                                                        {selectedHistoryItem.data?.holeQty} 孔 x {selectedHistoryItem.data?.holeSize}"
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs text-gray-500">條件: {selectedHistoryItem.data?.conditions?.join(', ') || '無'}</div>
-                                            </div>
-                                        )}
-                                        {selectedHistoryItem.type === 'cooling' && (
-                                            <div className="space-y-4">
-                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
-                                                    <div className="text-3xl font-mono font-bold text-purple-400">{selectedHistoryItem.data?.minutes} 分鐘</div>
-                                                    <div className="text-xs text-gray-500 mt-2">空間: {selectedHistoryItem.data?.ping} 坪 / 高度: {selectedHistoryItem.data?.height}m</div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                                    <div className="bg-industrial-950 p-2 rounded">目前室溫: {selectedHistoryItem.data?.currentTemp}°C</div>
-                                                    <div className="bg-industrial-950 p-2 rounded">目標溫度: {selectedHistoryItem.data?.targetTemp}°C</div>
-                                                    <div className="col-span-2 bg-industrial-950 p-2 rounded text-center">冷氣能力: {selectedHistoryItem.data?.acKw} KW</div>
+                                                <div className="bg-industrial-950 p-4 rounded-lg text-xs leading-loose">
+                                                    <div className="text-industrial-accent font-bold mb-1">施工條件回顧:</div>
+                                                    <div>- 法蘭尺寸: {selectedHistoryItem.data?.flangeW}x{selectedHistoryItem.data?.flangeH} cm</div>
+                                                    <div>- 空間類型: {selectedHistoryItem.data?.spaceTypeCN}</div>
+                                                    <div>- 集風箱類型: {selectedHistoryItem.data?.plenumType}</div>
                                                 </div>
                                             </div>
                                         )}
+                                        {/* 其他類型省略... */}
                                     </div>
                                     <div className="p-4 border-t border-industrial-700 bg-industrial-800">
                                         <button onClick={() => setSelectedHistoryItem(null)} className="w-full py-3 bg-industrial-700 text-white rounded-lg font-bold">關閉</button>
@@ -337,7 +330,7 @@
                             <NavButton active={activeTab === 'search'} onClick={() => setActiveTab('search')} icon="search" label="搜尋" />
                             <NavButton active={activeTab === 'capacity'} onClick={() => setActiveTab('capacity')} icon="ruler" label="負載" />
                             <NavButton active={activeTab === 'calc'} onClick={() => setActiveTab('calc')} icon="calculator" label="冷媒" />
-                            <NavButton active={activeTab === 'cooling'} onClick={() => setActiveTab('cooling')} icon="thermometer" label="降溫" />
+                            <NavButton active={activeTab === 'ducted'} onClick={() => setActiveTab('ducted')} icon="box" label="吊隱" />
                             <NavButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon="history" label="紀錄" />
                         </div>
                     </nav>
@@ -345,16 +338,162 @@
             );
         }
 
-        // --- 負載試算元件 ---
+        // --- NEW: 吊隱式出風計算元件 ---
+        function DuctedCalculator({ state, setState, addToHistory }) {
+            const { flangeW, flangeH, spaceType, unitPos, result } = state;
+
+            const calculate = () => {
+                const fw = parseFloat(flangeW), fh = parseFloat(flangeH);
+                if (!fw || !fh) return alert('請輸入完整的法蘭長寬');
+
+                const area = fw * fh;
+                let holeSize = 8; // 預設 8 英吋
+                let holeQty = 2;
+                let plenumType = "標準方形集風箱";
+                let airflowNote = "";
+
+                // 1. 空間類型決定孔徑傾向
+                if (spaceType === 'square') holeSize = 10; // 方形空間通常開大孔 (風量廣)
+                if (spaceType === 'long' || spaceType === 'narrow') holeSize = 8; // 長/窄空間建議小孔 (風速快、打得遠)
+
+                // 2. 特殊情況：法蘭高度過小 (三角形集風箱規則)
+                if (fh < 20) {
+                    plenumType = "三角形集風箱 (法蘭過窄建議)";
+                    holeSize = 8;
+                    holeQty = 2;
+                    airflowNote = "法蘭尺寸不足，強制採用三角形集風箱配雙 8 吋孔。";
+                } else {
+                    // 標準計算: 一個 8 吋孔面積約為 324 cm2, 10 吋約 506 cm2
+                    const singleHoleArea = Math.PI * Math.pow((holeSize * 2.54 / 2), 2);
+                    holeQty = Math.max(2, Math.ceil(area / (singleHoleArea * 0.9))); // 稍微留點餘裕
+                }
+
+                // 3. 根據位置調整建議
+                // 0, 2, 6, 8 為角落; 4 為中心; 1, 3, 5, 7 為邊緣
+                const isCorner = [0, 2, 6, 8].includes(unitPos);
+                const isCenter = unitPos === 4;
+
+                if (isCorner && spaceType === 'long') {
+                    airflowNote = "角落安裝且為長距離空間：建議縮小孔徑（維持 8 吋）以提升末端風速。";
+                } else if (isCenter && spaceType === 'square') {
+                    airflowNote = "中心安裝且為方形空間：建議加大孔徑（10~12 吋）以追求廣域擴散。";
+                    if (fw > 100) holeSize = 10;
+                }
+
+                const res = { holeSize, holeQty, plenumType, airflowNote, area };
+                setState(p => ({ ...p, result: res }));
+
+                const stCN = { long: '長距離', narrow: '窄空間', square: '方形空間' };
+                addToHistory(`吊隱計算: ${fw}x${fh} | 建議 ${holeQty}孔x${holeSize}"`, 'ducted', {
+                    flangeW: fw, flangeH: fh, holeSize, holeQty, plenumType, spaceTypeCN: stCN[spaceType]
+                });
+            };
+
+            const reset = () => {
+                setState({ flangeW: '', flangeH: '', spaceType: 'long', unitPos: 4, result: null });
+            };
+
+            return (
+                <div className="animate-fade-in space-y-4 pb-10">
+                    <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2"><i data-lucide="box" className="w-5 h-5"></i> 吊隱式出風配置</h2>
+                            <button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded">重置</button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {/* 1. 法蘭尺寸 */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-2 block font-bold uppercase">1. 出風口法蘭尺寸 (cm)</label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-2 text-[10px] text-gray-500 uppercase">寬 Width</span>
+                                        <input type="number" value={flangeW} onChange={e=>setState(p=>({...p, flangeW:e.target.value}))} className="w-full pt-6 pb-2 px-3 bg-industrial-900 border border-industrial-600 rounded text-center text-white text-xl font-mono" placeholder="0" />
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-2 text-[10px] text-gray-500 uppercase">高 Height</span>
+                                        <input type="number" value={flangeH} onChange={e=>setState(p=>({...p, flangeH:e.target.value}))} className="w-full pt-6 pb-2 px-3 bg-industrial-900 border border-industrial-600 rounded text-center text-white text-xl font-mono" placeholder="0" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 2. 空間類型 */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-2 block font-bold uppercase">2. 空間類型條件</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'long', l: '長距離', desc: '送風遠' },
+                                        { id: 'narrow', l: '窄空間', desc: '風道深' },
+                                        { id: 'square', l: '方形空間', desc: '範圍廣' }
+                                    ].map(t => (
+                                        <button key={t.id} onClick={()=>setState(p=>({...p, spaceType:t.id}))} className={`p-2 rounded border transition ${spaceType===t.id ? 'bg-blue-600 border-blue-400 text-white' : 'bg-industrial-900 border-industrial-700 text-gray-400'}`}>
+                                            <div className="text-xs font-bold">{t.l}</div>
+                                            <div className="text-[10px] opacity-60">{t.desc}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 3. 位置選擇 (圖形化按鈕) */}
+                            <div>
+                                <label className="text-xs text-gray-500 mb-2 block font-bold uppercase">3. 主機於空間位置</label>
+                                <div className="bg-industrial-950 p-4 rounded-lg flex justify-center">
+                                    <div className="grid grid-cols-3 gap-2 w-48">
+                                        {[...Array(9)].map((_, i) => (
+                                            <button 
+                                                key={i} 
+                                                onClick={() => setState(p => ({ ...p, unitPos: i }))}
+                                                className={`grid-pos-btn ${unitPos === i ? 'active' : 'bg-industrial-900'}`}
+                                            >
+                                                {i === 4 ? <i data-lucide="air-vent" className="w-4 h-4"></i> : null}
+                                                {unitPos === i && i !== 4 ? <i data-lucide="check" className="w-4 h-4"></i> : null}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="text-[10px] text-center text-gray-500 mt-2">點選方格代表主機位置</div>
+                            </div>
+
+                            <button onClick={calculate} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                                <i data-lucide="zap" className="w-5 h-5"></i> 開始計算配置
+                            </button>
+                        </div>
+                    </div>
+
+                    {result && (
+                        <div className="bg-industrial-900 rounded-xl p-5 border border-blue-600/50 animate-slide-up relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-full h-1 bg-blue-600"></div>
+                             <div className="grid grid-cols-2 gap-4">
+                                 <div className="text-center border-r border-industrial-700">
+                                     <div className="text-gray-500 text-[10px] mb-1">建議孔數</div>
+                                     <div className="text-4xl font-mono font-bold text-white">{result.holeQty} <span className="text-xs text-blue-500">孔</span></div>
+                                 </div>
+                                 <div className="text-center">
+                                     <div className="text-gray-500 text-[10px] mb-1">建議孔徑</div>
+                                     <div className="text-4xl font-mono font-bold text-white">{result.holeSize}<span className="text-xs text-blue-500">"</span></div>
+                                 </div>
+                                 <div className="col-span-2 bg-industrial-800 p-3 rounded text-xs leading-relaxed">
+                                     <div className="flex items-center gap-2 text-blue-400 font-bold mb-1">
+                                         <i data-lucide="info" className="w-3 h-3"></i> 師傅施工建議：
+                                     </div>
+                                     <div>- {result.plenumType}</div>
+                                     <div className="mt-1 text-gray-300 italic">{result.airflowNote || "建議採用 8" 以上配置以維持出風效能。"}</div>
+                                 </div>
+                             </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- 其他元件 (複用先前邏輯並優化) ---
         function CapacityCalculator({ state, setState, addToHistory }) {
             const { unit, length, width, ping, conditions, result } = state;
-
             useEffect(() => {
                 const l = parseFloat(length) || 0, w = parseFloat(width) || 0;
                 let areaM2 = unit === 'm' ? l * w : (l / 100) * (w / 100);
                 setState(prev => ({ ...prev, ping: (areaM2 * 0.3025).toFixed(1) }));
             }, [length, width, unit]);
-
             const calculate = () => {
                 if(ping <= 0) return alert('請輸入有效長寬');
                 let baseKcal = 450, multiplier = 1.0, conditionList = [];
@@ -369,28 +508,17 @@
                 setState(prev => ({ ...prev, result: { kw, tons } }));
                 addToHistory(`負載計算: ${ping}坪 / 需 ${kw} KW`, 'capacity', { ping, conditions: conditionList, kw, tons });
             };
-
-            const reset = () => {
-                setState({ unit: 'm', length: '', width: '', ping: 0, conditions: { westSun: false, allDaySun: false, topFloor: false, highCeiling: false, ironSheet: false, blackIron: false }, result: null });
-            };
-
+            const reset = () => setState({ unit: 'm', length: '', width: '', ping: 0, conditions: { westSun: false, allDaySun: false, topFloor: false, highCeiling: false, ironSheet: false, blackIron: false }, result: null });
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-yellow-400"><i data-lucide="ruler" className="w-5 h-5"></i> 空間負載試算</h2>
-                            <button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded hover:bg-industrial-600 transition">重置</button>
-                        </div>
-                        <div className="flex bg-industrial-900 rounded-lg p-1 mb-4">
-                            {['m', 'cm'].map(u => <button key={u} onClick={() => setState(p=>({...p, unit:u}))} className={`flex-1 py-1 text-sm rounded transition ${unit===u ? 'bg-industrial-700 text-white' : 'text-gray-500'}`}>{u === 'm' ? '公尺' : '公分'}</button>)}
-                        </div>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold flex items-center gap-2 text-yellow-400"><i data-lucide="ruler"></i> 空間負載試算</h2><button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded">重置</button></div>
+                        <div className="flex bg-industrial-900 rounded-lg p-1 mb-4">{['m', 'cm'].map(u => <button key={u} onClick={() => setState(p=>({...p, unit:u}))} className={`flex-1 py-1 text-sm rounded transition ${unit===u ? 'bg-industrial-700 text-white' : 'text-gray-500'}`}>{u === 'm' ? '公尺' : '公分'}</button>)}</div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <input type="number" value={length} onChange={e=>setState(p=>({...p, length:e.target.value}))} placeholder="長度" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
                             <input type="number" value={width} onChange={e=>setState(p=>({...p, width:e.target.value}))} placeholder="寬度" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
                         </div>
-                        <div className="text-center mb-6 py-2 bg-industrial-900/50 rounded border border-industrial-700/50">
-                            <div className="text-3xl font-mono font-bold text-white">{ping} <span className="text-sm text-gray-500">坪</span></div>
-                        </div>
+                        <div className="text-center mb-6 py-2 bg-industrial-900/50 rounded border border-industrial-700/50"><div className="text-3xl font-mono font-bold text-white">{ping} <span className="text-sm text-gray-500">坪</span></div></div>
                         <div className="grid grid-cols-2 gap-2 mb-6">
                             {Object.entries({ westSun:'🌞 西曬', allDaySun:'☀️ 白天日曬', topFloor:'🏠 頂樓/平房', highCeiling:'📏 挑高(>3m)', ironSheet:'🏭 鐵皮屋', blackIron:'🔥 黑色鐵皮' }).map(([k, l]) => (
                                 <label key={k} className={`flex items-center space-x-2 bg-industrial-900 p-2 rounded border border-industrial-700 cursor-pointer ${k === 'ironSheet' && conditions.blackIron ? 'opacity-30' : ''}`}>
@@ -399,28 +527,16 @@
                                         if (k === 'blackIron' && newState.blackIron) newState.ironSheet = false;
                                         if (k === 'ironSheet' && newState.ironSheet) newState.blackIron = false;
                                         setState(p=>({...p, conditions: newState}));
-                                    }} disabled={k === 'ironSheet' && conditions.blackIron} className="rounded text-industrial-accent" />
-                                    <span className="text-[10px]">{l}</span>
+                                    }} disabled={k === 'ironSheet' && conditions.blackIron} className="rounded text-industrial-accent" /><span className="text-[10px]">{l}</span>
                                 </label>
                             ))}
                         </div>
                         <button onClick={calculate} className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg">計算冷房能力</button>
                     </div>
-                    {result && (
-                        <div className="bg-industrial-900 rounded-lg p-5 border border-yellow-600/50 text-center animate-slide-up relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-1 bg-yellow-600"></div>
-                             <div className="flex justify-center items-end gap-4">
-                                 <div><div className="text-4xl font-bold text-white font-mono">{result.kw}</div><div className="text-xs text-yellow-500">KW</div></div>
-                                 <div className="text-gray-500 pb-2">/</div>
-                                 <div><div className="text-2xl font-bold text-white font-mono">{result.tons}</div><div className="text-xs text-yellow-500">頓</div></div>
-                             </div>
-                        </div>
-                    )}
                 </div>
             );
         }
 
-        // --- 冷媒計算機元件 ---
         function RefrigerantCalculator({ state, setState, addToHistory }) {
             const { baseLen, totalLen, gramPerMeter, result } = state;
             const calculate = () => {
@@ -431,45 +547,21 @@
                 addToHistory(`冷媒計算: 需補 ${addAmount}g`, 'calc', { baseLen, totalLen: total, result: addAmount });
             };
             const reset = () => setState({ baseLen: 5, totalLen: '', gramPerMeter: 20, result: null });
-
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-lg font-bold text-green-400 flex items-center gap-2"><i data-lucide="scale" className="w-5 h-5"></i> 冷媒補充量計算</h2>
-                            <button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded hover:bg-industrial-600 transition">重置</button>
-                        </div>
+                        <div className="flex justify-between items-center mb-6"><h2 className="text-lg font-bold text-green-400 flex items-center gap-2"><i data-lucide="scale"></i> 冷媒補充量計算</h2><button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded">重置</button></div>
                         <div className="space-y-4">
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">原廠基準長度 (m)</label>
-                                <div className="flex gap-2">
-                                    {[5, 8].map(l => <button key={l} onClick={()=>setState(p=>({...p, baseLen:l}))} className={`flex-1 py-2 rounded text-sm font-bold border ${baseLen===l ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{l}m</button>)}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">每米補充量 (g/m)</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[15, 20, 30].map(v => <button key={v} onClick={()=>setState(p=>({...p, gramPerMeter:v}))} className={`py-2 rounded text-sm font-bold border ${gramPerMeter===v ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{v}g</button>)}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-xs text-gray-500 mb-1 block">實際管長 (m)</label>
-                                <input type="number" value={totalLen} onChange={e=>setState(p=>({...p, totalLen:e.target.value}))} className="w-full text-2xl py-3 px-4 bg-industrial-900 border-2 border-industrial-600 focus:border-green-500 rounded-lg text-center" />
-                            </div>
-                            <button onClick={calculate} className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg shadow-lg transition flex items-center justify-center gap-2"><i data-lucide="calculator" className="w-5 h-5"></i> 開始計算</button>
+                            <div><label className="text-xs text-gray-500 mb-1 block">原廠基準長度 (m)</label><div className="flex gap-2">{[5, 8].map(l => <button key={l} onClick={()=>setState(p=>({...p, baseLen:l}))} className={`flex-1 py-2 rounded text-sm font-bold border ${baseLen===l ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{l}m</button>)}</div></div>
+                            <div><label className="text-xs text-gray-500 mb-1 block">每米補充量 (g/m)</label><div className="grid grid-cols-3 gap-2">{[15, 20, 30].map(v => <button key={v} onClick={()=>setState(p=>({...p, gramPerMeter:v}))} className={`py-2 rounded text-sm font-bold border ${gramPerMeter===v ? 'bg-green-600 border-green-500 text-white' : 'bg-industrial-900 border-industrial-600 text-gray-400'}`}>{v}g</button>)}</div></div>
+                            <div><label className="text-xs text-gray-500 mb-1 block">實際管長 (m)</label><input type="number" value={totalLen} onChange={e=>setState(p=>({...p, totalLen:e.target.value}))} className="w-full text-2xl py-3 px-4 bg-industrial-900 border-2 border-industrial-600 focus:border-green-500 rounded-lg text-center" /></div>
+                            <button onClick={calculate} className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2"><i data-lucide="calculator"></i> 開始計算</button>
                         </div>
-                        {result !== null && (
-                            <div className="mt-6 bg-industrial-900 rounded-lg p-4 border border-industrial-600 text-center animate-bounce-in">
-                                <span className="block text-gray-500 text-xs mb-1">需補充冷媒量</span>
-                                <div className="text-4xl font-mono font-bold text-green-400">{result} g</div>
-                            </div>
-                        )}
                     </div>
                 </div>
             );
         }
 
-        // --- 降溫時間估算元件 ---
         function CoolingTimeCalculator({ state, setState, addToHistory }) {
             const { ping, height, currentTemp, targetTemp, acKw, minutes } = state;
             const calculate = () => {
@@ -481,31 +573,16 @@
                 addToHistory(`降溫估算: ${p}坪 / 約 ${timeMinutes} 分鐘`, 'cooling', { ping: p, height: h, currentTemp, targetTemp, acKw: kw, minutes: timeMinutes });
             };
             const reset = () => setState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null });
-
             return (
                 <div className="animate-fade-in space-y-4">
                     <div className="bg-industrial-800 rounded-xl p-6 border border-industrial-700 shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-purple-400"><i data-lucide="thermometer" className="w-5 h-5"></i> 降溫時間估算</h2>
-                            <button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded hover:bg-industrial-600 transition">重置</button>
-                        </div>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-lg font-bold flex items-center gap-2 text-purple-400"><i data-lucide="thermometer"></i> 降溫時間估算</h2><button onClick={reset} className="text-xs bg-industrial-700 px-2 py-1 rounded">重置</button></div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <input type="number" value={ping} onChange={e=>setState(p=>({...p, ping:e.target.value}))} placeholder="坪數" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" />
                             <input type="number" value={height} onChange={e=>setState(p=>({...p, height:e.target.value}))} placeholder="高度(m)" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-white" step="0.1" />
                         </div>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <input type="number" value={currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} placeholder="室溫" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-red-300" />
-                            <input type="number" value={targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} placeholder="目標" className="bg-industrial-900 border border-industrial-600 rounded p-2 text-center text-blue-300" />
-                        </div>
-                        <input type="number" value={acKw} onChange={e=>setState(p=>({...p, acKw:e.target.value}))} placeholder="冷氣能力 (KW)" className="w-full bg-industrial-900 border border-industrial-600 rounded p-3 text-center text-white font-bold mb-6" />
                         <button onClick={calculate} className="w-full py-3 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg shadow-lg">開始模擬計算</button>
                     </div>
-                    {minutes !== null && (
-                        <div className="bg-industrial-900 rounded-lg p-5 border border-purple-500/50 text-center animate-slide-up relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                             <div className="text-4xl font-bold text-white font-mono mb-1">{minutes} <span className="text-sm font-sans font-normal text-gray-400">分鐘</span></div>
-                        </div>
-                    )}
                 </div>
             );
         }
@@ -513,7 +590,7 @@
         function NavButton({ active, onClick, icon, label }) {
             return (
                 <button onClick={onClick} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${active ? 'text-industrial-accent' : 'text-gray-500 hover:text-gray-300'}`}>
-                    <i data-lucide={icon} className={`w-6 h-6 mb-1 ${active ? 'fill-current/20' : ''}`}></i>
+                    <i data-lucide={icon} className={`w-5 h-5 mb-1 ${active ? 'fill-current/20' : ''}`}></i>
                     <span className="text-[10px] font-bold">{label}</span>
                 </button>
             );
