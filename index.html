@@ -133,22 +133,14 @@
             const [history, setHistory] = useState([]);
             const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
 
-            // --- 狀態持久化 (Lifting State Up) ---
-            
-            // 搜尋狀態
+            // --- 狀態持久化 ---
             const [searchState, setSearchState] = useState({ term: '', results: [] });
-            
-            // 負載計算狀態
             const [capacityState, setCapacityState] = useState({
                 unit: 'm', length: '', width: '', ping: 0,
                 conditions: { westSun: false, allDaySun: false, topFloor: false, highCeiling: false, ironSheet: false, blackIron: false },
                 result: null
             });
-
-            // 冷媒計算狀態
             const [refrigerantState, setRefrigerantState] = useState({ baseLen: 5, totalLen: '', gramPerMeter: 20, result: null });
-
-            // 降溫估算狀態
             const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null });
 
             useEffect(() => {
@@ -174,12 +166,6 @@
                 }
             };
 
-            const renderHistoryIcon = (type) => {
-                const icons = { calc: 'calculator', search: 'search', capacity: 'ruler', cooling: 'thermometer' };
-                const colors = { calc: 'text-green-400', search: 'text-blue-400', capacity: 'text-yellow-400', cooling: 'text-purple-400' };
-                return <i data-lucide={icons[type] || 'file'} className={`${colors[type] || 'text-gray-400'} w-5 h-5`}></i>;
-            };
-
             return (
                 <div className="min-h-screen flex flex-col font-sans">
                     <header className="bg-industrial-900 border-b border-industrial-700 sticky top-0 z-50">
@@ -188,15 +174,15 @@
                                 <i data-lucide="wrench" className="text-industrial-accent w-6 h-6"></i>
                                 <h1 className="text-xl font-bold tracking-wider">龍神<span className="text-industrial-accent">空調</span>幫手</h1>
                             </div>
-                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">V1.3</div>
+                            <div className="text-xs text-industrial-600 font-mono border border-industrial-700 px-2 py-1 rounded">V1.4</div>
                         </div>
                     </header>
 
                     <main className="flex-1 max-w-md mx-auto w-full p-4 pb-24 relative">
                         {activeTab === 'search' && (
                             <div className="animate-fade-in">
-                                <div className="relative mb-6 flex gap-2">
-                                    <div className="relative flex-1">
+                                <div className="relative mb-6">
+                                    <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i data-lucide="search" className="text-gray-400 w-5 h-5"></i>
                                         </div>
@@ -225,12 +211,6 @@
                                             </button>
                                         )}
                                     </div>
-                                    <button 
-                                        onClick={() => setSearchState({ term: '', results: [] })}
-                                        className="px-3 bg-industrial-700 hover:bg-industrial-600 rounded-lg text-xs font-bold transition flex items-center gap-1"
-                                    >
-                                        重置
-                                    </button>
                                 </div>
                                 <div className="space-y-4">
                                     {searchState.term && searchState.results.length === 0 ? (
@@ -307,13 +287,13 @@
                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedHistoryItem(null)}></div>
                                 <div className="bg-industrial-900 w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-industrial-700 shadow-2xl overflow-hidden transform animate-slide-up flex flex-col max-h-[85vh]">
                                     <div className="p-4 border-b border-industrial-700 flex justify-between items-center bg-industrial-800">
-                                        <h3 className="text-lg font-bold flex items-center gap-2">歷史細節</h3>
+                                        <h3 className="text-lg font-bold">歷史細節</h3>
                                         <button onClick={() => setSelectedHistoryItem(null)} className="p-1 rounded-full hover:bg-industrial-700 text-gray-400 hover:text-white">
                                             <i data-lucide="x" className="w-6 h-6"></i>
                                         </button>
                                     </div>
                                     <div className="p-5 overflow-y-auto text-sm">
-                                        <div className="mb-4 text-xs text-gray-500">記錄時間: {selectedHistoryItem.date}</div>
+                                        <div className="mb-4 text-xs text-gray-500 tracking-tight">紀錄時間: {selectedHistoryItem.date}</div>
                                         {selectedHistoryItem.type === 'search' && selectedHistoryItem.data?.results?.map(item => <ResultCard key={item.id} item={item} />)}
                                         {selectedHistoryItem.type === 'calc' && (
                                             <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
@@ -331,8 +311,16 @@
                                             </div>
                                         )}
                                         {selectedHistoryItem.type === 'cooling' && (
-                                            <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
-                                                <div className="text-3xl font-mono font-bold text-purple-400">{selectedHistoryItem.data?.minutes} 分鐘</div>
+                                            <div className="space-y-4">
+                                                <div className="bg-industrial-800 p-4 rounded-lg border border-industrial-700 text-center">
+                                                    <div className="text-3xl font-mono font-bold text-purple-400">{selectedHistoryItem.data?.minutes} 分鐘</div>
+                                                    <div className="text-xs text-gray-500 mt-2">空間: {selectedHistoryItem.data?.ping} 坪 / 高度: {selectedHistoryItem.data?.height}m</div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div className="bg-industrial-950 p-2 rounded">目前室溫: {selectedHistoryItem.data?.currentTemp}°C</div>
+                                                    <div className="bg-industrial-950 p-2 rounded">目標溫度: {selectedHistoryItem.data?.targetTemp}°C</div>
+                                                    <div className="col-span-2 bg-industrial-950 p-2 rounded text-center">冷氣能力: {selectedHistoryItem.data?.acKw} KW</div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -490,7 +478,7 @@
                 const totalLoadKJ = (p * 3.3058 * h) * 1.2 * 1.005 * dt * 10;
                 const timeMinutes = Math.round((totalLoadKJ / kw) / 60);
                 setState(p=>({...p, minutes: timeMinutes}));
-                addToHistory(`降溫估算: 約 ${timeMinutes} 分鐘`, 'cooling', { ping: p, minutes: timeMinutes });
+                addToHistory(`降溫估算: ${p}坪 / 約 ${timeMinutes} 分鐘`, 'cooling', { ping: p, height: h, currentTemp, targetTemp, acKw: kw, minutes: timeMinutes });
             };
             const reset = () => setState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null });
 
