@@ -109,6 +109,203 @@ const AC_DATABASE = [
         odu: { dims: '560×730×290', weight: '31.0', power: '220V', currentCool: '2.5A', currentHeat: 'N/A', currentMax: '8.5A', powerWire: '2.0mm²', signalWire: '2.0mm² (3芯)', footSpacing: '510×312.5' }, 
         idu: { dims: '295×810×250', weight: '9.0', airflow: '凍結洗淨', noise: '43/33/25/20' } 
     },
-    // ================= 大金 Daikin =================
+    // ================= 大金 Daikin (2026 最新收錄) =================
     { id: 'daikin-y-22', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', modelIdu: 'FTXM22YVLT', modelOdu: 'RXM22YVLT', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2, pipes: '2分(6.35) / 3分(9.52)', cspf: '7.6', odu: { dims: '595×845×300', weight: '36.0', power: '220V', currentCool: '1.8A', currentHeat: '2.0A', currentMax: '8.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '550x330' }, idu: { dims: '295×798×272', weight: '10.0', airflow: '閃流放電', noise: '40/32/24/19' } },
+    { 
+        id: 'daikin-z-28', brandCN: '大金', series: '橫綱Z系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.8,
+        modelIdu: 'FTXM28ZVLT', modelOdu: 'RXM28ZVLT',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '7.45',
+        odu: { dims: '595×845×300', weight: '38.0', power: '220V', currentCool: '2.2A', currentHeat: '2.5A', currentMax: '9.5A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '550x330' },
+        idu: { dims: '295×798×272', weight: '11.0', airflow: '康達氣流/閃流放電', noise: '41/33/25/19' }
+    },
+    { 
+        id: 'daikin-z-36', brandCN: '大金', series: '橫綱Z系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.5,
+        modelIdu: 'FTXM36ZVLT', modelOdu: 'RXM36ZVLT',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '7.12',
+        odu: { dims: '595×845×300', weight: '38.0', power: '220V', currentCool: '3.0A', currentHeat: '3.2A', currentMax: '11.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '550x330' },
+        idu: { dims: '295×798×272', weight: '11.0', airflow: '康達氣流/閃流放電', noise: '42/34/26/19' }
+    },
+    { 
+        id: 'daikin-u-22', brandCN: '大金', series: '大關U系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2,
+        modelIdu: 'FTXV22UVLT', modelOdu: 'RXV22UVLT',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '6.30',
+        odu: { dims: '550×675×284', weight: '28.0', power: '220V', currentCool: '2.2A', currentHeat: '2.4A', currentMax: '7.5A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '550x330' },
+        idu: { dims: '285×770×226', weight: '9.0', airflow: '3D氣流/智慧眼', noise: '40/32/24/19' }
+    },
+    { 
+        id: 'daikin-u-50', brandCN: '大金', series: '大關U系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 5.0,
+        modelIdu: 'FTXV50UVLT', modelOdu: 'RXV50UVLT',
+        pipes: '2分(6.35) / 4分(12.70)', cspf: '5.50',
+        odu: { dims: '695×930×350', weight: '45.0', power: '220V', currentCool: '6.2A', currentHeat: '6.8A', currentMax: '15.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '630x370' },
+        idu: { dims: '295×990×263', weight: '13.0', airflow: '3D氣流/智慧眼', noise: '46/38/30/23' }
+    },
+
+    // ================= 富士通 Fujitsu (General) KG系列 (優級/美型) =================
+    {
+        id: 'fujitsu-kg-22', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2,
+        modelIdu: 'ASCG022KGTA', modelOdu: 'AOCG022KGTA',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '6.53',
+        odu: { dims: '542×799×290', weight: '30.0', power: '220V', currentCool: '2.5A', currentHeat: '3.0A', currentMax: '9.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×215', weight: '10.0', airflow: 'Hybrid氣流/智慧眼', noise: '38/32/25/19' }
+    },
+    {
+        id: 'fujitsu-kg-28', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.8,
+        modelIdu: 'ASCG028KGTA', modelOdu: 'AOCG028KGTA',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '6.23',
+        odu: { dims: '542×799×290', weight: '30.0', power: '220V', currentCool: '3.4A', currentHeat: '4.2A', currentMax: '10.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×215', weight: '10.0', airflow: 'Hybrid氣流/智慧眼', noise: '40/34/26/19' }
+    },
+    {
+        id: 'fujitsu-kg-36', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.6,
+        modelIdu: 'ASCG036KGTA', modelOdu: 'AOCG036KGTA',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '6.01',
+        odu: { dims: '542×799×290', weight: '32.0', power: '220V', currentCool: '4.5A', currentHeat: '5.0A', currentMax: '13.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×215', weight: '10.0', airflow: 'Hybrid氣流/智慧眼', noise: '42/36/28/20' }
+    },
+    {
+        id: 'fujitsu-kg-40', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 4.1,
+        modelIdu: 'ASCG040KGTA', modelOdu: 'AOCG040KGTA',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '5.85',
+        odu: { dims: '542×799×290', weight: '33.0', power: '220V', currentCool: '5.5A', currentHeat: '6.0A', currentMax: '14.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×215', weight: '10.0', airflow: 'Hybrid氣流/智慧眼', noise: '43/38/30/21' }
+    },
+    {
+        id: 'fujitsu-kg-50', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 5.0,
+        modelIdu: 'ASCG050KGTA', modelOdu: 'AOCG050KGTA',
+        pipes: '2分(6.35) / 4分(12.70)',
+        cspf: '5.60',
+        odu: { dims: '632×799×290', weight: '38.0', power: '220V', currentCool: '6.0A', currentHeat: '6.2A', currentMax: '15.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '280×980×240', weight: '12.5', airflow: 'Hybrid氣流/智慧眼/大型機', noise: '45/40/32/22' }
+    },
+    {
+        id: 'fujitsu-kg-63', brandCN: '富士通', series: '優級KG系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 6.3,
+        modelIdu: 'ASCG063KGTA', modelOdu: 'AOCG063KGTA',
+        pipes: '2分(6.35) / 4分(12.70)',
+        cspf: '5.33',
+        odu: { dims: '632×799×290', weight: '40.0', power: '220V', currentCool: '8.2A', currentHeat: '8.8A', currentMax: '18.0A', powerWire: '5.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '280×980×240', weight: '13.0', airflow: 'Hybrid氣流/智慧眼/大型機', noise: '47/42/35/24' }
+    },
+
+    // ================= 富士通 Fujitsu (General) KM系列 (高級/標準) =================
+    {
+        id: 'fujitsu-km-22', brandCN: '富士通', series: '高級KM系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2,
+        modelIdu: 'ASCG022KMTC', modelOdu: 'AOCG022KMTC',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '6.20',
+        odu: { dims: '541×663×290', weight: '24.0', power: '220V', currentCool: '2.8A', currentHeat: '3.2A', currentMax: '9.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×222', weight: '10.0', airflow: '舒適氣流', noise: '40/34/28/20' }
+    },
+    {
+        id: 'fujitsu-km-28', brandCN: '富士通', series: '高級KM系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.8,
+        modelIdu: 'ASCG028KMTC', modelOdu: 'AOCG028KMTC',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '6.05',
+        odu: { dims: '541×663×290', weight: '25.0', power: '220V', currentCool: '3.6A', currentHeat: '4.0A', currentMax: '10.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×222', weight: '10.0', airflow: '舒適氣流', noise: '42/36/30/21' }
+    },
+    {
+        id: 'fujitsu-km-40', brandCN: '富士通', series: '高級KM系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 4.1,
+        modelIdu: 'ASCG040KMTC', modelOdu: 'AOCG040KMTC',
+        pipes: '2分(6.35) / 3分(9.52)',
+        cspf: '5.65',
+        odu: { dims: '542×799×290', weight: '33.0', power: '220V', currentCool: '5.8A', currentHeat: '6.2A', currentMax: '14.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: { dims: '270×834×222', weight: '10.0', airflow: '舒適氣流', noise: '44/38/32/22' }
+    },
+
+    // ================= 富士通 Fujitsu 多聯式室外機 (R32) =================
+    {
+        id: 'fujitsu-multi-50', brandCN: '富士通', series: '多聯系列', func: '冷暖', type: '室外機(一對多)', refrigerant: 'R32', isMulti: true, maxKw: 5.0, maxIdus: 2,
+        modelIdu: '請搭配多聯內機', modelOdu: 'AOCG050KBCA2',
+        pipes: '依內機配置',
+        cspf: '5.6 (依組合)',
+        odu: { dims: '632×799×290', weight: '37.0', power: '220V', currentCool: '6.2A', currentHeat: '6.5A', currentMax: '15.0A', powerWire: '3.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: null
+    },
+    {
+        id: 'fujitsu-multi-84', brandCN: '富士通', series: '多聯系列', func: '冷暖', type: '室外機(一對多)', refrigerant: 'R32', isMulti: true, maxKw: 8.4, maxIdus: 4,
+        modelIdu: '請搭配多聯內機', modelOdu: 'AOCG084KBTA4',
+        pipes: '依內機配置',
+        cspf: '5.2 (依組合)',
+        odu: { dims: '884×820×315', weight: '60.0', power: '220V', currentCool: '10.5A', currentHeat: '11.0A', currentMax: '25.0A', powerWire: '5.5mm²', signalWire: '2.0mm² (4芯)', footSpacing: '580×330' },
+        idu: null
+    },
+
+    // ================= Panasonic 國際牌 (2026 最新收錄) =================
+    // 特色：AI PLUS 史上最省電、nanoe X、IOT
+    {
+        id: 'panasonic-rx-22', brandCN: '國際牌', series: 'RX系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2,
+        modelIdu: 'CS-RX22NA2', modelOdu: 'CU-RX22NHA2',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '8.30',
+        odu: { dims: '542×780×289', weight: '30.0', power: '220V', currentCool: '2.0A', currentHeat: '2.3A', currentMax: '8.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '540x330' },
+        idu: { dims: '295×798×235', weight: '10.0', airflow: 'AI控頻/nanoeX', noise: '38/30/22/19' }
+    },
+    {
+        id: 'panasonic-rx-36', brandCN: '國際牌', series: 'RX系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.6,
+        modelIdu: 'CS-RX36NA2', modelOdu: 'CU-RX36NHA2',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '7.65',
+        odu: { dims: '542×780×289', weight: '33.0', power: '220V', currentCool: '3.5A', currentHeat: '3.8A', currentMax: '11.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '540x330' },
+        idu: { dims: '295×798×235', weight: '11.0', airflow: 'AI控頻/nanoeX', noise: '42/34/26/20' }
+    },
+    {
+        id: 'panasonic-qx-28', brandCN: '國際牌', series: 'QX系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.8,
+        modelIdu: 'CS-QX28NA2', modelOdu: 'CU-QX28NHA2',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '6.80',
+        odu: { dims: '542×780×289', weight: '31.0', power: '220V', currentCool: '2.8A', currentHeat: '3.1A', currentMax: '9.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '540x330' },
+        idu: { dims: '295×798×235', weight: '10.0', airflow: 'nanoeX/自體淨', noise: '40/32/24/20' }
+    },
+
+    // ================= 三菱重工 Mitsubishi Heavy (2025 最新收錄) =================
+    // 特色：航太級技術、噴射氣流
+    {
+        id: 'mhi-zsxt-25', brandCN: '三菱重工', series: '未來系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.5,
+        modelIdu: 'SRK25ZSXT-W', modelOdu: 'SRC25ZSXT-W',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '7.80',
+        odu: { dims: '595×780×290', weight: '35.0', power: '220V', currentCool: '2.1A', currentHeat: '2.4A', currentMax: '9.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '510x312.5' },
+        idu: { dims: '305×920×220', weight: '13.0', airflow: '噴射氣流/智慧眼', noise: '39/30/23/19' }
+    },
+    {
+        id: 'mhi-zst-35', brandCN: '三菱重工', series: '晴空系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.5,
+        modelIdu: 'SRK35ZST-W', modelOdu: 'SRC35ZST-W',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '6.10',
+        odu: { dims: '540×780×290', weight: '33.0', power: '220V', currentCool: '3.8A', currentHeat: '4.2A', currentMax: '12.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '510x312.5' },
+        idu: { dims: '290×870×230', weight: '10.0', airflow: '噴射氣流', noise: '41/33/26/22' }
+    },
+
+    // ================= 華菱 Hawrin (2025 最新收錄) =================
+    // 特色：易拆洗、台灣在地化
+    {
+        id: 'hawrin-dt-22', brandCN: '華菱', series: '易拆洗系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.3,
+        modelIdu: 'HP-22KA', modelOdu: 'HPC-22KA',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '6.00',
+        odu: { dims: '555×770×300', weight: '28.0', power: '220V', currentCool: '2.5A', currentHeat: '2.8A', currentMax: '8.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '500x320' },
+        idu: { dims: '295×800×210', weight: '9.0', airflow: '易拆洗結構', noise: '40/34/28/22' }
+    },
+    {
+        id: 'hawrin-dt-36', brandCN: '華菱', series: '易拆洗系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.6,
+        modelIdu: 'HP-36KA', modelOdu: 'HPC-36KA',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '5.80',
+        odu: { dims: '555×770×300', weight: '32.0', power: '220V', currentCool: '4.0A', currentHeat: '4.5A', currentMax: '11.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (4芯)', footSpacing: '500x320' },
+        idu: { dims: '295×800×210', weight: '10.0', airflow: '易拆洗結構', noise: '42/36/30/24' }
+    },
+
+    // ================= 日立 Hitachi 旗艦系列 (NT) (2025 最新收錄) =================
+    // 特色：凍結洗淨、風扇自動清
+    {
+        id: 'hitachi-nt-22', brandCN: '日立', series: '旗艦系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 2.2,
+        modelIdu: 'RAS-22NT', modelOdu: 'RAC-22NP', // 註: NT通常搭配NP/NK室外機
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '7.40',
+        odu: { dims: '560×730×290', weight: '32.0', power: '220V', currentCool: '2.4A', currentHeat: '2.8A', currentMax: '9.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (3芯)', footSpacing: '510×312.5' },
+        idu: { dims: '295×810×250', weight: '9.0', airflow: '凍結洗淨/風扇自動清', noise: '43/33/25/19' }
+    },
+    {
+        id: 'hitachi-nt-36', brandCN: '日立', series: '旗艦系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', isMulti: false, maxKw: 3.6,
+        modelIdu: 'RAS-36NT', modelOdu: 'RAC-36NP',
+        pipes: '2分(6.35) / 3分(9.52)', cspf: '6.70',
+        odu: { dims: '560×730×290', weight: '35.0', power: '220V', currentCool: '4.0A', currentHeat: '4.5A', currentMax: '13.0A', powerWire: '2.0mm²', signalWire: '2.0mm² (3芯)', footSpacing: '510×312.5' },
+        idu: { dims: '295×810×250', weight: '10.0', airflow: '凍結洗淨/風扇自動清', noise: '46/38/29/25' }
+    }
 ];
