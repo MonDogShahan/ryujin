@@ -1,0 +1,619 @@
+// 檢查資料庫是否成功載入
+if (typeof AC_DATABASE === 'undefined') {
+    console.error('Error: database.js not loaded!');
+    alert('資料庫載入失敗，請確認 database.js 是否在同一目錄下。');
+}
+
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// --- 基礎元件 ---
+const Icon = ({ name, className = "w-4 h-4" }) => {
+    const icons = {
+        menu: <><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></>,
+        wrench: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />,
+        search: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
+        ruler: <path d="M21.3 15.3 16 10l-4.9 4.9-5.3-5.3-1.4 1.4 5.3 5.3L5.4 21l-1.4-1.4 4.6-4.6L2.7 9.7l1.4-1.4 4.6 4.6L12.1 9l1.4 1.4-4.6 4.6 4.6 4.6 5.3-5.3 1.4 1.4-5.3 5.3 1.4 1.4Z" />,
+        calculator: <><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" /></>,
+        box: <><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></>,
+        history: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></>,
+        x: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
+        check: <path d="M20 6 9 17l-5-5" />,
+        zap: <path d="M4 14.5 14 3 12.5 9.5H20L10 21l1.5-6.5H4Z" />,
+        trash: <><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></>,
+        "circle-dot": <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></>,
+        "chevron-right": <path d="m9 18 6-6-6-6" />,
+        "wind": <><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" /><path d="M9.6 4.6A2 2 0 1 1 11 8H2" /><path d="M12.6 19.4A2 2 0 1 0 14 16H2" /></>,
+        "git-merge": <><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></>,
+        "plus": <><path d="M5 12h14"/><path d="M12 5v14"/></>,
+        "thermometer": <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />,
+        sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41-1.41" /><path d="m19.07 4.93-1.41 1.41" /></>,
+        snowflake: <><line x1="2" x2="22" y1="12" y2="12" /><line x1="12" x2="12" y1="2" y2="22" /><path d="m20 16-4-4 4-4" /><path d="m4 8 4 4-4 4" /><path d="m16 4-4 4-4-4" /><path d="m8 20 4-4 4 4" /></>,
+        "eye": <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>
+    };
+    return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name] || null}</svg>;
+};
+
+const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
+
+// --- 2. 各個功能子元件 ---
+
+const SpecModal = ({ group, onClose }) => {
+    if (!group || !group.variants) return null;
+    const [selectedVariant, setSelectedVariant] = useState(group.variants[0]);
+    
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-2 animate-fade-in">
+            <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose}></div>
+            <div className="bg-industrial-900 w-full max-w-2xl h-[90vh] rounded-xl border border-industrial-700 shadow-2xl flex flex-col relative z-10 overflow-hidden animate-zoom-in">
+                <div className="bg-industrial-800 p-4 border-b border-industrial-700 flex justify-between items-center shrink-0">
+                    <div>
+                        <h3 className="text-xl font-bold text-white tracking-wide">{group.brandCN} {group.series}</h3>
+                        <div className="flex gap-2 mt-1 flex-wrap">
+                            {group.variants.map((v, idx) => (
+                                <button key={idx} onClick={() => setSelectedVariant(v)} className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${selectedVariant === v ? 'bg-industrial-700 text-white border-industrial-500' : 'bg-transparent text-gray-500 border-transparent hover:bg-industrial-800'}`}>{v.func}型 ({v.modelIdu})</button>
+                            ))}
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 bg-industrial-700 hover:bg-industrial-600 rounded-full transition-colors text-white"><Icon name="x" className="w-5 h-5" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 custom-scroll">
+                    <div className="flex gap-2 mb-4 flex-wrap">
+                        <div className="bg-blue-900/30 border border-blue-800 rounded px-3 py-1 text-xs text-blue-300">冷房能力: {selectedVariant.maxKw} kW</div>
+                        <div className="bg-green-900/30 border border-green-800 rounded px-3 py-1 text-xs text-green-300">CSPF: {selectedVariant.cspf || '-'} kWh/kWh</div>
+                        <div className="bg-purple-900/30 border border-purple-800 rounded px-3 py-1 text-xs text-purple-300">冷媒: {selectedVariant.refrigerant}</div>
+                    </div>
+                    <table className="spec-table">
+                        <tbody>
+                            <tr><th colSpan="2" className="text-center bg-gray-800 text-white">基本規格</th></tr>
+                            <tr><th>室內機型號</th><td>{selectedVariant.modelIdu}</td></tr>
+                            <tr><th>室外機型號</th><td>{selectedVariant.modelOdu}</td></tr>
+                            <tr><th>電源規格</th><td>{selectedVariant.odu?.power || '220V'}</td></tr>
+                            <tr><th>控制配線</th><td>{selectedVariant.odu?.signalWire || '-'}</td></tr>
+                            <tr><th>電源配線</th><td>{selectedVariant.odu?.powerWire || '-'}</td></tr>
+                            <tr><th colSpan="2" className="text-center bg-gray-800 text-white">室內機規格 (IDU)</th></tr>
+                            <tr><th>外觀尺寸 (寬x高x深)</th><td>{selectedVariant.idu?.dims} mm</td></tr>
+                            <tr><th>機器淨重 (Weight)</th><td className="text-green-400 font-bold">{selectedVariant.idu?.weight || '-'} kg</td></tr>
+                            <tr><th>噪音值 (dB)</th><td>{selectedVariant.idu?.noise || '-'}</td></tr>
+                            <tr><th>風量特性</th><td>{selectedVariant.idu?.airflow || '-'}</td></tr>
+                            <tr><th colSpan="2" className="text-center bg-gray-800 text-white">室外機規格 (ODU)</th></tr>
+                            <tr><th>外觀尺寸 (寬x高x深)</th><td>{selectedVariant.odu?.dims} mm</td></tr>
+                            <tr><th>機器淨重 (Weight)</th><td className="text-green-400 font-bold">{selectedVariant.odu?.weight || '-'} kg</td></tr>
+                            <tr><th>腳座孔距 (寬x深)</th><td className="text-yellow-400">{selectedVariant.odu?.footSpacing || '-'} mm</td></tr>
+                            <tr><th>運轉電流 (冷/暖)</th><td>{selectedVariant.odu?.currentCool || '-'}/{selectedVariant.odu?.currentHeat || '-'}</td></tr>
+                            <tr><th>最大電流</th><td className="text-red-400 font-bold">{selectedVariant.odu?.currentMax || '-'}</td></tr>
+                            <tr><th colSpan="2" className="text-center bg-gray-800 text-white">配管資訊</th></tr>
+                            <tr><th>液管 / 氣管</th><td className="text-yellow-400 font-bold">{selectedVariant.pipes}</td></tr>
+                            <tr><th>最大配管長度</th><td>20m (參考值)</td></tr>
+                            <tr><th>最大高低差</th><td>10m (參考值)</td></tr>
+                            <tr><th>補充冷媒量</th><td>20g/m (超過基準後)</td></tr>
+                        </tbody>
+                    </table>
+                    <div className="mt-4 text-[10px] text-gray-500 text-center">* 資料僅供參考，實際安裝請以機器銘板或原廠最新技術手冊為準。</div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const HistoryModal = ({ item, onClose, onOpenSpec }) => {
+    if (!item) return null;
+    const data = item.data;
+
+    const renderContent = () => {
+        switch (item.type) {
+            case 'capacity_multi':
+                return (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-white mb-4 border-b border-industrial-700 pb-4">
+                                <div className="text-center font-mono border-r border-industrial-700">
+                                    <div className="text-gray-500 text-[10px] mb-1 font-bold">系統總負載</div>
+                                    <div className="text-3xl font-bold text-yellow-400">{data.totalKw} <span className="text-xs text-yellow-600 font-sans">KW</span></div>
+                                </div>
+                                <div className="text-center font-mono">
+                                    <div className="text-gray-500 text-[10px] mb-1 font-bold">規劃空間</div>
+                                    <div className="text-3xl font-bold">{data.roomCount} <span className="text-xs text-gray-500 font-sans">間</span></div>
+                                </div>
+                            </div>
+                            {data.pref === 'multi' && data.roomCount > 1 && (
+                                <div className="mb-4">
+                                    <h3 className="text-[10px] text-purple-400 font-bold mb-2 uppercase tracking-widest flex items-center gap-1"><Icon name="check" className="w-3 h-3"/> 一對多室外機推薦配對</h3>
+                                    {data.recommendedODU ? (
+                                        <div className="bg-purple-900/20 p-3 rounded-xl border border-purple-900/50 shadow-inner">
+                                            <div className="text-white font-bold text-sm mb-1">{data.recommendedODU.brandCN} {data.recommendedODU.modelOdu}</div>
+                                            <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-2">
+                                                <span><strong className="text-purple-300">支援形式:</strong> 最大支援 {data.recommendedODU.maxIdus} 內機</span>
+                                                <span><strong className="text-purple-300">能力上限:</strong> {data.recommendedODU.maxKw} KW</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 text-xs text-gray-400">資料庫中尚無適合機型</div>
+                                    )}
+                                </div>
+                            )}
+                            <div>
+                                <h3 className="text-[10px] text-gray-500 font-bold mb-2 uppercase tracking-widest border-t border-industrial-700 pt-3">空間明細</h3>
+                                <div className="space-y-2">
+                                    {data.roomData.map((r, idx) => (
+                                        <div key={idx} className="bg-industrial-950 p-3 rounded-lg border border-industrial-800 relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 w-1 h-full bg-green-500 opacity-50"></div>
+                                            <div className="flex justify-between items-center mb-1 pl-2">
+                                                <span className="text-gray-200 font-bold text-sm">{r.name} <span className="text-[10px] text-gray-500 font-normal ml-1">({r.ping}坪)</span></span>
+                                                <span className="font-mono font-bold text-yellow-500 text-sm">{r.kw} KW</span>
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 mb-2 pl-2">選擇型式: <span className="text-green-400 font-bold">{r.iduType}</span></div>
+                                            <div className="mt-2 pt-2 border-t border-industrial-800 text-[10px] pl-2">
+                                                {data.pref === 'single' ? (
+                                                    r.matchedSingle ? <span className="text-blue-300">推薦: {r.matchedSingle.modelIdu}</span> : <span className="text-red-400">無合適機型</span>
+                                                ) : (
+                                                    r.matchedIdu ? <span className="text-green-300">推薦: {r.matchedIdu.modelIdu}</span> : <span className="text-red-400">無合適機型</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                );
+            case 'calc':
+                    return (
+                        <div className="text-center">
+                            <div className="mb-4">
+                                <span className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-widest">計算條件</span>
+                                <div className="text-xs text-gray-400">基準: {data.baseLen}m | 總長: {data.totalLen}m</div>
+                            </div>
+                            <span className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-widest">建議補充量</span>
+                            <div className="text-4xl font-mono font-bold text-green-400">{data.result} <span className="text-sm">g</span></div>
+                        </div>
+                    );
+            case 'cooling':
+                return (
+                        <div className="text-center">
+                            <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-gray-400">
+                                <div className="bg-industrial-950 p-2 rounded">坪數: {data.ping}坪</div>
+                                <div className="bg-industrial-950 p-2 rounded">能力: {data.acKw}KW</div>
+                                <div className="bg-industrial-950 p-2 rounded">室溫: {data.currentTemp}°C</div>
+                                <div className="bg-industrial-950 p-2 rounded">目標: {data.targetTemp}°C</div>
+                            </div>
+                            <span className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-widest">預計降溫耗時</span>
+                            <div className="text-5xl font-mono font-bold text-purple-400 my-2">{data.minutes} <span className="text-sm font-sans text-gray-400 uppercase">min</span></div>
+                        </div>
+                );
+            case 'ducted':
+                return (
+                        <div className="space-y-4">
+                            {data.splitConfig ? (
+                                <div className="flex flex-col gap-3">
+                                    <div className="bg-industrial-950 p-3 rounded-xl border border-industrial-700 flex justify-between items-center"><div><div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">主機端</div></div><div className="text-right"><div className="text-xl font-mono font-bold text-blue-400">{data.mainQty}孔 × {data.mainSize}吋</div></div></div>
+                                    <div className="flex justify-center -my-2 z-10 text-gray-500"><Icon name="git-merge" className="w-5 h-5 rotate-180 bg-industrial-900 rounded-full" /></div>
+                                    <div className="bg-industrial-950 p-3 rounded-xl border border-green-900/50 flex justify-between items-center"><div><div className="text-[10px] text-green-400 font-bold uppercase tracking-wider mb-1">末端</div></div><div className="text-right"><div className="text-xl font-mono font-bold text-green-400">{data.splitConfig.qty}出風口 × {data.splitConfig.size}吋</div></div></div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-4 text-white">
+                                    <div className="text-center border-r border-industrial-700 font-mono"><div className="text-gray-500 text-[10px] mb-1 font-bold">主機端出風</div><div className="text-3xl font-bold">{data.mainQty} <span className="text-xs text-blue-500 font-sans">孔</span></div></div>
+                                    <div className="text-center font-mono"><div className="text-gray-500 text-[10px] mb-1 font-bold">孔徑</div><div className="text-3xl font-bold">{data.mainSize} <span className="text-xs text-blue-500 font-sans">吋</span></div></div>
+                                </div>
+                            )}
+                            <div className="bg-industrial-950 p-3 rounded-xl text-[11px] leading-relaxed text-gray-300 border border-industrial-700/50 mt-4"><span style={{ whiteSpace: "pre-wrap" }}>{data.airflowNote}</span></div>
+                        </div>
+                );
+            case 'search':
+                return (
+                    <div className="space-y-2">
+                        <div className="text-[10px] text-gray-500 mb-2">點擊卡片查看詳細規格</div>
+                        {data.results.map((g, i) => <ResultCard key={i} group={g} onClick={() => onOpenSpec(g)} />)}
+                    </div>
+                );
+            default:
+                return <div className="text-gray-500 text-center">無法顯示此類型的紀錄</div>;
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-fade-in">
+            <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose}></div>
+            <div className="bg-industrial-900 w-full max-w-lg max-h-[85vh] rounded-xl border border-industrial-700 shadow-2xl flex flex-col relative z-10 overflow-hidden animate-zoom-in">
+                <div className="bg-industrial-800 p-4 border-b border-industrial-700 flex justify-between items-center shrink-0">
+                    <h3 className="text-lg font-bold text-white tracking-wide truncate pr-4">{item.title}</h3>
+                    <button onClick={onClose} className="p-2 bg-industrial-700 hover:bg-industrial-600 rounded-full transition-colors text-white"><Icon name="x" className="w-5 h-5" /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-5 custom-scroll">
+                    {renderContent()}
+                    <div className="mt-6 pt-4 border-t border-industrial-800 text-[10px] text-gray-500 text-center">
+                        紀錄時間: {item.date}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const FilterSelect = ({ label, value, options, onChange, disabled }) => (
+    <div className={`relative ${disabled ? 'opacity-50' : ''}`}>
+        <span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10 pointer-events-none">{label}</span>
+        <div className="relative">
+            <select value={value} onChange={e => onChange(e.target.value)} disabled={disabled} className="w-full appearance-none bg-industrial-900 border border-industrial-700 rounded-lg pl-3 pr-8 py-2.5 text-sm text-white focus:border-industrial-accent outline-none transition-all cursor-pointer disabled:cursor-not-allowed">
+                {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-gray-500"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg></div>
+        </div>
+    </div>
+);
+
+const ResultCard = ({ group, onClick }) => {
+    if (!group || !group.variants) return null; 
+
+    const firstItem = group.variants[0];
+    const hasHeat = group.variants.some(v => v.func === '冷暖');
+    const hasCoolOnly = group.variants.some(v => v.func === '冷專');
+    
+    let barColor = 'bg-gray-600';
+    if (hasHeat && !hasCoolOnly) barColor = 'bg-heat-500';
+    else if (!hasHeat && hasCoolOnly) barColor = 'bg-cool-500';
+    else if (hasHeat && hasCoolOnly) barColor = 'bg-gradient-to-b from-heat-500 to-cool-500';
+
+    return (
+        <div onClick={onClick} className="bg-industrial-800 rounded-xl p-4 border border-industrial-700 shadow-lg mb-3 relative overflow-hidden cursor-pointer hover:border-industrial-500 hover:bg-industrial-700 transition-all group">
+            <div className={`absolute top-0 left-0 w-1.5 h-full ${barColor}`}></div>
+            <div className="pl-3 flex justify-between items-center">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{group.brandCN}</span>
+                        {group.series && <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{group.series}</span>}
+                    </div>
+                    <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors">{firstItem.modelIdu} <span className="text-xs text-gray-500 ml-2 font-normal">({group.variants.length > 1 ? '系列' : firstItem.func})</span></div>
+                    <div className="text-xs text-gray-400 mt-1 font-mono">{group.maxKw} kW | {group.pipes} | {group.refrigerant}</div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                        <div className="flex gap-1">
+                        {hasHeat && <span className="w-2 h-2 rounded-full bg-heat-500" title="有冷暖"></span>}
+                        {hasCoolOnly && <span className="w-2 h-2 rounded-full bg-cool-500" title="有冷專"></span>}
+                    </div>
+                    <button className="bg-industrial-900 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-900/50 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-all"><Icon name="eye" className="w-3 h-3" />規格詳情</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const SidebarBtn = ({ active, onClick, icon, label }) => (
+    <button onClick={onClick} className={`flex items-center gap-4 w-full text-left px-4 py-3.5 rounded-xl transition-all ${active ? 'bg-industrial-800 border border-industrial-700 text-industrial-accent font-bold' : 'text-gray-400 hover:bg-industrial-800 hover:text-white'}`}><Icon name={icon} className="w-5 h-5" /><span className="text-sm tracking-widest">{label}</span></button>
+);
+
+const MultiRoomCapacityCalculator = ({ rooms, setRooms, systemPref, setSystemPref, result, setResult, addToHistory, db }) => {
+    const [error, setError] = useState('');
+    const addRoom = () => { if (rooms.length >= 6) { setError('最多支援同時評估 6 個空間'); return; } setError(''); setRooms([...rooms, { id: Date.now(), name: `空間 ${rooms.length + 1}`, ping: '', conditions: {}, kw: 0, iduType: '壁掛式', matchedSingle: null, matchedIdu: null }]); };
+    const removeRoom = (id) => { setRooms(rooms.filter(r => r.id !== id)); };
+    const updateRoom = (id, field, value) => { setRooms(rooms.map(r => r.id === id ? { ...r, [field]: value } : r)); };
+    const toggleCondition = (id, conditionKey) => { setRooms(rooms.map(r => { if (r.id !== id) return r; const nextConds = { ...r.conditions, [conditionKey]: !r.conditions[conditionKey] }; if (conditionKey === 'blackIron' && nextConds.blackIron) nextConds.ironSheet = false; if (conditionKey === 'ironSheet' && nextConds.ironSheet) nextConds.blackIron = false; return { ...r, conditions: nextConds }; })); };
+    const calculateAll = () => {
+        let hasError = false; let totalKw = 0;
+        const calculatedRooms = rooms.map(r => {
+            const p = parseFloat(r.ping); if (!p || p <= 0) { hasError = true; return r; }
+            let kcalBase = 450, mult = 1.0;
+            if (r.conditions.westSun) mult += 0.2; if (r.conditions.allDaySun) mult += 0.3; if (r.conditions.topFloor) mult += 0.2; if (r.conditions.highCeiling) mult += 0.2;
+            if (r.conditions.blackIron) mult += 0.8; else if (r.conditions.ironSheet) mult += 0.5;
+            const roomKw = parseFloat(((kcalBase * mult * p) / 860).toFixed(2)); totalKw += roomKw;
+            return { ...r, kw: roomKw, matchedSingle: null, matchedIdu: null };
+        });
+        if (hasError) { setError('請確認所有空間皆已輸入有效坪數'); return; } setError(''); totalKw = parseFloat(totalKw.toFixed(2));
+        let recommendedODU = null;
+        if (systemPref === 'multi' && calculatedRooms.length > 1) {
+            const matches = db.filter(item => item.isMulti === true && item.maxKw >= totalKw && (item.maxIdus || 2) >= calculatedRooms.length);
+            if (matches.length > 0) { matches.sort((a, b) => a.maxKw - b.maxKw); recommendedODU = matches[0]; }
+        }
+        const finalRooms = calculatedRooms.map(r => {
+            if (systemPref === 'single') {
+                const matches = db.filter(item => item.isMulti === false && item.odu !== null && item.idu !== null && item.type === r.iduType && item.maxKw >= r.kw);
+                if (matches.length > 0) { matches.sort((a, b) => a.maxKw - b.maxKw); r.matchedSingle = matches[0]; }
+            } else {
+                let matches = db.filter(item => item.idu !== null && item.type === r.iduType && item.maxKw >= r.kw);
+                if (recommendedODU) { const brandMatches = matches.filter(i => i.brandCN === recommendedODU.brandCN); if (brandMatches.length > 0) matches = brandMatches; }
+                if (matches.length > 0) { matches.sort((a, b) => a.maxKw - b.maxKw); r.matchedIdu = matches[0]; }
+            }
+            return r;
+        });
+        setRooms(finalRooms); const resData = { pref: systemPref, totalKw, roomCount: finalRooms.length, recommendedODU, roomData: finalRooms };
+        setResult(resData); addToHistory(`全屋規劃: ${finalRooms.length}間 / ${totalKw}KW`, 'capacity_multi', resData);
+    };
+    return (
+        <div className="animate-fade-in pb-10">
+            <div className="flex justify-between items-center mb-4 text-white"><h2 className="text-yellow-400 font-bold flex items-center gap-2 text-sm"><Icon name="ruler" className="w-5 h-5" /> 多間負載與外機配置</h2><button onClick={addRoom} className="text-[10px] bg-industrial-800 hover:bg-industrial-700 text-white px-3 py-1.5 rounded border border-industrial-600 flex items-center gap-1"><Icon name="plus" className="w-3 h-3"/> 新增空間</button></div>
+            {error && <div className="text-red-400 text-xs font-bold mb-3 text-center bg-red-900/20 py-2 rounded-lg">{error}</div>}
+            <div className="mb-4 bg-industrial-950 p-1.5 rounded-xl border border-industrial-800"><label className="text-[10px] text-gray-500 mb-2 block font-bold text-center uppercase tracking-widest">系統配置偏好</label><div className="flex text-xs font-bold gap-2"><button onClick={() => {setSystemPref('single'); setResult(null);}} className={`flex-1 py-3 rounded-lg transition-all ${systemPref === 'single' ? 'bg-blue-600 text-white shadow-md' : 'bg-industrial-900 text-gray-500 border border-industrial-700'}`}>一對一獨立配置</button><button onClick={() => {setSystemPref('multi'); setResult(null);}} className={`flex-1 py-3 rounded-lg transition-all ${systemPref === 'multi' ? 'bg-purple-600 text-white shadow-md' : 'bg-industrial-900 text-gray-500 border border-industrial-700'}`}>一對多共用外機</button></div></div>
+            <div className="space-y-4 mb-6">{rooms.map((room) => (<div key={room.id} className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 shadow-sm relative">{rooms.length > 1 && (<button onClick={() => removeRoom(room.id)} className="absolute top-3 right-3 text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4" /></button>)}<div className="flex gap-2 mb-3 pr-6"><input type="text" value={room.name} onChange={e => updateRoom(room.id, 'name', e.target.value)} className="bg-transparent border-b border-industrial-600 text-industrial-accent font-bold w-1/3 text-sm focus:border-yellow-500" placeholder="空間名稱" /><div className="flex items-center gap-2 w-2/3"><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-full bg-industrial-900 border border-industrial-700 rounded-lg py-1.5 px-3 text-white text-sm" placeholder="輸入坪數" /><span className="text-xs text-gray-500">坪</span></div></div><div className="flex gap-2 mb-3">{['壁掛式', '吊隱式', '直立式'].map(type => (<button key={type} onClick={() => updateRoom(room.id, 'iduType', type)} className={`text-[10px] px-3 py-1.5 rounded-md font-bold transition-all border ${room.iduType === type ? 'bg-green-700/80 text-white border-green-500' : 'bg-industrial-900 text-gray-500 border-industrial-700'}`}>{type}</button>))}</div><div className="flex flex-wrap gap-2">{Object.entries(conditionLabels).map(([k, l]) => (<label key={k} className={`flex items-center space-x-1 bg-industrial-900 px-2 py-1 rounded border border-industrial-700 cursor-pointer text-[10px] ${room.conditions[k] ? 'border-industrial-accent text-industrial-accent' : 'text-gray-400'}`}><input type="checkbox" checked={!!room.conditions[k]} onChange={() => toggleCondition(room.id, k)} className="hidden" /><span>{l}</span></label>))}</div>{room.kw > 0 && <div className="absolute bottom-3 right-3 text-yellow-400 font-mono text-sm font-bold">{room.kw} KW</div>}</div>))}</div>
+            <button onClick={calculateAll} className="w-full py-4 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><Icon name="zap" className="w-4 h-4"/> 產生完整機型配置</button>
+            {result && (
+                <div className="mt-6 bg-industrial-900 rounded-2xl p-5 border border-yellow-600/50 animate-slide-up shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-yellow-600"></div>
+                        <div className="grid grid-cols-2 gap-4 text-white mb-4 border-b border-industrial-700 pb-4"><div className="text-center font-mono border-r border-industrial-700"><div className="text-gray-500 text-[10px] mb-1 font-bold">系統總負載</div><div className="text-3xl font-bold text-yellow-400">{result.totalKw} <span className="text-xs text-yellow-600 font-sans">KW</span></div></div><div className="text-center font-mono"><div className="text-gray-500 text-[10px] mb-1 font-bold">規劃空間</div><div className="text-3xl font-bold">{result.roomCount} <span className="text-xs text-gray-500 font-sans">間</span></div></div></div>
+                        {result.pref === 'multi' && result.roomCount > 1 && (<div className="mb-4"><h3 className="text-[10px] text-purple-400 font-bold mb-2 uppercase tracking-widest flex items-center gap-1"><Icon name="check" className="w-3 h-3"/> 一對多室外機推薦配對</h3>{result.recommendedODU ? (<div className="bg-purple-900/20 p-3 rounded-xl border border-purple-900/50 shadow-inner"><div className="text-white font-bold text-sm mb-1">{result.recommendedODU.brandCN} {result.recommendedODU.modelOdu}</div><div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-2"><span><strong className="text-purple-300">支援形式:</strong> 最大支援 {result.recommendedODU.maxIdus} 內機</span><span><strong className="text-purple-300">能力上限:</strong> {result.recommendedODU.maxKw} KW</span>{result.recommendedODU.odu && <span><strong className="text-purple-300">電源線建議:</strong> {result.recommendedODU.odu.powerWire}</span>}</div></div>) : (<div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 text-xs text-gray-400">* 資料庫中尚無可滿足 {result.totalKw} KW 且支援 {result.roomCount} 對多的機型。<br/>建議分流為兩組系統，或切換至「一對一獨立配置」。</div>)}</div>)}
+                        <div><h3 className="text-[10px] text-gray-500 font-bold mb-2 uppercase tracking-widest border-t border-industrial-700 pt-3">{result.pref === 'single' ? '各空間一對一系統推薦' : '各空間對應內機推薦'}</h3><div className="space-y-2">{result.roomData.map(r => (<div key={`res-${r.id}`} className="bg-industrial-950 p-3 rounded-lg border border-industrial-800 relative overflow-hidden"><div className="absolute top-0 left-0 w-1 h-full bg-green-500 opacity-50"></div><div className="flex justify-between items-center mb-1 pl-2"><span className="text-gray-200 font-bold text-sm">{r.name} <span className="text-[10px] text-gray-500 font-normal ml-1">({r.ping}坪)</span></span><span className="font-mono font-bold text-yellow-500 text-sm">{r.kw} KW</span></div><div className="text-[10px] text-gray-400 mb-2 pl-2">選擇型式: <span className="text-green-400 font-bold">{r.iduType}</span></div><div className="mt-2 pt-2 border-t border-industrial-800 text-[10px] pl-2">{result.pref === 'single' ? (r.matchedSingle ? (<div className="text-blue-300 font-bold">推薦一對一: <br/>{r.matchedSingle.brandCN} {r.matchedSingle.modelIdu} / {r.matchedSingle.modelOdu} <br/><span className="text-gray-500 font-normal block mt-0.5">能力上限 {r.matchedSingle.maxKw}KW</span></div>) : (<div className="text-red-400">查無對應之 {r.kw}KW 以上 {r.iduType} 機型</div>)) : (r.matchedIdu ? (<div className="text-green-300 font-bold">推薦多聯內機: <br/>{r.matchedIdu.brandCN} {r.matchedIdu.modelIdu} <br/><span className="text-gray-500 font-normal block mt-0.5">能力上限 {r.matchedIdu.maxKw}KW</span></div>) : (<div className="text-red-400">查無對應之 {r.kw}KW 以上多聯 {r.iduType} 內機</div>))}</div></div>))}</div></div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const RefrigerantCalculator = ({ state, setState, addToHistory }) => {
+    const [error, setError] = useState('');
+    const calculate = () => {
+        const total = parseFloat(state.totalLen); if (isNaN(total) || total < 0) { setError('請輸入實際施工總管長'); return; } setError('');
+        const res = Math.max(0, Math.round((total - state.baseLen) * state.gramPerMeter));
+        setState(p=>({...p, result: res})); addToHistory(`補冷媒: ${res}g / ${total}m`, 'calc', { baseLen: state.baseLen, totalLen: total, result: res });
+    };
+    return (
+        <div className="animate-fade-in space-y-4 pb-10">
+            <div className="bg-industrial-800 p-6 rounded-2xl border border-industrial-700 shadow-xl"><div className="flex justify-between items-center mb-4 text-white"><h2 className="text-green-400 font-bold flex items-center gap-2 text-sm"><Icon name="calculator" className="w-4 h-4" /> 冷媒補填量計算</h2><button onClick={()=>{setState({ baseLen: 5, totalLen: '', gramPerMeter: 20, result: null }); setError('');}} className="text-[10px] text-gray-500 hover:text-white px-2 py-1 bg-industrial-900 rounded">重置</button></div><div className="mb-5 bg-industrial-950 p-3 rounded-xl border border-industrial-800 text-[11px] text-gray-300 leading-relaxed"><div className="text-green-500 font-bold mb-1 flex items-center gap-1"><Icon name="check" className="w-3 h-3"/> 業界冷媒追加標準參考 (以R32/R410A為例)</div><ul className="list-disc pl-4 space-y-1 text-gray-400"><li><strong className="text-gray-300">免充填長度：</strong>一對一常為 <span className="text-blue-300">5~10米</span>。一對多常為 <span className="text-blue-300">30~40米</span>。</li><li><strong className="text-gray-300">液管 2分 (6.35mm)：</strong>每米追加 <span className="text-yellow-400 font-bold">20g</span>。</li><li><strong className="text-gray-300">液管 3分 (9.52mm)：</strong>每米追加 <span className="text-yellow-400 font-bold">50g</span>。</li><li><strong className="text-gray-300">液管 4分 (12.7mm)：</strong>每米追加 <span className="text-yellow-400 font-bold">90g</span>。</li></ul></div>{error && <div className="text-red-400 text-xs font-bold mb-3 text-center bg-red-900/20 py-2 rounded-lg">{error}</div>}<div className="space-y-5"><div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest">原廠基準長度 (m)</label><div className="grid grid-cols-4 gap-2">{[5, 7.5, 10, 30].map(l => (<button key={l} onClick={()=>setState(p=>({...p, baseLen:l}))} className={`py-2 rounded-xl text-xs font-bold border transition-all ${state.baseLen===l ? 'bg-green-600 border-green-500 text-white shadow-md' : 'bg-industrial-900 border-industrial-700 text-gray-500'}`}>{l}m</button>))}</div></div><div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest">每米補充量 (g/m) <span className="normal-case font-normal ml-1 text-[9px] text-blue-400">※請依液管大小選擇</span></label><div className="grid grid-cols-4 gap-2">{[15, 20, 50, 90].map(v => (<button key={v} onClick={()=>setState(p=>({...p, gramPerMeter:v}))} className={`py-2 rounded-xl text-xs font-bold border transition-all ${state.gramPerMeter===v ? 'bg-green-600 border-green-500 text-white shadow-md' : 'bg-industrial-900 border-industrial-700 text-gray-500'}`}>{v}g</button>))}</div></div><div><label className="text-[10px] text-gray-500 mb-2 block font-bold text-center uppercase tracking-widest">實際施工總管長 (m)</label><input type="number" value={state.totalLen} onChange={e=>setState(p=>({...p, totalLen:e.target.value}))} className="w-full text-3xl py-4 bg-industrial-900 border-2 border-industrial-700 focus:border-green-500 rounded-2xl text-center text-white font-mono shadow-inner" placeholder="0" /></div><button onClick={calculate} className="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><Icon name="calculator" className="w-4 h-4" /> 開始計算補充量</button></div>{state.result !== null && (<div className="mt-6 bg-industrial-900 rounded-2xl p-4 border border-green-600/30 text-center animate-fade-in"><span className="block text-gray-500 text-[10px] mb-1 uppercase font-bold tracking-widest">建議補充量</span><div className="text-4xl font-mono font-bold text-green-400">{state.result} <span className="text-sm">g</span></div></div>)}</div></div>
+    );
+};
+
+const CoolingTimeCalculator = ({ state, setState, addToHistory }) => {
+    const [error, setError] = useState('');
+    const calculate = () => {
+        const { ping, height, currentTemp, targetTemp, acKw } = state; const p = parseFloat(ping), h = parseFloat(height), kw = parseFloat(acKw), ct = parseFloat(currentTemp), tt = parseFloat(targetTemp); const dt = ct - tt;
+        if (!p || !kw || isNaN(dt) || dt <= 0) { setError('請確認數值完整（目標溫度需低於室溫）'); return; } setError('');
+        const time = Math.round(((p * 3.3 * h) * 1.2 * 1.0 * dt * 10) / kw / 60);
+        setState(pS => ({...pS, minutes: time})); addToHistory(`降溫估算: ${time} 分鐘`, 'cooling', { ping: p, height: h, acKw: kw, minutes: time, currentTemp: ct, targetTemp: tt });
+    };
+    return (
+        <div className="animate-fade-in space-y-4"><div className="bg-industrial-800 p-6 rounded-2xl border border-industrial-700 shadow-xl"><div className="flex justify-between items-center mb-4 text-white"><h2 className="text-purple-400 font-bold flex items-center gap-2 text-sm"><Icon name="thermometer" className="w-4 h-4" /> 物理降溫模擬</h2><button onClick={()=>{setState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null }); setError('');}} className="text-[10px] text-gray-500 hover:text-white px-2 py-1 bg-industrial-900 rounded">重置</button></div>{error && <div className="text-red-400 text-xs font-bold mb-3 text-center bg-red-900/20 py-2 rounded-lg">{error}</div>}<div className="grid grid-cols-2 gap-3 mb-4"><div className="relative"><span className="absolute left-3 top-0 text-[8px] text-gray-500 uppercase font-bold">坪數 Area</span><input type="number" value={state.ping} onChange={e=>setState(p=>({...p, ping:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div><div className="relative"><span className="absolute left-3 top-0 text-[8px] text-gray-500 uppercase font-bold">高度 Height</span><input type="number" value={state.height} onChange={e=>setState(p=>({...p, height:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div></div><div className="grid grid-cols-2 gap-3 mb-6"><div className="relative"><span className="absolute left-3 top-0 text-[8px] text-red-500 uppercase font-bold">室溫 °C</span><input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p, currentTemp:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-red-300 text-sm" /></div><div className="relative"><span className="absolute left-3 top-0 text-[8px] text-blue-500 uppercase font-bold">目標 °C</span><input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p, targetTemp:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-blue-300 text-sm" /></div></div><div className="mb-6"><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest text-center">冷氣制冷能力 (KW)</label><input type="number" value={state.acKw} onChange={e=>setState(p=>({...p, acKw:e.target.value}))} className="w-full bg-industrial-900 border-2 border-industrial-700 focus:border-purple-500 rounded-2xl p-4 text-center text-white font-bold text-xl shadow-inner" placeholder="例如: 3.6" /></div><button onClick={calculate} className="w-full py-4 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm">執行數據模擬</button></div>{state.minutes !== null && (<div className="bg-industrial-900 rounded-2xl p-5 border border-purple-600/50 text-center animate-slide-up relative overflow-hidden"><div className="absolute top-0 left-0 w-full h-1 bg-purple-600"></div><div className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">預計降溫耗時</div><div className="text-5xl font-mono font-bold text-purple-400 my-2">{state.minutes} <span className="text-sm font-sans text-gray-400 uppercase">min</span></div></div>)}</div>
+    );
+};
+
+const DuctedCalculator = ({ state, setState, addToHistory }) => {
+    const [error, setError] = useState('');
+    const calculate = () => {
+        const fw = parseFloat(state.flangeW), fh = parseFloat(state.flangeH), p = parseFloat(state.ping);
+        const desiredOutlets = parseInt(state.outletCount);
+        if (!fw || !fh || !p || !desiredOutlets) { setError('請完整輸入所有量測尺寸與規劃參數'); return; }
+        if (state.outletPos === null) { setError('請點選九宮格設定風管走向'); return; }
+        setError('');
+
+        const area = fw * fh; 
+        const x1 = state.unitPos % 3, y1 = Math.floor(state.unitPos / 3);
+        const x2 = state.outletPos % 3, y2 = Math.floor(state.outletPos / 3);
+        const gridDist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        const roomSide = Math.sqrt(p * 3.3058); 
+        const estDist = (gridDist * (roomSide / 3)) + 1.5;
+
+        const needHighPressure = (estDist >= 10 && p > 5);
+        const area12 = 730; // 12英吋約略面積
+        const area10 = 490;
+        const area8 = 314;
+
+        let mainQty = 0, mainSize = 0, splitConfig = null, note = "";
+
+        // 新增 12英吋 邏輯
+        if (!needHighPressure && area >= desiredOutlets * area12 && desiredOutlets >= 2) {
+            mainQty = desiredOutlets; mainSize = 12;
+            note = `法蘭面積非常充裕 (${area}cm²)，可直接製作 ${mainQty} 孔 12吋 大型集風箱，風量與靜音效果最佳。`;
+        } else if (!needHighPressure && area >= desiredOutlets * area10) {
+            mainQty = desiredOutlets; mainSize = 10;
+            note = `法蘭面積充足 (${area}cm²)，可直接於主機端製作 ${mainQty} 孔 10吋 標準集風箱。`;
+        } else if (area >= desiredOutlets * area8) {
+            mainQty = desiredOutlets; mainSize = 8;
+            if (needHighPressure) note = `預估風管長度約 ${estDist.toFixed(1)} 米，需切換為 8 吋系統以提高靜壓。\n法蘭面積夠排下 ${mainQty} 孔 8吋。`;
+            else note = `法蘭面積無法容納 ${desiredOutlets} 孔 10吋，但可排下 ${mainQty} 孔 8吋！\n已為您自動降管徑，無須使用三通。`;
+        } else {
+            mainSize = needHighPressure ? 8 : 10;
+            let holeArea = mainSize === 10 ? area10 : area8;
+            // 如果還是不夠，也嘗試用12吋做主幹
+            if (area >= area12 && desiredOutlets >= 3) { mainSize = 12; holeArea = area12; }
+            
+            mainQty = Math.floor(area / holeArea);
+            if (mainQty < 1) {
+                if (area >= area8) { mainSize = 8; mainQty = Math.floor(area / area8); } 
+                else { mainSize = 8; mainQty = 1; }
+            }
+            const splitRatio = desiredOutlets / mainQty;
+            const splitSize = mainSize / splitRatio; 
+            
+            // 修正三通後孔徑顯示邏輯
+            let displaySplitSize = splitSize;
+            if (mainSize === 12 && splitRatio >= 2) displaySplitSize = 8; // 12轉兩個8
+            else if (mainSize === 10 && splitRatio >= 2) displaySplitSize = 6; // 10轉兩個6 (通常)
+
+            splitConfig = { qty: desiredOutlets, size: displaySplitSize.toFixed(1) };
+            note = `受限於法蘭面積 (${area}cm²)，無法直接排下 ${desiredOutlets} 孔。\n建議主機端先做 ${mainQty} 孔 ${mainSize}吋，延伸後加裝三通轉為 ${desiredOutlets} 個 ${displaySplitSize.toFixed(0)}~${displaySplitSize.toFixed(1)}吋出風口。`;
+            if (needHighPressure) note = `⚠️ 長距離送風，主機端已優先考量靜壓設定。\n` + note;
+        }
+
+        if (p <= 4 && !needHighPressure && !splitConfig && mainSize === 10) note = "ℹ️ 小坪數空間，維持標準 10 吋孔徑確保低風切音。\n" + note;
+
+        const res = { mainQty, mainSize, splitConfig, airflowNote: note, estDist: estDist.toFixed(1), flangeArea: area, desiredOutlets };
+        setState(prev => ({ ...prev, result: res }));
+        addToHistory(`吊隱規劃: ${desiredOutlets}孔`, 'ducted', res);
+    };
+
+    const reset = () => { setState({ flangeW:'', flangeH:'', ping:'', outletCount: 2, unitPos:4, outletPos:null, result:null }); setError(''); };
+
+    return (
+        <div className="animate-fade-in space-y-4 pb-10">
+            <div className="bg-industrial-800 p-6 rounded-2xl border border-industrial-700 shadow-xl"><div className="flex justify-between items-center mb-6 text-white"><h2 className="text-blue-400 font-bold flex items-center gap-2 text-sm"><Icon name="box" className="w-4 h-4" /> 吊隱式集風系統規劃</h2><button onClick={reset} className="text-[10px] text-gray-500 hover:text-white px-2 py-1 bg-industrial-900 rounded">重置</button></div>{error && <div className="text-red-400 text-xs font-bold mb-3 text-center bg-red-900/20 py-2 rounded-lg">{error}</div>}<div className="space-y-6"><div><label className="text-[10px] text-gray-500 mb-2 block font-bold uppercase tracking-widest">1. 法蘭尺寸與空間規劃</label><div className="grid grid-cols-2 gap-3 mb-3"><div className="relative"><span className="absolute left-2 top-0 text-[8px] text-gray-500">法蘭寬(cm)</span><input type="number" value={state.flangeW} onChange={e=>setState(p=>({...p, flangeW:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div><div className="relative"><span className="absolute left-2 top-0 text-[8px] text-gray-500">法蘭高(cm)</span><input type="number" value={state.flangeH} onChange={e=>setState(p=>({...p, flangeH:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div></div><div className="grid grid-cols-2 gap-3"><div className="relative"><span className="absolute left-2 top-0 text-[8px] text-blue-400">空間坪數</span><input type="number" value={state.ping} onChange={e=>setState(p=>({...p, ping:e.target.value}))} className="w-full bg-industrial-900 border border-blue-900/50 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div><div className="relative"><span className="absolute left-2 top-0 text-[8px] text-green-400">出風口數</span><input type="number" value={state.outletCount} onChange={e=>setState(p=>({...p, outletCount:e.target.value}))} className="w-full bg-industrial-900 border border-green-900/50 rounded-xl pt-4 pb-2 text-center text-white text-sm" /></div></div></div><div className="bg-industrial-950 p-4 rounded-xl border border-industrial-800"><label className="text-[10px] text-blue-400 mb-3 block font-bold text-center uppercase tracking-widest">2. 風管走向 (計算距離射程)</label><div className="flex gap-4 justify-center"><div className="flex flex-col items-center"><span className="text-[10px] text-gray-500 mb-2">主機位置</span><div className="grid grid-cols-3 gap-1 w-24">{[...Array(9)].map((_, i) => (<button key={`u-${i}`} type="button" onClick={() => setState(p => ({ ...p, unitPos: i }))} className={`grid-pos-btn ${state.unitPos === i ? 'active-unit' : ''}`}>{state.unitPos===i ? <Icon name="box" className="w-3 h-3" /> : null}</button>))}</div></div><div className="flex items-center text-gray-600"><Icon name="chevron-right" /></div><div className="flex flex-col items-center"><span className="text-[10px] text-gray-500 mb-2">最遠出風口</span><div className="grid grid-cols-3 gap-1 w-24">{[...Array(9)].map((_, i) => (<button key={`o-${i}`} type="button" onClick={() => setState(p => ({ ...p, outletPos: i }))} className={`grid-pos-btn ${state.outletPos === i ? 'active-outlet' : ''}`}>{state.outletPos===i ? <Icon name="wind" className="w-3 h-3" /> : null}</button>))}</div></div></div></div><button onClick={calculate} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2"><Icon name="zap" className="w-4 h-4" /> 產生最佳配置方案</button></div></div>
+            {state.result && (
+                <div className="bg-industrial-900 rounded-2xl p-5 border border-blue-600/50 animate-slide-up shadow-2xl relative overflow-hidden mt-4">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-blue-600"></div>
+                        {state.result.splitConfig ? (
+                            <div className="flex flex-col gap-3">
+                                <div className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 flex justify-between items-center"><div><div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">主機端集風箱</div><div className="text-gray-400 text-xs">依據法蘭極限</div></div><div className="text-right"><div className="text-2xl font-mono font-bold text-blue-400">{state.result.mainQty}孔 × {state.result.mainSize}吋</div></div></div>
+                                <div className="flex justify-center -my-2 z-10 text-gray-500"><Icon name="git-merge" className="w-6 h-6 rotate-180 bg-industrial-900 rounded-full" /></div>
+                                <div className="bg-industrial-800 p-4 rounded-xl border border-green-900/50 flex justify-between items-center"><div><div className="text-[10px] text-green-400 font-bold uppercase tracking-wider mb-1">末端分風箱(三通)</div><div className="text-gray-400 text-xs">符合預期出風數量</div></div><div className="text-right"><div className="text-2xl font-mono font-bold text-green-400">{state.result.splitConfig.qty}出風口 × {state.result.splitConfig.size}吋</div></div></div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4 text-white"><div className="text-center border-r border-industrial-700 font-mono"><div className="text-gray-500 text-[10px] mb-1 font-bold">主機端出風數量</div><div className="text-4xl font-bold">{state.result.mainQty} <span className="text-xs text-blue-500 font-sans">孔</span></div></div><div className="text-center font-mono"><div className="text-gray-500 text-[10px] mb-1 font-bold">建議孔徑大小</div><div className="text-4xl font-bold">{state.result.mainSize} <span className="text-xs text-blue-500 font-sans">吋</span></div></div></div>
+                        )}
+                        <div className="bg-industrial-800/50 p-3 rounded-xl text-[11px] leading-relaxed text-gray-300 border border-industrial-700/50 mt-4"><span className="text-blue-400 font-bold block mb-1 uppercase tracking-widest"><Icon name="wind" className="inline w-3 h-3 mr-1" />專業配置解析:</span><span style={{ whiteSpace: "pre-wrap" }}>{state.result.airflowNote}</span></div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- 3. 主程式 App ---
+
+function App() {
+    const [activeTab, setActiveTab] = useState('search'); 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [history, setHistory] = useState([]);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+    const [searchState, setSearchState] = useState({ brand: '不拘', series: '不拘', func: '不拘', iduType: '不拘', keyword: '', results: [], hasSearched: false });
+    const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
+
+    const availableSeries = useMemo(() => {
+        if (searchState.brand === '不拘') return ['不拘'];
+        const seriesSet = new Set(AC_DATABASE.filter(item => item.brandCN === searchState.brand && item.series).map(item => item.series));
+        return ['不拘', ...Array.from(seriesSet)];
+    }, [searchState.brand]);
+
+    useEffect(() => { setSearchState(prev => ({ ...prev, series: '不拘' })); }, [searchState.brand]);
+
+    const [refrigerantState, setRefrigerantState] = useState({ baseLen: 5, totalLen: '', gramPerMeter: 20, result: null });
+    const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', minutes: null });
+    const [ductedState, setDuctedState] = useState({ flangeW: '', flangeH: '', ping: '', outletCount: 2, unitPos: 4, outletPos: null, result: null });
+    const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', ping: '', conditions: {}, kw: 0, iduType: '壁掛式', matchedSingle: null, matchedIdu: null }]);
+    const [systemPref, setSystemPref] = useState('multi'); 
+    const [multiCapacityResult, setMultiCapacityResult] = useState(null);
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('yiGeHistory');
+            if (saved) setHistory(JSON.parse(saved));
+        } catch (e) { setHistory([]); }
+    }, []);
+
+    const addToHistory = useCallback((title, type, data) => {
+        setHistory(prev => {
+            const newH = [{ id: Date.now(), title, type, date: new Date().toLocaleString(), data }, ...prev].slice(0, 20);
+            localStorage.setItem('yiGeHistory', JSON.stringify(newH));
+            return newH;
+        });
+    }, []);
+
+    const confirmClearHistory = () => {
+        setHistory([]);
+        localStorage.removeItem('yiGeHistory');
+        setShowClearConfirm(false);
+    };
+
+    const executeSearch = () => {
+        const rawResults = AC_DATABASE.filter(item => {
+            if (searchState.brand !== '不拘' && item.brandCN !== searchState.brand) return false;
+            if (searchState.series !== '不拘' && item.series !== searchState.series) return false;
+            if (searchState.func !== '不拘' && item.func !== searchState.func) return false;
+            if (searchState.iduType !== '不拘') {
+                if (searchState.iduType === '室內機' && !item.idu) return false;
+                else if (searchState.iduType === '室外機(一對一)' && (!item.odu || item.isMulti)) return false;
+                else if (searchState.iduType === '室外機(一對多)' && (!item.odu || !item.isMulti)) return false;
+                else if (!['室內機','室外機(一對一)','室外機(一對多)'].includes(searchState.iduType) && (!item.idu || item.type !== searchState.iduType)) return false;
+            }
+            if (searchState.keyword.trim() !== '') {
+                const kw = searchState.keyword.toLowerCase();
+                if (!item.brandCN.toLowerCase().includes(kw) && !((item.modelIdu||'')+(item.modelOdu||'')).toLowerCase().includes(kw) && !(item.series||'').toLowerCase().includes(kw)) return false;
+            }
+            return true;
+        });
+
+        const groupedMap = new Map();
+        rawResults.forEach(item => {
+            const groupKey = `${item.brandCN}-${item.series}-${item.maxKw}-${item.type}`;
+            if (!groupedMap.has(groupKey)) {
+                groupedMap.set(groupKey, { brandCN: item.brandCN, series: item.series, maxKw: item.maxKw, type: item.type, refrigerant: item.refrigerant, pipes: item.pipes, variants: [] });
+            }
+            groupedMap.get(groupKey).variants.push(item);
+        });
+
+        const groupedResults = Array.from(groupedMap.values()).sort((a, b) => a.maxKw - b.maxKw);
+        setSearchState(prev => ({ ...prev, results: groupedResults, hasSearched: true }));
+        addToHistory(`條件搜尋: ${groupedResults.length}組結果`, 'search', { results: groupedResults });
+    };
+
+    const clearSearchFilters = () => { setSearchState({ brand: '不拘', series: '不拘', func: '不拘', iduType: '不拘', keyword: '', results: [], hasSearched: false }); };
+    
+    return (
+        <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950">
+            <header className="bg-industrial-900 border-b border-industrial-700 sticky top-0 z-40 px-4 py-3 shadow-lg">
+                <div className="max-w-md mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsSidebarOpen(true)} className="p-1 -ml-1 text-gray-400 hover:text-white transition-colors active:scale-95"><Icon name="menu" className="w-6 h-6" /></button>
+                        <div className="flex items-center gap-2"><Icon name="wrench" className="text-industrial-accent w-5 h-5" /><h1 className="text-lg font-bold tracking-tighter text-white">龍神<span className="text-industrial-accent">空調</span>幫手</h1></div>
+                    </div>
+                    <span className="text-[10px] text-industrial-600 font-mono">V11.2</span>
+                </div>
+            </header>
+            <div className={`fixed inset-0 z-[200] ${isSidebarOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+                <div className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsSidebarOpen(false)}></div>
+                <div className={`absolute top-0 left-0 w-64 h-full bg-industrial-900 border-r border-industrial-700 transform transition-transform duration-300 flex flex-col shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <div className="p-5 border-b border-industrial-700 flex items-center justify-between bg-industrial-950">
+                        <div className="flex items-center gap-2"><Icon name="wrench" className="text-industrial-accent w-5 h-5" /><span className="text-lg font-bold text-white tracking-widest">選單</span></div>
+                        <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500 hover:text-white"><Icon name="x" className="w-5 h-5" /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto py-4 space-y-1.5 px-3">
+                        <SidebarBtn active={activeTab==='search'} onClick={()=>{setActiveTab('search'); setIsSidebarOpen(false);}} icon="search" label="機型與規格查詢" />
+                        <SidebarBtn active={activeTab==='capacity'} onClick={()=>{setActiveTab('capacity'); setIsSidebarOpen(false);}} icon="ruler" label="負載與機型配置" />
+                        <SidebarBtn active={activeTab==='calc'} onClick={()=>{setActiveTab('calc'); setIsSidebarOpen(false);}} icon="calculator" label="冷媒追加計算" />
+                        <SidebarBtn active={activeTab==='cooling'} onClick={()=>{setActiveTab('cooling'); setIsSidebarOpen(false);}} icon="thermometer" label="物理降溫模擬" />
+                        <SidebarBtn active={activeTab==='ducted'} onClick={()=>{setActiveTab('ducted'); setIsSidebarOpen(false);}} icon="box" label="吊隱式風管規劃" />
+                    </div>
+                    <div className="p-4 border-t border-industrial-700 bg-industrial-950"><SidebarBtn active={activeTab==='history'} onClick={()=>{setActiveTab('history'); setIsSidebarOpen(false);}} icon="history" label="操作歷史紀錄" /></div>
+                </div>
+            </div>
+            <main className="flex-1 max-w-md mx-auto w-full p-4 pb-8 overflow-x-hidden">
+                {activeTab === 'search' && (
+                    <div className="animate-fade-in">
+                        <h2 className="text-industrial-accent font-bold mb-3 flex items-center gap-2 text-sm"><Icon name="search" className="w-4 h-4" /> 多條件精準篩選</h2>
+                        <div className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 shadow-inner mb-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                <FilterSelect label="品牌" value={searchState.brand} options={['不拘', '日立', '大金', '國際牌', '三菱重工', '富士通', '格力', '美的', '華菱']} onChange={val => setSearchState(p => ({...p, brand: val}))} />
+                                <FilterSelect label="系列 (請先選品牌)" value={searchState.series} options={availableSeries} disabled={searchState.brand === '不拘'} onChange={val => setSearchState(p => ({...p, series: val}))} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                <FilterSelect label="冷暖/冷專" value={searchState.func} options={['不拘', '冷暖', '冷專']} onChange={val => setSearchState(p => ({...p, func: val}))} />
+                                <FilterSelect label="機型型式" value={searchState.iduType} options={['不拘', '室內機', '室外機(一對一)', '室外機(一對多)', '壁掛式', '吊隱式', '直立式']} onChange={val => setSearchState(p => ({...p, iduType: val}))} />
+                            </div>
+                            <div className="relative pt-2">
+                                <span className="absolute top-0 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10 pointer-events-none">型號關鍵字</span>
+                                <div className="absolute inset-y-0 left-0 pl-3 pt-2 flex items-center pointer-events-none text-gray-500"><Icon name="search" className="w-4 h-4" /></div>
+                                <input type="text" className="w-full pl-9 pr-4 py-2.5 bg-industrial-900 border border-industrial-700 rounded-lg text-sm text-white focus:border-industrial-accent transition-all" placeholder="選填..." value={searchState.keyword} onChange={e => setSearchState(p => ({...p, keyword: e.target.value}))} onKeyDown={e => { if (e.key === 'Enter') executeSearch(); }} />
+                            </div>
+                            <div className="flex gap-3 pt-2 border-t border-industrial-700/50">
+                                <button onClick={clearSearchFilters} className="px-4 py-3 bg-industrial-900 text-gray-400 font-bold rounded-lg border border-industrial-700 text-sm whitespace-nowrap hover:text-white">清除條件</button>
+                                <button onClick={executeSearch} className="flex-1 py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg transition-all active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
+                            </div>
+                        </div>
+                        {searchState.hasSearched && (
+                            <div className="mt-2">
+                                <div className="text-[10px] text-gray-500 mb-3 border-b border-industrial-700 pb-2 uppercase tracking-widest flex justify-between"><span>查詢結果</span><span className="text-industrial-accent font-bold">共 {searchState.results.length} 組符合</span></div>
+                                {searchState.results.length > 0 ? 
+                                    searchState.results.map((g, i) => <ResultCard key={i} group={g} onClick={() => setSelectedSpecGroup(g)} />) 
+                                    : <div className="text-center text-gray-500 py-10 bg-industrial-800/50 rounded-xl border border-industrial-700 border-dashed"><Icon name="x" className="w-8 h-8 mx-auto mb-2 text-gray-600" /><p className="text-sm">查無符合條件的機型資料</p></div>}
+                            </div>
+                        )}
+                    </div>
+                )}
+                {activeTab === 'capacity' && <MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} systemPref={systemPref} setSystemPref={setSystemPref} result={multiCapacityResult} setResult={setMultiCapacityResult} addToHistory={addToHistory} db={AC_DATABASE} />}
+                {activeTab === 'calc' && <RefrigerantCalculator state={refrigerantState} setState={setRefrigerantState} addToHistory={addToHistory} />}
+                {activeTab === 'cooling' && <CoolingTimeCalculator state={coolingState} setState={setCoolingState} addToHistory={addToHistory} />}
+                {activeTab === 'ducted' && <DuctedCalculator state={ductedState} setState={setDuctedState} addToHistory={addToHistory} />}
+                {activeTab === 'history' && (
+                    <div className="animate-fade-in">
+                        <div className="flex justify-between items-center mb-4 border-b border-industrial-700 pb-2"><h2 className="text-white font-bold tracking-widest flex items-center gap-2 text-sm"><Icon name="history" className="w-4 h-4"/> 操作紀錄</h2><button onClick={() => setShowClearConfirm(true)} className="text-[10px] text-red-400 border border-red-900/30 px-2 py-1 rounded bg-red-900/10 hover:bg-red-900/20">清除紀錄</button></div>
+                        {history.length === 0 ? <p className="text-center text-gray-600 py-20 text-sm">目前沒有歷史紀錄</p> : (
+                            <div className="space-y-3">{history.map(item => (<div key={item.id} onClick={() => setSelectedHistoryItem(item)} className="bg-industrial-800 p-3 rounded-xl border-l-4 border-industrial-600 flex justify-between items-center shadow-sm cursor-pointer hover:bg-industrial-700 transition-colors group"><div><span className="text-[9px] text-gray-500 block leading-none mb-1 uppercase tracking-widest">{item.type} | {item.date}</span><div className="text-sm font-bold text-gray-200 truncate w-56 group-hover:text-industrial-accent transition-colors">{item.title}</div></div><Icon name="chevron-right" className="w-4 h-4 text-gray-600 group-hover:text-white" /></div>))}</div>
+                        )}
+                    </div>
+                )}
+            </main>
+            {selectedSpecGroup && (
+                <SpecModal group={selectedSpecGroup} onClose={() => setSelectedSpecGroup(null)} />
+            )}
+            {selectedHistoryItem && (
+                <HistoryModal item={selectedHistoryItem} onClose={() => setSelectedHistoryItem(null)} onOpenSpec={setSelectedSpecGroup} />
+            )}
+            {showClearConfirm && <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-fade-in"><div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowClearConfirm(false)}></div><div className="bg-industrial-800 p-6 rounded-2xl w-full max-w-xs border border-industrial-700 shadow-2xl relative z-10 text-center"><Icon name="trash" className="w-10 h-10 text-red-500 mx-auto mb-3" /><h3 className="text-white font-bold mb-2">確認清除紀錄</h3><p className="text-xs text-gray-400 mb-6">您確定要清除所有的操作紀錄嗎？</p><div className="flex gap-3"><button onClick={() => setShowClearConfirm(false)} className="flex-1 py-3 rounded-xl bg-industrial-700 text-white font-bold text-sm">取消</button><button onClick={confirmClearHistory} className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg">確定</button></div></div></div>}
+        </div>
+    );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
