@@ -1,4 +1,3 @@
-/* style.css - 龍神 V13.2 視覺升級版 */
 :root {
     --bg-dark: #0f172a;
     --panel-bg: #1e293b;
@@ -16,8 +15,8 @@ body {
     font-family: 'Microsoft JhengHei', sans-serif; 
     overflow-x: hidden; 
     -webkit-tap-highlight-color: transparent;
-    /* 加入一點點網格背景，增加科技感 */
-    background-image: radial-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+    /* 科技感網格背景 */
+    background-image: radial-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px);
     background-size: 20px 20px;
 }
 
@@ -72,8 +71,14 @@ body {
 .spec-label { color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; }
 .spec-val { color: var(--text-primary); font-family: monospace; font-weight: 600; font-size: 0.95rem; text-align: right; }
 
-/* 8-bit 動畫保留 */
+/* 按鈕樣式 */
+.grid-pos-btn { aspect-ratio: 1/1; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; transition: all 0.2s; background-color: #1e293b; color: #64748b; }
+.grid-pos-btn.active-unit { background-color: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+.grid-pos-btn.active-outlet { background-color: #10b981; color: #fff; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+
+/* 8-bit 動畫區 */
 .pixel-track { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 5; }
 .pixel-scene { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 15px; animation: run-to-title 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 .pixel-art { font-family: "Press Start 2P", cursive; font-size: 20px; line-height: 1; text-shadow: 2px 2px 0px #000; }
 .worker { filter: hue-rotate(180deg) brightness(1.2) drop-shadow(0 0 5px rgba(255,255,255,0.5)); transform: scaleX(-1); }
+.dragon { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5)); }
