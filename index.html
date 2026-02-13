@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神空調幫手 | 專業冷氣師傅工具箱 V13.0</title>
+    <title>龍神空調幫手 | 專業冷氣師傅工具箱 V13.2</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -15,10 +15,10 @@
     <link rel="stylesheet" href="style.css">
 
     <script>
-        // 禁止右鍵選單 (保留您的設定)
+        // 禁止右鍵選單 (保護應用程式感)
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Tailwind 設定
+        // Tailwind 全域設定 (擴充主題顏色與動畫)
         tailwind.config = {
             theme: {
                 extend: {
@@ -52,34 +52,14 @@
     </script>
 </head>
 <body>
-<header class="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
-        
-        <div class="z-20">
-             <button onClick={() => setIsSidebarOpen(true)} id="menu-trigger" class="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 active:scale-95 transition-transform">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-             </button>
-        </div>
+    <div id="root"></div>
 
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none">
-            <div class="flex items-center gap-2 mb-0.5">
-                <div class="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400">
-                    <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/>
-                    </svg>
-                </div>
-                <h1 class="text-xl font-black italic dragon-title tracking-tight">龍神空調</h1>
-            </div>
-            <span class="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.2</span>
-        </div>
-
-        <div class="z-20">
-            <div class="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">
-                PRO
-            </div>
-        </div>
-        
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
-    </header>
+    <script type="text/babel" src="data.js"></script>
+    
+    <script type="text/babel" src="components.js"></script>
+    
+    <script type="text/babel" src="calculators.js"></script>
+    
+    <script type="text/babel" src="app.js"></script>
 </body>
 </html>
-
