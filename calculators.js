@@ -1,4 +1,4 @@
-// ================= 3. 計算工具邏輯 =================
+// ================= 3. 計算工具邏輯 (V13.4: 吊隱式新增公式顯示) =================
 
 // --- 負載計算 (V3.1: 保持不變) ---
 const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }) => {
@@ -141,7 +141,7 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
     );
 };
 
-// --- 吊隱式計算 (V13.3: 實務 kW 權重版) ---
+// --- 吊隱式計算 (V13.4: 舒適優先 + 公式顯示) ---
 const DuctedCalculator = ({ state, setState, db }) => {
     const [error, setError] = useState('');
     
@@ -151,24 +151,18 @@ const DuctedCalculator = ({ state, setState, db }) => {
         return db.filter(m => m.type === '吊隱式').sort((a,b) => a.maxKw - b.maxKw);
     }, [db]);
 
-    // 模擬法蘭資料庫 (因為 data.js 沒有這些欄位，暫時用對照表)
-    // 實務上您可以將這些數據直接寫入 data.js 的 idu 物件中
+    // 模擬法蘭資料庫
     const FLANGE_MAP = {
-        'daikin-sky-71': { w: 750, h: 200 }, // 模擬大金 71 型法蘭
-        // 您可以在此新增更多型號對應
+        'daikin-sky-71': { w: 750, h: 200 }, 
     };
 
-    // 處理機型選擇
     const handleModelSelect = (e) => {
         const modelId = e.target.value;
         if (!modelId) return;
 
         const model = ductedModels.find(m => m.id === modelId);
         if (model) {
-            // 嘗試讀取模擬法蘭尺寸，若無則預設
-            const flange = FLANGE_MAP[model.id] || { w: 700, h: 180 }; // 預設值
-            
-            // 自動估算坪數 (以 1kW 對應 1.6~1.8 坪估算)
+            const flange = FLANGE_MAP[model.id] || { w: 700, h: 180 }; 
             const estPing = (model.maxKw * 1.6).toFixed(1);
 
             setState(p => ({
@@ -178,16 +172,14 @@ const DuctedCalculator = ({ state, setState, db }) => {
                 flangeW: flange.w,
                 flangeH: flange.h,
                 ping: estPing,
-                result: null // 重置結果
+                result: null 
             }));
         }
     };
 
     const handlePingChange = (val) => {
         const ping = parseFloat(val);
-        // 簡單的自動建議，但不會覆蓋使用者已輸入的
         if (ping && !state.kw) {
-             // 如果還沒填 kW，才幫忙估算 (1坪約 0.6kW)
              setState(p => ({ ...p, ping: val, kw: (ping * 0.6).toFixed(1) }));
         } else {
              setState(p => ({ ...p, ping: val }));
@@ -212,23 +204,40 @@ const DuctedCalculator = ({ state, setState, db }) => {
         const area14 = 962;  // 14 inch
         const tolerance = 120; 
 
+        // 2. 準備公式計算結果 (只顯示結果 >= 1 的選項)
+        const calcDetails = [];
+        const ductSizes = [
+            { size: 8, area: area8 },
+            { size: 10, area: area10 },
+            { size: 12, area: area12 },
+            { size: 14, area: area14 }
+        ];
+
+        ductSizes.forEach(d => {
+            const ratio = (flangeArea / d.area).toFixed(1); // 算出來是幾孔
+            if (parseFloat(ratio) >= 1.0) {
+                calcDetails.push({ 
+                    size: d.size, 
+                    area: d.area, 
+                    ratio: ratio,
+                    formula: `${flangeArea} ÷ ${d.area} = ${ratio} 孔`
+                });
+            }
+        });
+
         let advice = "";
         let mainSizeStr = "";
         let statusColor = "text-white"; 
         
-        // --- V13.3 核心邏輯：加入 kW 判斷 ---
-        
-        // 判斷主幹最大能做多大 (物理限制)
+        // --- 核心邏輯：加入 kW 判斷 (與 V13.3 相同) ---
         let maxMainDuctPhys = 8;
         if (flangeArea + tolerance >= area14) maxMainDuctPhys = 14;
         else if (flangeArea + tolerance >= area12) maxMainDuctPhys = 12;
         else if (flangeArea + tolerance >= area10) maxMainDuctPhys = 10;
 
-        // 實務限制 (9.0kW 門檻)
-        // 若 < 9.0kW，即便法蘭很大，通常也不會配到 14" (因為風速不夠推)
         let suggestedMainSize = maxMainDuctPhys;
         if (kw < 9.0 && suggestedMainSize > 12) {
-            suggestedMainSize = 12; // 強制降階
+            suggestedMainSize = 12; 
         }
 
         const requiredArea = outlets * area8;
@@ -236,7 +245,6 @@ const DuctedCalculator = ({ state, setState, db }) => {
         // 邏輯 A: 小噸數 (< 9.0 kW)
         if (kw < 9.0) {
             if (flangeArea >= requiredArea) {
-                // 足夠
                 statusColor = "text-green-400";
                 if (outlets === 1) {
                     mainSizeStr = `${suggestedMainSize}" 單孔`;
@@ -246,22 +254,19 @@ const DuctedCalculator = ({ state, setState, db }) => {
                     advice = `✅ 標準配置 (${kw}kW)：\n9.0kW 以下機型建議結構單純化。\n建議集風箱直接出 ${outlets} 孔 8" 風管 (或 10")，不需使用複雜三通。`;
                 }
             } else if (flangeArea + tolerance >= requiredArea) {
-                // 變通
                 statusColor = "text-yellow-400";
                 mainSizeStr = `變通: ${outlets} 孔 8"`;
                 advice = `⚠️ 空間受限 (${kw}kW)：\n法蘭面積略小。建議集風箱直接擴管至 ${suggestedMainSize}"，然後直接分出 ${outlets} 孔 8"。\n(此噸數不建議使用過長的 12" 主幹接三通，壓損會較大)`;
             } else {
-                // 不足
                 statusColor = "text-red-400";
                 mainSizeStr = "法蘭過小";
                 advice = `🔴 法蘭過小：\n${kw}kW 機型法蘭僅 ${flangeArea}cm²，無法負擔 ${outlets} 孔需求。\n建議減少孔數。`;
             }
         } 
-        // 邏輯 B: 大噸數 (>= 9.0 kW) -> 這裡才考慮大風管、三通、多孔
+        // 邏輯 B: 大噸數 (>= 9.0 kW)
         else {
             if (flangeArea >= requiredArea) {
                 statusColor = "text-green-400";
-                // 大噸數優先推薦大主幹
                 if (outlets >= 3 && suggestedMainSize >= 12) {
                     mainSizeStr = `${suggestedMainSize}" 主管配置`;
                     advice = `✅ 大風量配置 (${kw}kW)：\n機型噸數大，建議優先採用「集風箱出 ${suggestedMainSize}" 主管」。\n再延伸至適當位置使用分風箱(三通/四通)轉 ${outlets} 孔 8"。\n(這樣可降低機房噪音並均勻送風)`;
@@ -270,7 +275,6 @@ const DuctedCalculator = ({ state, setState, db }) => {
                     advice = `✅ 強力配置 (${kw}kW)：\n法蘭充足，建議直接出 ${outlets} 孔 10" 風管以確保大風量傳輸。`;
                 }
             } else if (flangeArea + tolerance >= requiredArea) {
-                // 變通
                 statusColor = "text-yellow-400";
                 mainSizeStr = `12"~14" 擴管變通`;
                 advice = `⚠️ 變通配置 (${kw}kW)：\n法蘭略小。建議集風箱擴管至 12"~14" 單孔主管。\n接一段風管後再使用三通分流，利用主管的靜壓箱效應來穩壓。`;
@@ -281,7 +285,7 @@ const DuctedCalculator = ({ state, setState, db }) => {
             }
         }
 
-        setState(prev => ({ ...prev, result: { mainSizeStr, flangeArea, advice, statusColor } }));
+        setState(prev => ({ ...prev, result: { mainSizeStr, flangeArea, advice, statusColor, calcDetails } }));
     };
 
     const reset = () => { setState({ selectedModel: '', kw: '', flangeW:'', flangeH:'', ping: '', outletCount: 1, result: null }); setError(''); };
@@ -292,7 +296,7 @@ const DuctedCalculator = ({ state, setState, db }) => {
                 <div className="flex justify-between items-center mb-6 text-white"><h2 className="text-blue-400 font-bold flex items-center gap-2 text-sm"><Icon name="box" className="w-4 h-4" /> 吊隱式風管規劃 (Pro)</h2><button onClick={reset} className="text-[10px] text-gray-500 hover:text-white px-2 py-1 bg-industrial-900 rounded">重置</button></div>
                 {error && <div className="text-red-400 text-xs font-bold mb-3 text-center bg-red-900/20 py-2 rounded-lg">{error}</div>}
                 <div className="space-y-4">
-                    {/* 1. 機型選擇 */}
+                    {/* 機型、kW、坪數、法蘭等輸入框保持不變... */}
                     <div className="relative">
                         <span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10">選擇吊隱式機型 (自動帶入)</span>
                         <div className="relative">
@@ -304,19 +308,16 @@ const DuctedCalculator = ({ state, setState, db }) => {
                         </div>
                     </div>
 
-                    {/* 2. kW 與 坪數 */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="relative"><span className="absolute left-2 top-0 text-[8px] text-blue-400">冷氣能力 (kW)</span><input type="number" value={state.kw || ''} onChange={e=>setState(p=>({...p, kw: e.target.value}))} className="w-full bg-industrial-900 border border-blue-900/50 rounded-xl pt-4 pb-2 text-center text-white text-sm" placeholder="輸入 kW"/></div>
                         <div className="relative"><span className="absolute left-2 top-0 text-[8px] text-yellow-500">空間坪數</span><input type="number" value={state.ping || ''} onChange={e=>handlePingChange(e.target.value)} className="w-full bg-industrial-900 border border-yellow-600/30 rounded-xl pt-4 pb-2 text-center text-white text-sm" placeholder="輸入坪數"/></div>
                     </div>
                     
-                    {/* 3. 法蘭尺寸 */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="relative"><span className="absolute left-2 top-0 text-[8px] text-gray-500">法蘭寬(mm)</span><input type="number" value={state.flangeW} onChange={e=>setState(p=>({...p,flangeW:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm"/></div>
                         <div className="relative"><span className="absolute left-2 top-0 text-[8px] text-gray-500">法蘭高(mm)</span><input type="number" value={state.flangeH} onChange={e=>setState(p=>({...p,flangeH:e.target.value}))} className="w-full bg-industrial-900 border border-industrial-700 rounded-xl pt-4 pb-2 text-center text-white text-sm"/></div>
                     </div>
                     
-                    {/* 4. 出風口數 */}
                     <div className="relative"><span className="absolute left-2 top-0 text-[8px] text-green-400">出風口數量</span><input type="number" value={state.outletCount} onChange={e=>setState(p=>({...p,outletCount:e.target.value}))} className="w-full bg-industrial-900 border border-green-900/50 rounded-xl pt-4 pb-2 text-center text-white text-sm"/></div>
                     
                     <button onClick={calculate} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg active:scale-95 text-sm">試算配置</button>
@@ -328,8 +329,22 @@ const DuctedCalculator = ({ state, setState, db }) => {
                         <div className="text-gray-500 text-xs">法蘭面積: {state.result.flangeArea} cm²</div>
                         <div className={`text-xl font-bold ${state.result.statusColor}`}>{state.result.mainSizeStr}</div>
                     </div>
-                    <div className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-industrial-950 p-3 rounded border border-gray-800 text-left font-mono">
+                    <div className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap bg-industrial-950 p-3 rounded border border-gray-800 text-left font-mono mb-4">
                         {state.result.advice}
+                    </div>
+                    
+                    {/* 新增：公式計算細節區 */}
+                    <div className="bg-industrial-950/50 rounded-lg p-3 border border-gray-700">
+                        <div className="text-[10px] text-gray-500 font-bold mb-2 uppercase tracking-wider">計算公式參考 (法蘭/管面積)</div>
+                        <div className="space-y-1">
+                            {state.result.calcDetails.map(detail => (
+                                <div key={detail.size} className="flex justify-between text-xs font-mono text-gray-400 border-b border-gray-800/50 pb-1 last:border-0">
+                                    <span>{detail.size}" ({detail.area}cm²):</span>
+                                    <span className="text-yellow-500/80">{detail.formula}</span>
+                                </div>
+                            ))}
+                            {state.result.calcDetails.length === 0 && <div className="text-xs text-gray-600 text-center">法蘭過小，無合適管徑 (>1孔)</div>}
+                        </div>
                     </div>
                 </div>
             )}
