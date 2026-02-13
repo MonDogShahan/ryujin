@@ -126,6 +126,14 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="spec-row"><span className="spec-label">外觀尺寸 (寬x高x深)</span><span className="spec-val">{currentVariant.idu?.dims} mm</span></div>
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.idu?.weight} kg</span></div>
                                     <div className="spec-row"><span className="spec-label">噪音值</span><span className="spec-val">{currentVariant.idu?.noise || '-'}</span></div>
+                                    
+                                    {/* 新增：吊隱式吹出口法蘭尺寸 */}
+                                    {(currentVariant.type === '吊隱式' || currentVariant.idu?.flangeDims) && (
+                                        <div className="spec-row bg-blue-900/20 -mx-4 px-4 py-2 mt-2 border-t border-blue-800/30">
+                                            <span className="spec-label text-blue-300 font-bold">吹出口法蘭 (寬x高)</span>
+                                            <span className="spec-val text-yellow-400 text-lg">{currentVariant.idu?.flangeDims || '需查閱手冊'} <span className="text-xs text-gray-500">mm</span></span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="glass-panel rounded-xl overflow-hidden border-l-4 border-l-green-500">
@@ -133,7 +141,12 @@ const SpecModal = ({ group, onClose }) => {
                                 <div className="p-4 space-y-3">
                                     <div className="spec-row"><span className="spec-label">外觀尺寸 (寬x高x深)</span><span className="spec-val">{currentVariant.odu?.dims} mm</span></div>
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.odu?.weight} kg</span></div>
-                                    <div className="spec-row"><span className="spec-label">腳座孔距</span><span className="spec-val text-yellow-400">{currentVariant.odu?.footSpacing || '參閱說明書'}</span></div>
+                                    
+                                    {/* 修改：新增安裝固定腳孔距 */}
+                                    <div className="spec-row bg-green-900/20 -mx-4 px-4 py-2 mt-2 border-t border-green-800/30">
+                                        <span className="spec-label text-green-300 font-bold">安裝腳座孔距 (寬x深)</span>
+                                        <span className="spec-val text-yellow-400 text-lg">{currentVariant.odu?.footSpacing || '需查閱手冊'} <span className="text-xs text-gray-500">mm</span></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
