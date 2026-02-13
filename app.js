@@ -129,10 +129,10 @@ const App = () => {
                                 <path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/>
                             </svg>
                         </div>
-                        {/* 修正：加入 pr-2 (padding-right) 避免斜體字被切到 */}
-                        <h1 className="text-xl font-black italic dragon-title tracking-tight pr-2">龍神空調</h1>
+                        {/* 修正：文字更改為 "龍神空調幫手"，並加大右側間距 pr-3 避免切字 */}
+                        <h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1>
                     </div>
-                    <span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.3</span>
+                    <span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.4</span>
                 </div>
 
                 <div className="z-20">
