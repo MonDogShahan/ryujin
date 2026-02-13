@@ -1,0 +1,24 @@
+body { background-color: #0b1121; color: #e2e8f0; user-select: none; font-family: 'Microsoft JhengHei', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+
+/* 玻璃擬態 */
+.glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+.glass-header { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+
+.spec-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 12px 0; align-items: center; }
+.spec-row:last-child { border-bottom: none; }
+.spec-label { color: #94a3b8; font-size: 0.85rem; font-weight: 500; }
+.spec-val { color: #f8fafc; font-family: monospace; font-weight: 600; font-size: 0.95rem; text-align: right; }
+
+.grid-pos-btn { aspect-ratio: 1/1; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; transition: all 0.2s; background-color: #1e293b; color: #64748b; }
+.grid-pos-btn.active-unit { background-color: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+.grid-pos-btn.active-outlet { background-color: #10b981; color: #fff; border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+
+/* 8-bit 動畫區 */
+.pixel-track { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; z-index: 5; }
+.pixel-scene { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 15px; animation: run-to-title 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.pixel-art { font-family: "Press Start 2P", cursive; font-size: 20px; line-height: 1; text-shadow: 2px 2px 0px #000; }
+.worker { filter: hue-rotate(180deg) brightness(1.2) drop-shadow(0 0 5px rgba(255,255,255,0.5)); transform: scaleX(-1); }
+.dragon { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.5)); }
