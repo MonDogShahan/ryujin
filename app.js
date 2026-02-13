@@ -2,27 +2,50 @@
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [searchState, setSearchState] = useState({ brand: '不拘', series: '不拘', func: '不拘', type: '不拘', keyword: '', results: [], history: [] });
+    
+    // 搜尋功能狀態
+    const [searchState, setSearchState] = useState({ 
+        brand: '不拘', 
+        series: '不拘', 
+        func: '不拘', 
+        type: '不拘', 
+        keyword: '', 
+        results: [], 
+        history: [] 
+    });
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
-    // 各功能狀態
+    // 各計算機功能狀態
     const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
     const [capacityResult, setCapacityResult] = useState(null);
-    const [ductedState, setDuctedState] = useState({ flangeW: '', flangeH: '', ping: '', outletCount: 1, result: null });
+    
+    // V13.3 更新：吊隱式狀態包含 selectedModel 和 kw
+    const [ductedState, setDuctedState] = useState({ 
+        selectedModel: '', 
+        kw: '', 
+        flangeW: '', 
+        flangeH: '', 
+        ping: '', 
+        outletCount: 1, 
+        result: null 
+    });
+    
     const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', result: null });
 
+    // 初始化：讀取搜尋紀錄
     useEffect(() => {
         const saved = localStorage.getItem('searchHistory');
         if (saved) setSearchState(p => ({ ...p, history: JSON.parse(saved) }));
     }, []);
 
+    // 計算可用的系列選單
     const availableSeries = useMemo(() => {
         if (searchState.brand === '不拘') return ['不拘'];
         return ['不拘', ...new Set(AC_DATABASE.filter(i => i.brandCN === searchState.brand).map(i => i.series))];
     }, [searchState.brand]);
 
-    // 搜尋核心邏輯 (含自動建議)
+    // 搜尋核心邏輯
     const getFilteredResults = (kw) => {
         const results = AC_DATABASE.filter(i => {
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
@@ -38,7 +61,7 @@ const App = () => {
     const executeSearch = () => {
         const filtered = getFilteredResults(searchState.keyword);
         
-        // 智慧分組：將同型號的冷暖/冷專合併
+        // 智慧分組：將同型號的冷暖/冷專合併顯示
         const grouped = [];
         filtered.forEach(item => {
             const key = `${item.brandCN}-${item.series}-${item.maxKw}`;
@@ -48,6 +71,7 @@ const App = () => {
         });
 
         setSearchState(p => {
+            // 更新搜尋歷史
             const newHistory = p.keyword && !p.history.includes(p.keyword) ? [p.keyword, ...p.history].slice(0, 5) : p.history;
             localStorage.setItem('searchHistory', JSON.stringify(newHistory));
             return { ...p, results: grouped.sort((a,b) => a.maxKw - b.maxKw), history: newHistory };
@@ -55,10 +79,9 @@ const App = () => {
         setShowHistory(false);
     };
 
-    // 搜尋建議邏輯：空白顯示歷史，有字顯示相關型號
+    // 搜尋建議
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
-        // 簡單示範：列出包含關鍵字的型號 (去重)
         const matches = AC_DATABASE.filter(i => JSON.stringify(i).toLowerCase().includes(searchState.keyword.toLowerCase()))
                                         .map(i => i.modelIdu).slice(0, 5);
         return [...new Set(matches)];
@@ -69,7 +92,7 @@ const App = () => {
         setSearchState(p => ({ ...p, history: [] }));
     };
 
-    // 處理點擊外部關閉搜尋紀錄 (修復 Bug)
+    // 點擊外部關閉搜尋紀錄
     const searchContainerRef = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -81,7 +104,8 @@ const App = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const SidebarBtn = ({ id, icon, label, onClick, active }) => (
+    // 側邊欄按鈕元件
+    const SidebarBtnWrapper = ({ id, icon, label }) => (
         <button onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }} className={`flex items-center gap-4 w-full text-left px-4 py-3.5 rounded-xl transition-all ${activeTab === id ? 'bg-industrial-800 border border-industrial-700 text-industrial-accent font-bold' : 'text-gray-400 hover:text-white'}`}>
             <Icon name={icon} className="w-5 h-5" /><span className="text-sm tracking-widest">{label}</span>
         </button>
@@ -89,7 +113,7 @@ const App = () => {
 
     return (
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
-            {/* Header: 全新龍神視覺設計 */}
+            {/* Header: V13.2 龍神視覺設計 */}
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20">
                     <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform">
@@ -105,9 +129,10 @@ const App = () => {
                                 <path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/>
                             </svg>
                         </div>
-                        <h1 className="text-xl font-black italic dragon-title tracking-tight">龍神空調</h1>
+                        {/* 修正：加入 pr-2 (padding-right) 避免斜體字被切到 */}
+                        <h1 className="text-xl font-black italic dragon-title tracking-tight pr-2">龍神空調</h1>
                     </div>
-                    <span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.2</span>
+                    <span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.3</span>
                 </div>
 
                 <div className="z-20">
@@ -115,7 +140,6 @@ const App = () => {
                         PRO
                     </div>
                 </div>
-                {/* 頂部光暈特效 */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
@@ -128,10 +152,10 @@ const App = () => {
                         <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500"><Icon name="x" className="w-5 h-5" /></button>
                     </div>
                     <div className="flex-1 overflow-y-auto py-4 space-y-1.5 px-3">
-                        <SidebarBtn id="search" icon="search" label="機型與規格查詢" />
-                        <SidebarBtn id="capacity" icon="ruler" label="負載與機型配置" />
-                        <SidebarBtn id="cooling" icon="thermometer" label="物理降溫模擬" />
-                        <SidebarBtn id="ducted" icon="box" label="吊隱式風管規劃" />
+                        <SidebarBtnWrapper id="search" icon="search" label="機型與規格查詢" />
+                        <SidebarBtnWrapper id="capacity" icon="ruler" label="負載與機型配置" />
+                        <SidebarBtnWrapper id="cooling" icon="thermometer" label="物理降溫模擬" />
+                        <SidebarBtnWrapper id="ducted" icon="box" label="吊隱式風管規劃" />
                     </div>
                 </div>
             </div>
@@ -188,9 +212,15 @@ const App = () => {
                         </div>
                     </div>
                 )}
+                
+                {/* 負載計算 */}
                 {activeTab === 'capacity' && <MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} systemPref={'multi'} setSystemPref={()=>{}} result={capacityResult} setResult={setCapacityResult} addToHistory={()=>{}} db={AC_DATABASE} />}
+                
+                {/* 降溫模擬 */}
                 {activeTab === 'cooling' && <CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
-                {activeTab === 'ducted' && <DuctedCalculator state={ductedState} setState={setDuctedState} />}
+                
+                {/* 吊隱式規劃 - 關鍵更新：傳入 db={AC_DATABASE} */}
+                {activeTab === 'ducted' && <DuctedCalculator state={ductedState} setState={setDuctedState} db={AC_DATABASE} />}
             </main>
 
             {selectedSpecGroup && <SpecModal group={selectedSpecGroup} onClose={() => setSelectedSpecGroup(null)} />}
@@ -198,5 +228,6 @@ const App = () => {
     );
 };
 
+// 渲染到 DOM
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
