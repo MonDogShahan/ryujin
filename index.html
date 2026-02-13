@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神空調幫手 | 專業冷氣師傅工具箱 V13.2</title>
+    
+    <title>龍神空調幫手</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23fbbf24%22><path d=%22M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z%22/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -15,10 +18,10 @@
     <link rel="stylesheet" href="style.css">
 
     <script>
-        // 禁止右鍵選單 (保護應用程式感)
+        // 禁止右鍵選單
         document.addEventListener('contextmenu', e => e.preventDefault());
         
-        // Tailwind 全域設定 (擴充主題顏色與動畫)
+        // Tailwind 設定
         tailwind.config = {
             theme: {
                 extend: {
@@ -55,11 +58,8 @@
     <div id="root"></div>
 
     <script type="text/babel" src="data.js"></script>
-    
     <script type="text/babel" src="components.js"></script>
-    
     <script type="text/babel" src="calculators.js"></script>
-    
     <script type="text/babel" src="app.js"></script>
 </body>
 </html>
