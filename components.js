@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 (components.js) V13.17 =================
+// ================= 2. 共用 UI 元件 (components.js) V13.20 =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -22,36 +22,18 @@ const Icon = ({ name, className }) => {
 
 const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
 
-// ★ 新增：電工法規計算邏輯 (推算線徑與NFB)
+// 電工法規計算邏輯
 const calculateElectric = (maxAmp, powerWatts) => {
-    // 若有提供最大電流，優先使用，否則用功率/220V 估算
     let current = parseFloat(maxAmp);
     if (isNaN(current) && powerWatts) current = parseFloat(powerWatts) / 220;
     if (isNaN(current)) return { wire: '詳見說明書', nfb: '-' };
-
-    // 安全係數 1.25倍
     const safeCurrent = current * 1.25;
-    
-    let wire = '2.0mm²';
-    let nfb = '15A'; // 最小 NFB
-
-    if (safeCurrent <= 15) {
-        wire = '2.0mm²';
-        nfb = '15A (或20A)';
-    } else if (safeCurrent <= 20) {
-        wire = '3.5mm² (或5.5mm²)';
-        nfb = '20A';
-    } else if (safeCurrent <= 30) {
-        wire = '5.5mm²';
-        nfb = '30A';
-    } else if (safeCurrent <= 40) {
-        wire = '8mm²';
-        nfb = '40A';
-    } else {
-        wire = '14mm²';
-        nfb = '50A+';
-    }
-
+    let wire = '2.0mm²'; let nfb = '15A';
+    if (safeCurrent <= 15) { wire = '2.0mm²'; nfb = '15A (或20A)'; }
+    else if (safeCurrent <= 20) { wire = '3.5mm² (或5.5mm²)'; nfb = '20A'; }
+    else if (safeCurrent <= 30) { wire = '5.5mm²'; nfb = '30A'; }
+    else if (safeCurrent <= 40) { wire = '8mm²'; nfb = '40A'; }
+    else { wire = '14mm²'; nfb = '50A+'; }
     return { wire, nfb, calc: true };
 };
 
@@ -69,8 +51,6 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
 
     const [activeTab, setActiveTab] = useState('basic');
     if (!currentVariant) return null;
-
-    // 取得電氣建議
     const elecSpec = calculateElectric(currentVariant.odu?.currentMax, currentVariant.power);
 
     return (
@@ -79,12 +59,15 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
             <div className="bg-industrial-950 w-full max-w-3xl h-[85vh] rounded-2xl border border-gray-700 shadow-2xl flex flex-col relative z-10 overflow-hidden animate-zoom-in">
                 <div className="glass-header p-5 flex justify-between items-start shrink-0 z-20">
                     <div>
-                        <div className="flex items-center gap-3 mb-2"><span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wider">{currentVariant.brandCN}</span><h3 className="text-xl font-bold text-white tracking-wide">{currentVariant.series}</h3></div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wider">{currentVariant.brandCN}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${currentVariant.type === '吊隱式' ? 'text-purple-300 border-purple-500 bg-purple-900/50' : currentVariant.type === '四方吹' ? 'text-pink-300 border-pink-500 bg-pink-900/50' : currentVariant.type === '窗型' ? 'text-green-300 border-green-500 bg-green-900/50' : 'text-cyan-300 border-cyan-500 bg-cyan-900/50'}`}>{currentVariant.type}</span>
+                            <h3 className="text-xl font-bold text-white tracking-wide">{currentVariant.series}</h3>
+                        </div>
                         <div className="flex flex-wrap gap-2 items-center"><div className="flex bg-industrial-900 rounded-lg p-1 border border-gray-700 mr-2">{heatVariant && <button onClick={() => setDisplayMode('heat')} className={`px-3 py-1 text-xs rounded-md transition-all ${displayMode === 'heat' ? 'bg-orange-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}>冷暖</button>}{coolVariant && <button onClick={() => setDisplayMode('cool')} className={`px-3 py-1 text-xs rounded-md transition-all ${displayMode === 'cool' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}>冷專</button>}</div><span className="text-sm font-mono text-yellow-400 font-bold">{currentVariant.maxKw} kW</span></div>
                     </div>
                     <button onClick={onClose} className="p-2 bg-industrial-800 hover:bg-red-900/50 rounded-full text-gray-400 hover:text-red-400 transition-colors"><Icon name="x" className="w-5 h-5" /></button>
                 </div>
-
                 <div className="flex border-b border-gray-800 bg-industrial-900/50 backdrop-blur-sm sticky top-0 z-10">{['basic:⚡ 效能概覽', 'detail:📦 內外機細節', 'install:🔧 安裝參數'].map(tab => { const [key, label] = tab.split(':'); return <button key={key} onClick={() => setActiveTab(key)} className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all relative ${activeTab === key ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>{label}{activeTab === key && <span className={`absolute bottom-0 left-0 w-full h-0.5 shadow-[0_0_10px] ${key === 'basic' ? 'bg-blue-500 shadow-blue-500/50' : key === 'detail' ? 'bg-green-500 shadow-green-500/50' : 'bg-orange-500 shadow-orange-500/50'}`}></span>}</button>; })}</div>
                 <div className="flex-1 overflow-y-auto custom-scroll p-5 bg-gradient-to-b from-industrial-950 to-industrial-900">
                     {activeTab === 'basic' && (
@@ -102,30 +85,7 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                     {activeTab === 'install' && (
                         <div className="space-y-5 animate-fade-in">
                             <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 flex items-center gap-4"><div className="p-3 bg-orange-500/20 rounded-full text-orange-400"><Icon name="wrench" className="w-6 h-6"/></div><div><div className="text-[10px] text-orange-300 font-bold uppercase tracking-widest mb-1">配管尺寸 (液/氣)</div><div className="text-xl font-mono font-bold text-white">{currentVariant.pipes}</div></div></div>
-                            <div className="glass-panel rounded-xl p-4">
-                                <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest border-b border-industrial-700 pb-2">線材規格 (法規推算)</h4>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {/* 優先顯示資料庫數據，若無則顯示推算值，並標註 (推算) */}
-                                    <div>
-                                        <span className="text-[10px] text-gray-500 block mb-1">建議電源線徑</span>
-                                        <div className="text-sm font-mono text-blue-300">
-                                            {currentVariant.odu?.powerWire || `${elecSpec.wire} ${elecSpec.calc ? '(依電流推算)' : ''}`}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span className="text-[10px] text-gray-500 block mb-1">內外機訊號線</span>
-                                        <div className="text-sm font-mono text-green-300">
-                                            {currentVariant.odu?.signalWire || '1.25mm² x 4C (建議)'}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span className="text-[10px] text-gray-500 block mb-1">建議 NFB (無熔絲開關)</span>
-                                        <div className="text-sm font-mono text-red-400 font-bold">
-                                            {currentVariant.odu?.currentMax ? `${currentVariant.odu.currentMax}A (Max)` : elecSpec.nfb}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div className="glass-panel rounded-xl p-4"><h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest border-b border-industrial-700 pb-2">線材規格 (法規推算)</h4><div className="grid grid-cols-1 gap-4"><div><span className="text-[10px] text-gray-500 block mb-1">建議電源線徑</span><div className="text-sm font-mono text-blue-300">{currentVariant.odu?.powerWire || `${elecSpec.wire} ${elecSpec.calc ? '(依電流推算)' : ''}`}</div></div><div><span className="text-[10px] text-gray-500 block mb-1">內外機訊號線</span><div className="text-sm font-mono text-green-300">{currentVariant.odu?.signalWire || '1.25mm² x 4C (建議)'}</div></div><div><span className="text-[10px] text-gray-500 block mb-1">建議 NFB (無熔絲開關)</span><div className="text-sm font-mono text-red-400 font-bold">{currentVariant.odu?.currentMax ? `${currentVariant.odu.currentMax}A (Max)` : elecSpec.nfb}</div></div></div></div>
                             <div className="text-center text-[10px] text-gray-600 mt-4">* 以上數據僅供參考，實際施工請務必參閱原廠安裝說明書與電工法規</div>
                         </div>
                     )}
@@ -139,6 +99,7 @@ const FilterSelect = ({ label, value, options, onChange }) => (
     <div className="relative"><span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10">{label}</span><div className="relative"><select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-industrial-900 border border-industrial-700 rounded-lg pl-3 pr-8 py-3 text-sm text-white focus:border-industrial-accent outline-none transition-all cursor-pointer">{options.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-gray-500"><Icon name="chevron" className="w-4 h-4"/></div></div></div>
 );
 
+// ★ 關鍵修正：ResultCard 新增型式標籤顯示
 const ResultCard = ({ group, onClick }) => {
     const heatVariant = group.variants.find(v => v.func === '冷暖');
     const coolVariant = group.variants.find(v => v.func === '冷專');
@@ -154,9 +115,14 @@ const ResultCard = ({ group, onClick }) => {
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{currentItem.brandCN}</span>
+                        {/* ★ 新增：型式標籤 (四方吹/吊隱/壁掛/窗型) */}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                            currentItem.type === '吊隱式' ? 'text-purple-300 border-purple-800 bg-purple-900/20' :
+                            currentItem.type === '四方吹' ? 'text-pink-300 border-pink-800 bg-pink-900/20' :
+                            currentItem.type === '窗型' ? 'text-green-300 border-green-800 bg-green-900/20' :
+                            'text-cyan-300 border-cyan-800 bg-cyan-900/20'
+                        }`}>{currentItem.type}</span>
                         <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{currentItem.series}</span>
-                        {heatVariant && coolVariant && (<div className="flex bg-industrial-900 rounded p-0.5 ml-2 border border-industrial-600"><button onClick={(e) => handleToggle(e, 'heat')} className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'heat' ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>冷暖</button><button onClick={(e) => handleToggle(e, 'cool')} className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'cool' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>冷專</button></div>)}
-                        {(!heatVariant || !coolVariant) && (<span className={`text-[9px] px-1.5 py-0.5 rounded ${currentItem.func === '冷暖' ? 'bg-orange-900/50 text-orange-300' : 'bg-blue-900/50 text-blue-300'}`}>{currentItem.func}</span>)}
                     </div>
                     <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors flex items-center gap-2">{currentItem.modelIdu}</div>
                     <div className="text-xs text-gray-400 mt-1 font-mono flex gap-3"><span className={mode === 'heat' ? 'text-orange-400' : 'text-blue-400'}>{mode === 'heat' ? '暖氣' : '冷氣'}: {mode === 'heat' ? currentItem.heatCap : currentItem.coolCap || currentItem.maxKw} kW</span><span className="text-gray-600">|</span><span>{currentItem.pipes}</span></div>
