@@ -1,6 +1,6 @@
 // ================= 4. 主程式 (App) V13.11 =================
 const App = () => {
-    // ... (狀態與之前一致)
+    // ... (狀態初始化保持不變) ...
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [searchState, setSearchState] = useState({ brand: '不拘', series: '不拘', func: '不拘', type: '不拘', keyword: '', results: [], history: [] });
@@ -18,7 +18,7 @@ const App = () => {
         return ['不拘', ...new Set(AC_DATABASE.filter(i => i.brandCN === searchState.brand).map(i => i.series))];
     }, [searchState.brand]);
 
-    // ★ 關鍵修正：搜尋邏輯優化
+    // ★ 關鍵修正：精準搜尋邏輯 (28 -> 2.8kW / 排除 80, 63 等)
     const getFilteredResults = (kw) => {
         return AC_DATABASE.filter(i => {
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
@@ -30,20 +30,22 @@ const App = () => {
                 const keywordLower = kw.toLowerCase();
                 const itemString = JSON.stringify(i).toLowerCase();
                 
-                // 1. 處理純數字輸入 (如 "28" -> 找 2.8kW 或 型號含 28)
+                // 1. 純數字邏輯 (如 "28")
                 if (!isNaN(parseFloat(kw)) && isFinite(kw)) {
-                    // 排除像 "80" 匹配到 "2.8" (因為包含8) 的情況 -> 嚴格字串包含
-                    // 優先匹配 maxKw (加減 0.1 容許值)
                     const kwNum = parseFloat(kw);
-                    const isCapacityMatch = Math.abs(parseFloat(i.maxKw) - kwNum) < 0.1 || Math.abs(parseFloat(i.maxKw)*10 - kwNum) < 0.1;
+                    // 邏輯: 搜尋 "28" -> 找 2.8kW (±0.1) OR 找 28kW (商用)
+                    // 同時檢查型號中是否包含 "28" (嚴格字串比對，不包含 80 中的 8)
                     
-                    // 型號匹配 (嚴格包含字串)
+                    // 判定 kW 能力匹配 (28 -> 2.8)
+                    const isCapacityMatch = Math.abs(parseFloat(i.maxKw) * 10 - kwNum) < 0.5 || Math.abs(parseFloat(i.maxKw) - kwNum) < 0.1;
+                    
+                    // 判定型號匹配 (確保 "28" 不會匹配到 "RAS-80")
                     const isModelMatch = i.modelIdu.toLowerCase().includes(keywordLower) || i.modelOdu.toLowerCase().includes(keywordLower);
                     
                     return isCapacityMatch || isModelMatch;
                 }
                 
-                // 2. 一般文字搜尋
+                // 2. 文字邏輯
                 return itemString.includes(keywordLower);
             }
             return true;
@@ -67,8 +69,7 @@ const App = () => {
         setShowHistory(false);
     };
 
-    // ... (suggestions, clearHistory, SidebarBtnWrapper 保持不變) ...
-    // 為節省篇幅，請保留原有的 UI 邏輯代碼 ...
+    // ... (UI 元件保持不變，省略以節省篇幅) ...
     const suggestions = useMemo(() => { if (!searchState.keyword) return searchState.history; const matches = AC_DATABASE.filter(i => JSON.stringify(i).toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5); return [...new Set(matches)]; }, [searchState.keyword, searchState.history]);
     const clearHistory = () => { localStorage.removeItem('searchHistory'); setSearchState(p => ({ ...p, history: [] })); };
     const searchContainerRef = useRef(null);
@@ -93,7 +94,6 @@ const App = () => {
                 {activeTab === 'search' && (
                     <div className="animate-fade-in h-full flex flex-col">
                         <div className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 shadow-inner mb-4 space-y-4 shrink-0">
-                            {/* ... 搜尋過濾器 UI (保持不變) ... */}
                             <div className="grid grid-cols-2 gap-4"><FilterSelect label="品牌" value={searchState.brand} options={['不拘', '日立', '大金', '三菱重工', '國際牌', '富士通', '華菱']} onChange={v => setSearchState(p => ({...p, brand: v, series: '不拘'}))} /><FilterSelect label="系列" value={searchState.series} options={availableSeries} onChange={v => setSearchState(p => ({...p, series: v}))} /></div>
                             <div className="grid grid-cols-2 gap-4"><FilterSelect label="功能" value={searchState.func} options={['不拘', '冷暖', '冷專']} onChange={v => setSearchState(p => ({...p, func: v}))} /><FilterSelect label="型式" value={searchState.type} options={['不拘', '壁掛式', '吊隱式', '室外機(一對多)', '室外機(商用)', '窗型']} onChange={v => setSearchState(p => ({...p, type: v}))} /></div>
                             <div className="relative pt-2" ref={searchContainerRef}>
@@ -106,7 +106,7 @@ const App = () => {
                             <button onClick={executeSearch} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
                         </div>
                         
-                        {/* ★ 修正：搜尋結果區域加入 scroll (max-h) */}
+                        {/* ★ 修正：列表滑動區域，防止結果過多時畫面卡死 */}
                         <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1" style={{maxHeight: 'calc(100vh - 400px)'}}>
                             {searchState.results.map((g, i) => <ResultCard key={i} group={g} onClick={(group, currentFunc) => setSelectedSpecGroup({ ...group, initialFunc: currentFunc })} />)}
                             {searchState.results.length === 0 && <div className="text-center text-gray-500 py-10">請選擇條件並執行搜尋</div>}
