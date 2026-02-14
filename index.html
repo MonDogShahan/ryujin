@@ -57,9 +57,20 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" src="data.js"></script>
+    <script type="text/babel" src="data1.js"></script> <script type="text/babel" src="data2.js"></script> <script type="text/babel" src="data3.js"></script> <script type="text/babel">
+        // 檢查各個資料變數是否存在，防止報錯，並合併為一個 AC_DATABASE
+        const AC_DATABASE = [
+            ...(window.DATA_HITACHI || []),
+            ...(window.DATA_DAIKIN_FUJITSU || []),
+            ...(window.DATA_OTHERS || [])
+        ];
+        console.log("資料庫載入完成，共 " + AC_DATABASE.length + " 筆資料");
+    </script>
+
     <script type="text/babel" src="components.js"></script>
+    
     <script type="text/babel" src="calculators.js"></script>
+    
     <script type="text/babel" src="app.js"></script>
 </body>
 </html>
