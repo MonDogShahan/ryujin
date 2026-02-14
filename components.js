@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 (components.js) =================
+// ================= 2. 共用 UI 元件 (components.js) V13.7 =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -22,17 +22,19 @@ const Icon = ({ name, className }) => {
 
 const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
 
-// --- 規格詳情視窗 (SpecModal) ---
-const SpecModal = ({ group, onClose }) => {
+// --- 規格詳情視窗 ---
+const SpecModal = ({ group, initialFunc, onClose }) => {
     if (!group || !group.variants) return null;
     
-    // 找有無冷暖/冷專
+    // 預設顯示使用者在卡片上選擇的模式 (冷暖或冷專)
+    const [displayMode, setDisplayMode] = useState(initialFunc === '冷專' ? 'cool' : 'heat');
+    
     const heatVariant = group.variants.find(v => v.func === '冷暖');
     const coolVariant = group.variants.find(v => v.func === '冷專');
-    const [displayMode, setDisplayMode] = useState(heatVariant ? 'heat' : 'cool');
     
-    // 確保當前顯示的型號存在，否則切換
-    const currentVariant = displayMode === 'heat' ? heatVariant : coolVariant;
+    // 確保當前顯示的型號存在
+    const currentVariant = displayMode === 'heat' ? (heatVariant || coolVariant) : (coolVariant || heatVariant);
+    
     useEffect(() => {
         if (displayMode === 'heat' && !heatVariant) setDisplayMode('cool');
         if (displayMode === 'cool' && !coolVariant) setDisplayMode('heat');
@@ -94,7 +96,6 @@ const SpecModal = ({ group, onClose }) => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scroll p-5 bg-gradient-to-b from-industrial-950 to-industrial-900">
-                    {/* Tab 1: 效能概覽 (包含新增的詳細電力數據) */}
                     {activeTab === 'basic' && (
                         <div className="space-y-6 animate-fade-in">
                             <div className="grid grid-cols-2 gap-4">
@@ -108,7 +109,6 @@ const SpecModal = ({ group, onClose }) => {
                                 </div>
                             </div>
                             
-                            {/* 新增：詳細能力與電力規格區塊 */}
                             <div className="glass-panel rounded-xl overflow-hidden">
                                 <div className="bg-industrial-800/80 px-4 py-2 text-xs font-bold text-gray-300 border-b border-gray-700 flex items-center gap-2">
                                     <Icon name="zap" className="w-3 h-3 text-yellow-500"/> 性能與電力規格
@@ -137,7 +137,6 @@ const SpecModal = ({ group, onClose }) => {
                                 </div>
                             </div>
 
-                            {/* 簡易安裝規格摘要 */}
                             <div className="glass-panel rounded-xl overflow-hidden mt-2">
                                 <div className="bg-industrial-800/80 px-4 py-2 text-xs font-bold text-gray-300 border-b border-gray-700 flex items-center gap-2"><Icon name="wrench" className="w-3 h-3 text-gray-400"/> 安裝摘要</div>
                                 <div className="p-4 grid grid-cols-2 gap-4">
@@ -148,7 +147,6 @@ const SpecModal = ({ group, onClose }) => {
                         </div>
                     )}
 
-                    {/* Tab 2: 內外機細節 (包含法蘭與腳距) */}
                     {activeTab === 'detail' && (
                         <div className="space-y-6 animate-fade-in">
                             <div className="glass-panel rounded-xl overflow-hidden border-l-4 border-l-blue-500">
@@ -158,7 +156,6 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.idu?.weight} kg</span></div>
                                     <div className="spec-row"><span className="spec-label">噪音值</span><span className="spec-val">{currentVariant.idu?.noise || '-'}</span></div>
                                     
-                                    {/* 吊隱式：吹出口法蘭尺寸 */}
                                     {(currentVariant.type === '吊隱式' || currentVariant.idu?.flangeDims) && (
                                         <div className="spec-row bg-blue-900/20 -mx-4 px-4 py-2 mt-2 border-t border-blue-800/30">
                                             <span className="spec-label text-blue-300 font-bold">吹出口法蘭 (寬x高)</span>
@@ -173,7 +170,6 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="spec-row"><span className="spec-label">外觀尺寸 (寬x高x深)</span><span className="spec-val">{currentVariant.odu?.dims} mm</span></div>
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.odu?.weight} kg</span></div>
                                     
-                                    {/* 室外機：安裝固定腳孔距 */}
                                     <div className="spec-row bg-green-900/20 -mx-4 px-4 py-2 mt-2 border-t border-green-800/30">
                                         <span className="spec-label text-green-300 font-bold">安裝腳座孔距 (寬x深)</span>
                                         <span className="spec-val text-yellow-400 text-lg">{currentVariant.odu?.footSpacing || '需查閱手冊'} <span className="text-xs text-gray-500">mm</span></span>
@@ -183,7 +179,6 @@ const SpecModal = ({ group, onClose }) => {
                         </div>
                     )}
 
-                    {/* Tab 3: 安裝參數 */}
                     {activeTab === 'install' && (
                         <div className="space-y-5 animate-fade-in">
                             <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 flex items-center gap-4">
@@ -219,25 +214,70 @@ const FilterSelect = ({ label, value, options, onChange }) => (
     </div>
 );
 
-// 搜尋結果卡片
+// --- 搜尋結果卡片 (支援冷暖/冷專切換) ---
 const ResultCard = ({ group, onClick }) => {
-    const hasHeat = group.variants.some(v => v.func === '冷暖');
-    const hasCool = group.variants.some(v => v.func === '冷專');
-    const displayItem = group.variants[0];
+    // 檢查是否有冷暖或冷專版本
+    const heatVariant = group.variants.find(v => v.func === '冷暖');
+    const coolVariant = group.variants.find(v => v.func === '冷專');
+    
+    // 狀態：目前顯示哪一種 (預設優先顯示冷暖，若無則顯示冷專)
+    const [mode, setMode] = useState(heatVariant ? 'heat' : 'cool');
+    
+    // 確保不會因為資料缺失而報錯
+    const currentItem = mode === 'heat' ? (heatVariant || coolVariant) : (coolVariant || heatVariant);
+
+    // 處理切換按鈕點擊 (阻止冒泡，避免觸發 onClick 打開詳情)
+    const handleToggle = (e, newMode) => {
+        e.stopPropagation();
+        setMode(newMode);
+    };
 
     return (
-        <div onClick={onClick} className="bg-industrial-800 rounded-xl p-4 border border-industrial-700 shadow-lg mb-3 relative overflow-hidden cursor-pointer hover:border-industrial-500 hover:bg-industrial-700 transition-all group">
-            <div className={`absolute top-0 left-0 w-1.5 h-full ${hasHeat && hasCool ? 'bg-gradient-to-b from-heat-500 to-cool-500' : hasHeat ? 'bg-heat-500' : 'bg-cool-500'}`}></div>
+        <div onClick={() => onClick(group, currentItem.func)} className="bg-industrial-800 rounded-xl p-4 border border-industrial-700 shadow-lg mb-3 relative overflow-hidden cursor-pointer hover:border-industrial-500 hover:bg-industrial-700 transition-all group">
+            {/* 側邊條顏色：根據模式改變 */}
+            <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors duration-300 ${mode === 'heat' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+            
             <div className="pl-3 flex justify-between items-center">
-                <div>
+                <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{displayItem.brandCN}</span>
-                        <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{displayItem.series}</span>
-                        {hasHeat && hasCool && <span className="text-[9px] bg-gray-700 text-white px-1 rounded ml-1">冷暖/冷專</span>}
+                        <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{currentItem.brandCN}</span>
+                        <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{currentItem.series}</span>
+                        
+                        {/* 如果同時有冷暖跟冷專，顯示切換按鈕 */}
+                        {heatVariant && coolVariant && (
+                            <div className="flex bg-industrial-900 rounded p-0.5 ml-2 border border-industrial-600">
+                                <button 
+                                    onClick={(e) => handleToggle(e, 'heat')}
+                                    className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'heat' ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                >
+                                    冷暖
+                                </button>
+                                <button 
+                                    onClick={(e) => handleToggle(e, 'cool')}
+                                    className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'cool' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                >
+                                    冷專
+                                </button>
+                            </div>
+                        )}
+                        {/* 如果只有一種，顯示標籤 */}
+                        {(!heatVariant || !coolVariant) && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded ${currentItem.func === '冷暖' ? 'bg-orange-900/50 text-orange-300' : 'bg-blue-900/50 text-blue-300'}`}>
+                                {currentItem.func}
+                            </span>
+                        )}
                     </div>
-                    <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors">{displayItem.modelIdu}</div>
-                    <div className="text-xs text-gray-400 mt-1 font-mono">
-                        {displayItem.coolCap || displayItem.maxKw} kW | {displayItem.pipes}
+                    
+                    <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors flex items-center gap-2">
+                        {currentItem.modelIdu}
+                    </div>
+                    
+                    <div className="text-xs text-gray-400 mt-1 font-mono flex gap-3">
+                        <span className={mode === 'heat' ? 'text-orange-400' : 'text-blue-400'}>
+                            {mode === 'heat' ? '暖氣' : '冷氣'}: {mode === 'heat' ? currentItem.heatCap : currentItem.coolCap || currentItem.maxKw} kW
+                        </span>
+                        <span className="text-gray-600">|</span>
+                        <span>{currentItem.pipes}</span>
                     </div>
                 </div>
                 <button className="bg-industrial-900 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-900/50 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-all"><Icon name="search" className="w-3 h-3" /> 詳情</button>
