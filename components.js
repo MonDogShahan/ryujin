@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 (components.js) V13.20 =================
+// ================= 2. 共用 UI 元件 (components.js) V13.21 =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -99,7 +99,7 @@ const FilterSelect = ({ label, value, options, onChange }) => (
     <div className="relative"><span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10">{label}</span><div className="relative"><select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-industrial-900 border border-industrial-700 rounded-lg pl-3 pr-8 py-3 text-sm text-white focus:border-industrial-accent outline-none transition-all cursor-pointer">{options.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-gray-500"><Icon name="chevron" className="w-4 h-4"/></div></div></div>
 );
 
-// ★ 關鍵修正：ResultCard 新增型式標籤顯示
+// ★ 關鍵修正：卡片左側飾條 & 簡介文字
 const ResultCard = ({ group, onClick }) => {
     const heatVariant = group.variants.find(v => v.func === '冷暖');
     const coolVariant = group.variants.find(v => v.func === '冷專');
@@ -108,14 +108,23 @@ const ResultCard = ({ group, onClick }) => {
     if (!currentItem) return null;
     const handleToggle = (e, newMode) => { e.stopPropagation(); setMode(newMode); };
 
+    // 判斷是否為冷專
+    const isColdOnly = currentItem.func === '冷專';
+
     return (
         <div onClick={() => onClick(group, currentItem.func)} className="bg-industrial-800 rounded-xl p-4 border border-industrial-700 shadow-lg mb-3 relative overflow-hidden cursor-pointer hover:border-industrial-500 hover:bg-industrial-700 transition-all group">
-            <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors duration-300 ${mode === 'heat' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+            {/* ★ 左側飾條：冷專=藍色，冷暖=漸層(暖->冷) */}
+            <div className={`absolute top-0 left-0 w-1.5 h-full transition-all duration-300 ${
+                isColdOnly 
+                ? 'bg-blue-500' 
+                : 'bg-gradient-to-b from-orange-500 to-blue-500'
+            }`}></div>
+            
             <div className="pl-3 flex justify-between items-center">
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    {/* Header Row: 品牌、型式、系列、(KW標籤移到這裡) */}
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{currentItem.brandCN}</span>
-                        {/* ★ 新增：型式標籤 (四方吹/吊隱/壁掛/窗型) */}
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
                             currentItem.type === '吊隱式' ? 'text-purple-300 border-purple-800 bg-purple-900/20' :
                             currentItem.type === '四方吹' ? 'text-pink-300 border-pink-800 bg-pink-900/20' :
@@ -123,9 +132,25 @@ const ResultCard = ({ group, onClick }) => {
                             'text-cyan-300 border-cyan-800 bg-cyan-900/20'
                         }`}>{currentItem.type}</span>
                         <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{currentItem.series}</span>
+                        {/* ★ 新增：KW 能力標籤 (補償下方移除的資訊) */}
+                        <span className="text-[10px] font-mono font-bold text-yellow-400 bg-industrial-950 px-1.5 py-0.5 rounded border border-yellow-600/50">
+                            {currentItem.maxKw} kW
+                        </span>
+                        
+                        {heatVariant && coolVariant && (<div className="flex bg-industrial-900 rounded p-0.5 ml-2 border border-industrial-600"><button onClick={(e) => handleToggle(e, 'heat')} className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'heat' ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>冷暖</button><button onClick={(e) => handleToggle(e, 'cool')} className={`px-1.5 py-0.5 text-[9px] rounded transition-all ${mode === 'cool' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300'}`}>冷專</button></div>)}
                     </div>
+                    
+                    {/* Model Name */}
                     <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors flex items-center gap-2">{currentItem.modelIdu}</div>
-                    <div className="text-xs text-gray-400 mt-1 font-mono flex gap-3"><span className={mode === 'heat' ? 'text-orange-400' : 'text-blue-400'}>{mode === 'heat' ? '暖氣' : '冷氣'}: {mode === 'heat' ? currentItem.heatCap : currentItem.coolCap || currentItem.maxKw} kW</span><span className="text-gray-600">|</span><span>{currentItem.pipes}</span></div>
+                    
+                    {/* ★ 簡介列：只顯示 冷暖/冷專 | 銅管 */}
+                    <div className="text-xs text-gray-400 mt-1 font-mono flex gap-3">
+                        <span className={isColdOnly ? 'text-blue-400' : 'text-orange-400'}>
+                            {currentItem.func}
+                        </span>
+                        <span className="text-gray-600">|</span>
+                        <span>{currentItem.pipes}</span>
+                    </div>
                 </div>
                 <button className="bg-industrial-900 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-900/50 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-all"><Icon name="search" className="w-3 h-3" /> 詳情</button>
             </div>
