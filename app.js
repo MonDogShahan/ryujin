@@ -1,4 +1,4 @@
-// 確保讀取到全域資料庫
+// 確保讀取到全域資料庫 (防止白屏的關鍵)
 const AC_DATABASE = window.AC_DATABASE || [];
 
 // ================= 4. 主程式 (App) V13.12 =================
@@ -14,25 +14,33 @@ const App = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
-    // --- 計算機狀態 (提升至 App 層級，切換分頁不消失) ---
+    // --- 計算機狀態 (提升至此以保持切換分頁時不消失) ---
+    
+    // 1. 負載計算狀態
     const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
     const [capacityResult, setCapacityResult] = useState(null);
+    
+    // 2. 吊隱式規劃狀態 (★修正：狀態提升)
     const [ductedPlans, setDuctedPlans] = useState([
         { id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', outlets: 1, result: null }
     ]);
+    
+    // 3. 降溫模擬狀態
     const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', result: null });
 
+    // 初始化：讀取搜尋紀錄
     useEffect(() => {
         const saved = localStorage.getItem('searchHistory');
         if (saved) setSearchState(p => ({ ...p, history: JSON.parse(saved) }));
     }, []);
 
+    // 計算可用的系列選單
     const availableSeries = useMemo(() => {
         if (searchState.brand === '不拘') return ['不拘'];
         return ['不拘', ...new Set(AC_DATABASE.filter(i => i.brandCN === searchState.brand).map(i => i.series))];
     }, [searchState.brand]);
 
-    // ★ 關鍵優化：智慧搜尋邏輯
+    // ★ 關鍵優化：智慧搜尋邏輯 (28 -> 2.8kW, 不跑出 80kW)
     const getFilteredResults = (kw) => {
         return AC_DATABASE.filter(i => {
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
@@ -44,20 +52,22 @@ const App = () => {
                 const keywordLower = kw.toLowerCase();
                 const itemString = JSON.stringify(i).toLowerCase();
                 
-                // 處理純數字 (例如 "28")
+                // 1. 處理純數字輸入 (如 "28")
                 if (!isNaN(parseFloat(kw)) && isFinite(kw)) {
                     const kwNum = parseFloat(kw);
-                    // 1. 檢查能力：28 對應 2.8kW (±0.1)
-                    // 2. 檢查商用能力：28 對應 28kW (商用機)
+                    
+                    // A. 判定 kW 能力匹配 (28 -> 2.8kW 或 28kW)
+                    // 容許值 ±0.1 (避免浮點數誤差)
                     const isCapacityMatch = Math.abs(parseFloat(i.maxKw) * 10 - kwNum) < 0.5 || Math.abs(parseFloat(i.maxKw) - kwNum) < 0.1;
                     
-                    // 3. 檢查型號：必須 "包含" 該數字 (排除 80 包含 8 的情況，但保留 RAS-28 包含 28)
+                    // B. 判定型號匹配 (嚴格包含)
+                    // 確保輸入 "28" 時，不會因為 "RAS-80" 裡面有 8 而匹配到，必須真的有 "28"
                     const isModelMatch = i.modelIdu.toLowerCase().includes(keywordLower) || i.modelOdu.toLowerCase().includes(keywordLower);
                     
                     return isCapacityMatch || isModelMatch;
                 }
                 
-                // 處理一般文字 (例如 "NJP", "日立")
+                // 2. 一般文字搜尋 (如 "NJP", "日立")
                 return itemString.includes(keywordLower);
             }
             return true;
@@ -81,6 +91,7 @@ const App = () => {
         setShowHistory(false);
     };
     
+    // 搜尋建議
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
         const matches = AC_DATABASE.filter(i => JSON.stringify(i).toLowerCase().includes(searchState.keyword.toLowerCase()))
@@ -190,7 +201,7 @@ const App = () => {
                             <button onClick={executeSearch} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
                         </div>
                         
-                        {/* ★ 修正：搜尋結果加入滑動軸，防止畫面撐爆 */}
+                        {/* ★ 修正：搜尋結果加入 Scroll，解決結果過多無法下滑的問題 */}
                         <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1" style={{maxHeight: 'calc(100vh - 400px)'}}>
                             {searchState.results.map((g, i) => <ResultCard key={i} group={g} onClick={(group, currentFunc) => setSelectedSpecGroup({ ...group, initialFunc: currentFunc })} />)}
                             {searchState.results.length === 0 && <div className="text-center text-gray-500 py-10">請選擇條件並執行搜尋</div>}
