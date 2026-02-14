@@ -1,7 +1,12 @@
-// ================= 3. 計算工具邏輯 (calculators.js) V13.9 =================
+// ================= 3. 計算工具邏輯 (calculators.js) V13.10 =================
+// 修改重點：
+// 1. 移除公式顯示的小數點 (取整數)
+// 2. 加入主管+三通分歧邏輯 (2孔用12"主管等)
+// 3. 智慧判斷法蘭面積是否足夠支撐主管
+
 const { useState, useMemo, useEffect } = React;
 
-// PDF 生成器 (專業版)
+// PDF 生成器 (維持不變)
 const generateProfessionalPDF = (title, items, summary) => {
     const printWindow = window.open('', '', 'height=800,width=1000');
     if (!printWindow) { alert('請允許彈出視窗以列印 PDF'); return; }
@@ -51,10 +56,8 @@ const generateProfessionalPDF = (title, items, summary) => {
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
 };
 
-// --- 負載計算 (保持不變) ---
+// --- 負載計算 ---
 const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }) => {
-    // ... (維持您原本的代碼或上一次提供的代碼)
-    // 為了確保不缺漏，這裡提供核心邏輯，如需完整版請參考 V13.8 提供的
     const [error, setError] = useState('');
     const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -169,13 +172,11 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
     );
 };
 
-// --- 吊隱式風管規劃 (V13.9: 完整修復版) ---
+// --- 吊隱式風管規劃 (V13.10: 邏輯優化 - 支援三通判斷) ---
 const DuctedCalculator = ({ plans, setPlans, db }) => {
-    // 品牌列表
     const [brands, setBrands] = useState([]);
     const [showReset, setShowReset] = useState(false);
 
-    // 初始化品牌列表 (只抓取吊隱式)
     useEffect(() => {
         if (db) {
             const ductBrands = [...new Set(db.filter(m => m.type === '吊隱式').map(m => m.brandCN))];
@@ -188,33 +189,26 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
             if (p.id !== id) return p;
             let updates = { [field]: value };
 
-            // 選擇品牌後，清空型號
             if (field === 'brand') {
-                updates.model = '';
-                updates.kw = '';
-                updates.flangeW = '';
-                updates.flangeH = '';
+                updates.model = ''; updates.kw = ''; updates.flangeW = ''; updates.flangeH = '';
             }
 
-            // 選擇型號後，自動填寫: KW, 法蘭寬高, 建議出風口數
             if (field === 'model') {
                 const modelData = db.find(m => m.id === value);
                 if (modelData) {
                     updates.kw = modelData.maxKw;
-                    
-                    // 強力解析法蘭尺寸 (處理 "700x200", "560x153 (估)" 等各種格式)
+                    // 自動填寫法蘭 (抓取數字)
                     if (modelData.idu?.flangeDims) {
-                        const dims = modelData.idu.flangeDims.match(/(\d+)/g); // 抓取所有數字
+                        const dims = modelData.idu.flangeDims.match(/(\d+)/g);
                         if (dims && dims.length >= 2) {
                             updates.flangeW = dims[0];
                             updates.flangeH = dims[1];
                         }
                     }
-
-                    // 智慧推算建議出風口 (根據 kW)
+                    // 智慧推算建議出風口
                     const kw = parseFloat(modelData.maxKw);
                     if (kw < 3.0) updates.outlets = 1;
-                    else if (kw < 5.5) updates.outlets = 2;
+                    else if (kw < 6.0) updates.outlets = 2;
                     else if (kw < 9.0) updates.outlets = 3;
                     else updates.outlets = 4;
                 }
@@ -223,48 +217,57 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
         }));
     };
 
-    // 核心計算邏輯 (恢復公式顯示)
+    // 核心計算邏輯修正
     const calculatePlan = (id) => {
         setPlans(plans.map(p => {
             if (p.id !== id) return p;
-            const fw = parseFloat(p.flangeW);
-            const fh = parseFloat(p.flangeH);
+            const fw = parseInt(p.flangeW);
+            const fh = parseInt(p.flangeH);
             const outlets = parseInt(p.outlets);
             
-            if (!fw || !fh || !outlets) return { ...p, result: { error: '請完整輸入法蘭尺寸與出風口數量' } };
+            if (!fw || !fh || !outlets) return { ...p, result: { error: '請完整輸入數據' } };
 
-            const flangeArea = Math.round((fw * fh) / 100); // cm2
-            const area8 = 314;   // 8吋面積
+            const flangeArea = Math.round((fw * fh) / 100); // cm2 (整數)
+            const area8 = 314;   // 8吋面積 (整數)
             const area10 = 490;  // 10吋面積
             const area12 = 706;  // 12吋面積
+            const area14 = 962;  // 14吋面積
             
-            // 計算細節陣列
+            // 計算細節 (移除小數點，顯示整數運算概念)
             const details = [];
-            
-            // 8吋計算
-            const count8 = (flangeArea / area8).toFixed(1);
-            details.push(`8" 風管 (${area8}cm²): 可接 ${count8} 孔`);
-            
-            // 10吋計算
-            const count10 = (flangeArea / area10).toFixed(1);
-            details.push(`10" 風管 (${area10}cm²): 可接 ${count10} 孔`);
-            
-            // 12吋計算
-            const count12 = (flangeArea / area12).toFixed(1);
-            details.push(`12" 風管 (${area12}cm²): 可接 ${count12} 孔`);
+            // 只顯示大於等於1的合理孔數
+            if(flangeArea >= area8) details.push(`8"管(${area8}cm²): 可接 ${Math.floor(flangeArea/area8)} 孔`);
+            if(flangeArea >= area10) details.push(`10"管(${area10}cm²): 可接 ${Math.floor(flangeArea/area10)} 孔`);
+            if(flangeArea >= area12) details.push(`12"管(${area12}cm²): 可接 ${Math.floor(flangeArea/area12)} 孔`);
 
-            // 建議邏輯
             let advice = "";
             let statusColor = "text-green-400";
             
-            // 判斷法蘭是否過小
-            const requiredArea = outlets * area8 * 0.8; // 寬容值 0.8
-            if (flangeArea < requiredArea) {
+            // 總需求面積 (假設都用8吋出風)
+            const requiredAreaTotal = outlets * area8;
+
+            // 判斷邏輯 A: 法蘭本身太小
+            if (flangeArea < requiredAreaTotal * 0.85) { 
                 statusColor = "text-red-400";
-                advice = `⚠️ 法蘭面積 (${flangeArea}cm²) 不足!\n建議減少孔數或使用擴管集風箱。`;
+                advice = `⚠️ 法蘭面積 (${flangeArea}cm²) 不足！\n需求約 ${requiredAreaTotal}cm²。建議減少孔數。`;
+            } 
+            // 判斷邏輯 B: 可使用主管+三通 (User requested logic)
+            // 如果 2孔 (需求628)，法蘭(例如910) > 12"(706) -> 可以用12"當主管
+            else if (outlets >= 2) {
+                if (flangeArea >= area12 && requiredAreaTotal <= area12 * 1.1) {
+                    advice = `✅ 建議配置 (主管分流)：\n集風箱出 1支 12" 主管，後端接三通分出 ${outlets}孔 8"。\n(利用12"主管穩壓，總量 ${area12}cm² 足夠供應 ${outlets}孔)`;
+                } else if (flangeArea >= area10 && requiredAreaTotal <= area10 * 1.1) {
+                    advice = `✅ 建議配置 (主管分流)：\n集風箱出 1支 10" 主管，後端接三通分出 ${outlets}孔 8"。`;
+                } else if (flangeArea >= area14 && requiredAreaTotal <= area14 * 1.1) {
+                    advice = `✅ 建議配置 (主管分流)：\n集風箱出 1支 14" 主管，後端接三通分出 ${outlets}孔 8"。`;
+                } else {
+                    // 標準多孔直出
+                    advice = `✅ 標準配置：\n集風箱直接出 ${outlets} 孔 8" 風管。`;
+                }
             } else {
-                advice = `✅ 配置合理。\n建議使用 ${outlets} 孔 8" 風管。`;
-                if (outlets >= 3) advice += `\n(主幹建議使用 10"~12" 以降低風切聲)`;
+                // 單孔情況
+                const suggestSize = flangeArea >= area10 ? "10\"" : "8\"";
+                advice = `✅ 標準配置：\n集風箱出 1 孔 ${suggestSize} 風管。`;
             }
 
             return { ...p, result: { flangeArea, details, advice, statusColor } };
@@ -274,7 +277,6 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
     const addPlan = () => setPlans([...plans, { id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', outlets: 1, result: null }]);
     const removePlan = (id) => setPlans(plans.filter(p => p.id !== id));
     
-    // 存檔 PDF
     const handleSavePDF = () => {
         const rows = `
             <table>
@@ -380,15 +382,14 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
                                 <span className={`text-xs font-bold ${plan.result.statusColor}`}>{plan.result.statusColor === 'text-green-400' ? '✔ 配置OK' : '⚠ 需注意'}</span>
                             </div>
                             
-                            {/* 計算公式與建議 */}
                             <div className="bg-industrial-950/50 p-3 rounded-lg border border-gray-700/50">
-                                <div className="text-[10px] text-blue-300 font-bold mb-1 opacity-70">集風箱開孔建議 (公式計算)</div>
+                                <div className="text-[10px] text-blue-300 font-bold mb-1 opacity-70">參考計算</div>
                                 {plan.result.details.map((detail, i) => (
                                     <div key={i} className="text-[10px] text-gray-400 font-mono border-b border-gray-800/50 last:border-0 py-0.5">{detail}</div>
                                 ))}
                             </div>
                             
-                            <div className="text-xs text-gray-200 bg-industrial-700/30 p-2 rounded border border-industrial-600 leading-relaxed">
+                            <div className="text-xs text-gray-200 bg-industrial-700/30 p-2 rounded border border-industrial-600 leading-relaxed whitespace-pre-wrap">
                                 {plan.result.advice}
                             </div>
                         </div>
