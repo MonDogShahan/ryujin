@@ -1,7 +1,7 @@
-// ================= 3. 計算工具邏輯 (calculators.js) V13.11 =================
+// ================= 3. 計算工具邏輯 (calculators.js) V13.12 =================
 const { useState, useMemo, useEffect } = React;
 
-// PDF 生成器 (專業版 - 支援中文)
+// --- PDF 生成器 (專業工程版) ---
 const generateProfessionalPDF = (title, items, summary) => {
     const printWindow = window.open('', '', 'height=800,width=1000');
     if (!printWindow) { alert('請允許彈出視窗以列印 PDF'); return; }
@@ -13,7 +13,7 @@ const generateProfessionalPDF = (title, items, summary) => {
     <head>
         <title>${title}</title>
         <style>
-            body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; padding: 40px; color: #333; }
+            body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; padding: 40px; color: #333; -webkit-print-color-adjust: exact; }
             .header { display: flex; justify-content: space-between; border-bottom: 3px solid #f59e0b; padding-bottom: 20px; margin-bottom: 30px; }
             .logo { font-size: 24px; font-weight: 900; color: #1e293b; font-style: italic; }
             .meta { text-align: right; font-size: 12px; color: #64748b; }
@@ -23,8 +23,10 @@ const generateProfessionalPDF = (title, items, summary) => {
             td { padding: 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
             .total-box { background: #fef3c7; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; text-align: right; font-size: 16px; font-weight: bold; color: #92400e; }
             .footer { margin-top: 50px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
-            .advice-text { white-space: pre-wrap; font-size: 11px; line-height: 1.5; margin-top: 4px; }
-            .math-detail { font-family: Consolas, monospace; font-size: 10px; color: #64748b; }
+            .advice-text { white-space: pre-wrap; font-size: 11px; line-height: 1.5; color: #0f172a; }
+            .math-detail { font-family: Consolas, monospace; font-size: 10px; color: #64748b; margin-bottom: 4px; }
+            .status-ok { color: #059669; font-weight: bold; }
+            .status-warn { color: #dc2626; font-weight: bold; }
             @media print { .no-print { display: none; } }
         </style>
     </head>
@@ -37,7 +39,7 @@ const generateProfessionalPDF = (title, items, summary) => {
             </div>
         </div>
         
-        <div class="section-title">規劃明細</div>
+        <div class="section-title">規劃明細表</div>
         ${items}
         
         ${summary ? `<div class="total-box">${summary}</div>` : ''}
@@ -52,12 +54,17 @@ const generateProfessionalPDF = (title, items, summary) => {
     setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
 };
 
-// --- 負載計算 ---
+// --- 負載計算 (接收 App 層級狀態) ---
 const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }) => {
     const [error, setError] = useState('');
     const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-    const addRoom = () => { if (rooms.length >= 8) { setError('最多 8 間'); return; } setError(''); setRooms([...rooms, { id: Date.now(), name: `空間 ${rooms.length + 1}`, w: '', d: '', ping: '', conditions: {}, kw: 0 }]); };
+    const addRoom = () => { 
+        if (rooms.length >= 8) { setError('最多 8 間'); return; } 
+        setError(''); 
+        setRooms([...rooms, { id: Date.now(), name: `空間 ${rooms.length + 1}`, w: '', d: '', ping: '', conditions: {}, kw: 0 }]); 
+    };
+    
     const removeRoom = (id) => setRooms(rooms.filter(r => r.id !== id));
     
     const updateRoom = (id, field, value) => {
@@ -83,7 +90,11 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
         }));
     };
 
-    const resetAll = () => { setRooms([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]); setResult(null); setShowResetConfirm(false); };
+    const resetAll = () => { 
+        setRooms([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]); 
+        setResult(null); 
+        setShowResetConfirm(false); 
+    };
 
     const calculateAll = () => {
         let totalKw = 0;
@@ -95,6 +106,7 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
             if (r.conditions.topFloor) mult += 0.2; if (r.conditions.ironSheet) mult += 0.5;
             const kw = parseFloat(((kcal * mult * p) / 860).toFixed(2));
             totalKw += kw;
+            // 尋找最佳匹配 (壁掛式)
             const bestMatch = db.filter(d => d.type === '壁掛式' && d.maxKw >= kw).sort((a,b) => a.maxKw - b.maxKw)[0];
             return { ...r, kw, bestMatch };
         });
@@ -151,7 +163,7 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
                             <div className="flex items-center gap-1 bg-industrial-900 rounded px-2"><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-12 bg-transparent text-yellow-500 font-bold text-center" placeholder="坪" /><span className="text-xs text-gray-500">坪</span></div>
                         </div>
                         <div className="flex flex-wrap gap-2 mb-2">
-                            {Object.entries({ westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮' }).map(([k, l]) => (
+                            {Object.entries(conditionLabels).map(([k, l]) => (
                                 <label key={k} className={`flex items-center space-x-1 px-2 py-1 rounded border cursor-pointer text-[10px] ${room.conditions[k] ? 'bg-blue-600/30 border-blue-500 text-blue-300' : 'bg-industrial-900 border-industrial-700 text-gray-500'}`}>
                                     <input type="checkbox" checked={!!room.conditions[k]} onChange={() => toggleCondition(room.id, k)} className="hidden" /><span>{l}</span>
                                 </label>
@@ -168,7 +180,7 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
     );
 };
 
-// --- 吊隱式風管規劃 (V13.11: 小噸數三通分流邏輯) ---
+// --- 吊隱式風管規劃 (V13.12: 小噸數三通邏輯 + 整數運算) ---
 const DuctedCalculator = ({ plans, setPlans, db }) => {
     const [brands, setBrands] = useState([]);
     const [showReset, setShowReset] = useState(false);
@@ -185,13 +197,15 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
             if (p.id !== id) return p;
             let updates = { [field]: value };
 
-            if (field === 'brand') { updates.model = ''; updates.kw = ''; updates.flangeW = ''; updates.flangeH = ''; }
+            if (field === 'brand') {
+                updates.model = ''; updates.kw = ''; updates.flangeW = ''; updates.flangeH = '';
+            }
 
             if (field === 'model') {
                 const modelData = db.find(m => m.id === value);
                 if (modelData) {
                     updates.kw = modelData.maxKw;
-                    // 自動填寫法蘭 (正則表達式抓取)
+                    // 自動填寫法蘭 (正則表達式抓取數字)
                     if (modelData.idu?.flangeDims) {
                         const dims = modelData.idu.flangeDims.match(/(\d+)/g);
                         if (dims && dims.length >= 2) {
@@ -199,10 +213,10 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
                             updates.flangeH = dims[1];
                         }
                     }
-                    // 智慧推算: 小噸數預設2孔, 大噸數3-4孔
+                    // 智慧推算建議出風口
                     const kw = parseFloat(modelData.maxKw);
                     if (kw < 2.8) updates.outlets = 1;
-                    else if (kw < 6.0) updates.outlets = 2; 
+                    else if (kw < 6.0) updates.outlets = 2; // 3.6~5.0 建議2孔
                     else if (kw < 9.0) updates.outlets = 3;
                     else updates.outlets = 4;
                 }
@@ -211,6 +225,7 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
         }));
     };
 
+    // ★ 核心計算邏輯修正：整數計算 + 分歧建議
     const calculatePlan = (id) => {
         setPlans(plans.map(p => {
             if (p.id !== id) return p;
@@ -220,36 +235,39 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
             
             if (!fw || !fh || !outlets) return { ...p, result: { error: '請完整輸入數據' } };
 
-            const flangeArea = Math.round((fw * fh) / 100); // cm2
+            const flangeArea = Math.round((fw * fh) / 100); // cm2 (整數)
             const area8 = 314;   // 8吋面積 (整數)
             const area10 = 490;  // 10吋面積
             const area12 = 706;  // 12吋面積
             
-            // 計算細節 (只顯示整數)
+            // 計算細節 (移除小數點，顯示整數運算概念)
             const details = [];
-            details.push(`8"管 (${area8}cm²): 可接 ${Math.floor(flangeArea/area8)} 孔`);
+            // 只顯示大於等於1的合理孔數
+            if(flangeArea >= area8) details.push(`8"管 (${area8}cm²): 可接 ${Math.floor(flangeArea/area8)} 孔`);
             if(flangeArea >= area10) details.push(`10"管 (${area10}cm²): 可接 ${Math.floor(flangeArea/area10)} 孔`);
             if(flangeArea >= area12) details.push(`12"管 (${area12}cm²): 可接 ${Math.floor(flangeArea/area12)} 孔`);
 
             let advice = "";
             let statusColor = "text-green-400";
             
-            // 總需求面積 (若都用8"出風)
+            // 總需求面積 (假設都用8吋出風)
             const requiredAreaTotal = outlets * area8;
 
-            // ★ 核心邏輯修正：判斷是否需要分歧
+            // ★ 分歧判定邏輯
             if (outlets >= 2) {
-                // 如果法蘭小於「2孔8吋 (628cm²)」 -> 代表法蘭太小，塞不下兩個8吋
-                if (flangeArea < 600) { // 稍微給點容許值 (628 * 0.95)
+                // 如果法蘭小於「2孔8吋 (628cm²)」的 90% (容許值)
+                // 代表法蘭太小，塞不下兩個 8"
+                if (flangeArea < 600) { 
                     statusColor = "text-yellow-400";
-                    advice = `⚠ 法蘭面積 (${flangeArea}cm²) 不足直接開 ${outlets} 孔 8"！\n\n✅ 建議配置 (三通分流)：\n1. 集風箱只開 1 孔主管 (建議 10" 或 12")。\n2. 延伸後接三通 (Y管) 分出 ${outlets} 孔 8"。\n(此做法可利用主管容積穩壓，避免法蘭擁擠)`;
+                    advice = `⚠️ 法蘭面積 (${flangeArea}cm²) 不足以直接開 ${outlets} 孔 8" (${requiredAreaTotal}cm²)！\n\n✅ 建議配置 (三通分流)：\n1. 集風箱只開 1 孔主管 (建議使用 10" 或 12")。\n2. 延伸後接三通 (Y管/T管) 分出 ${outlets} 孔 8"。\n(此做法可利用主管容積穩壓，解決法蘭開孔空間不足問題)`;
                 } else {
                     // 法蘭夠大 (>= 600)，可以直接開孔
                     advice = `✅ 法蘭空間充足 (${flangeArea}cm²)。\n建議於集風箱直接開 ${outlets} 孔 8" 風管。`;
                 }
             } else {
                 // 單孔情況
-                advice = `✅ 標準單孔配置。\n依據法蘭大小建議出 1 孔 ${flangeArea >= area10 ? '10"' : '8"'} 風管。`;
+                const suggestSize = flangeArea >= area10 ? '10"' : '8"';
+                advice = `✅ 標準單孔配置。\n依據法蘭大小建議出 1 孔 ${suggestSize} 風管。`;
             }
 
             return { ...p, result: { flangeArea, details, advice, statusColor } };
@@ -268,10 +286,19 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
                         const modelName = db.find(m => m.id === p.model)?.modelIdu || p.model || '未選擇';
                         const res = p.result;
                         return `<tr>
-                            <td><strong>${p.brand}</strong><br/><span style="font-size:10px">${modelName}</span><br/><span style="color:#f59e0b">${p.kw} kW</span></td>
+                            <td>
+                                <strong>${p.brand}</strong><br/>
+                                <span style="font-size:10px">${modelName}</span><br/>
+                                <span style="color:#f59e0b">${p.kw} kW</span>
+                            </td>
                             <td>${p.flangeW} x ${p.flangeH}<br/><span style="font-size:10px;color:#64748b">面積: ${res ? res.flangeArea : '-'} cm²</span></td>
                             <td><span style="font-size:14px;font-weight:bold">${p.outlets}</span> 孔</td>
-                            <td>${res && !res.error ? `<div class="math-detail">${res.details.join('<br/>')}</div><div class="advice-text" style="color:${res.statusColor === 'text-red-400' ? 'red' : '#059669'}">${res.advice}</div>` : '<span style="color:gray">未試算</span>'}</td>
+                            <td>
+                                ${res && !res.error ? `
+                                    <div class="math-detail">${res.details.join('<br/>')}</div>
+                                    <div class="advice-text" style="color:${res.statusColor === 'text-red-400' ? 'red' : '#059669'}">${res.advice}</div>
+                                ` : '<span style="color:gray">未試算</span>'}
+                            </td>
                         </tr>`;
                     }).join('')}
                 </tbody>
@@ -290,42 +317,95 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
                     <button onClick={() => setShowReset(true)} className="p-2 bg-red-600 hover:bg-red-500 rounded-lg text-white"><Icon name="refresh" className="w-4 h-4"/></button>
                 </div>
             </div>
-            {showReset && <div className="bg-red-900/30 border border-red-500/50 p-3 rounded-lg text-center animate-zoom-in"><p className="text-xs text-red-200 mb-2">確定重置？</p><div className="flex gap-2 justify-center"><button onClick={resetAll} className="px-3 py-1 bg-red-600 text-white rounded text-xs">確定</button><button onClick={() => setShowReset(false)} className="px-3 py-1 bg-gray-600 text-white rounded text-xs">取消</button></div></div>}
-            
+
+            {showReset && (
+                <div className="bg-red-900/30 border border-red-500/50 p-3 rounded-lg text-center animate-zoom-in">
+                    <p className="text-xs text-red-200 mb-2">確定重置所有規劃嗎？</p>
+                    <div className="flex gap-2 justify-center">
+                        <button onClick={resetAll} className="px-3 py-1 bg-red-600 text-white rounded text-xs">確定</button>
+                        <button onClick={() => setShowReset(false)} className="px-3 py-1 bg-gray-600 text-white rounded text-xs">取消</button>
+                    </div>
+                </div>
+            )}
+
             {plans.map((plan, idx) => (
                 <div key={plan.id} className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 shadow-xl relative animate-slide-up">
                     <div className="absolute top-2 left-2 text-[10px] text-gray-500 font-bold">#{idx + 1}</div>
                     {plans.length > 1 && <button onClick={() => removePlan(plan.id)} className="absolute top-2 right-2 text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4"/></button>}
+                    
                     <div className="grid grid-cols-2 gap-3 mt-4 mb-3">
-                        <div className="relative"><span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-gray-400">品牌</span><select value={plan.brand} onChange={e => updatePlan(plan.id, 'brand', e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-xs text-white outline-none"><option value="">請選擇</option>{brands.map(b => <option key={b} value={b}>{b}</option>)}</select></div>
-                        <div className="relative"><span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-gray-400">型號</span><select value={plan.model} onChange={e => updatePlan(plan.id, 'model', e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-xs text-white outline-none" disabled={!plan.brand}><option value="">請選擇</option>{db.filter(m => m.brandCN === plan.brand && m.type === '吊隱式').sort((a,b)=>a.maxKw-b.maxKw).map(m => (<option key={m.id} value={m.id}>{m.modelIdu} ({m.maxKw}kW)</option>))}</select></div>
+                        <div className="relative">
+                            <span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-gray-400">品牌</span>
+                            <select value={plan.brand} onChange={e => updatePlan(plan.id, 'brand', e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-xs text-white outline-none focus:border-blue-500">
+                                <option value="">請選擇</option>
+                                {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                            </select>
+                        </div>
+                        <div className="relative">
+                            <span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-gray-400">型號</span>
+                            <select value={plan.model} onChange={e => updatePlan(plan.id, 'model', e.target.value)} className="w-full bg-industrial-900 border border-industrial-600 rounded p-2 text-xs text-white outline-none focus:border-blue-500" disabled={!plan.brand}>
+                                <option value="">請選擇</option>
+                                {db.filter(m => m.brandCN === plan.brand && m.type === '吊隱式').sort((a,b)=>a.maxKw-b.maxKw).map(m => (
+                                    <option key={m.id} value={m.id}>{m.modelIdu} ({m.maxKw}kW)</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
+
                     <div className="grid grid-cols-3 gap-2 mb-3">
                         <div className="relative"><span className="absolute top-0 left-1 text-[8px] text-blue-400">kW</span><input type="number" value={plan.kw} onChange={e=>updatePlan(plan.id, 'kw', e.target.value)} className="w-full bg-industrial-900 rounded p-2 pt-3 text-xs text-white text-center" /></div>
                         <div className="relative col-span-2 flex items-center gap-1">
-                            <div className="relative w-full"><span className="absolute top-0 left-1 text-[8px] text-gray-500">寬(mm)</span><input type="number" value={plan.flangeW} onChange={e=>updatePlan(plan.id, 'flangeW', e.target.value)} className="w-full bg-industrial-900 rounded p-2 pt-3 text-xs text-white text-center" /></div>
+                            <div className="relative w-full">
+                                <span className="absolute top-0 left-1 text-[8px] text-gray-500">寬(mm)</span>
+                                <input type="number" value={plan.flangeW} onChange={e=>updatePlan(plan.id, 'flangeW', e.target.value)} className="w-full bg-industrial-900 rounded p-2 pt-3 text-xs text-white text-center" />
+                            </div>
                             <span className="text-white text-xs">x</span>
-                            <div className="relative w-full"><span className="absolute top-0 left-1 text-[8px] text-gray-500">高(mm)</span><input type="number" value={plan.flangeH} onChange={e=>updatePlan(plan.id, 'flangeH', e.target.value)} className="w-full bg-industrial-900 rounded p-2 pt-3 text-xs text-white text-center" /></div>
+                            <div className="relative w-full">
+                                <span className="absolute top-0 left-1 text-[8px] text-gray-500">高(mm)</span>
+                                <input type="number" value={plan.flangeH} onChange={e=>updatePlan(plan.id, 'flangeH', e.target.value)} className="w-full bg-industrial-900 rounded p-2 pt-3 text-xs text-white text-center" />
+                            </div>
                         </div>
                     </div>
+
                     <div className="flex items-center gap-2">
-                        <div className="flex-1 relative"><span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-green-400">出風口數量</span><input type="number" value={plan.outlets} onChange={e=>updatePlan(plan.id, 'outlets', e.target.value)} className="w-full bg-industrial-900 border border-green-900/50 rounded p-2 text-center text-white font-bold" /></div>
-                        <button onClick={() => calculatePlan(plan.id)} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded p-2 text-xs font-bold">開始試算</button>
+                        <div className="flex-1 relative">
+                            <span className="absolute -top-2 left-2 bg-industrial-800 px-1 text-[8px] text-green-400">出風口數量</span>
+                            <input type="number" value={plan.outlets} onChange={e=>updatePlan(plan.id, 'outlets', e.target.value)} className="w-full bg-industrial-900 border border-green-900/50 rounded p-2 text-center text-white font-bold" />
+                        </div>
+                        <button onClick={() => calculatePlan(plan.id)} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white rounded p-2 text-xs font-bold shadow-lg active:scale-95 transition-all">開始試算</button>
                     </div>
+
                     {plan.result && !plan.result.error && (
                         <div className="mt-4 pt-3 border-t border-gray-700 space-y-2 animate-fade-in">
-                            <div className="flex justify-between items-end"><span className="text-[10px] text-gray-400">法蘭面積: <span className="text-white font-mono">{plan.result.flangeArea}</span> cm²</span><span className={`text-xs font-bold ${plan.result.statusColor}`}>{plan.result.statusColor === 'text-green-400' ? '✔ 配置合理' : '⚠ 建議分流'}</span></div>
-                            <div className="bg-industrial-950/50 p-3 rounded-lg border border-gray-700/50"><div className="text-[10px] text-blue-300 font-bold mb-1 opacity-70">參考計算 (無條件捨去)</div>{plan.result.details.map((detail, i) => (<div key={i} className="text-[10px] text-gray-400 font-mono border-b border-gray-800/50 last:border-0 py-0.5">{detail}</div>))}</div>
-                            <div className="text-xs text-gray-200 bg-industrial-700/30 p-2 rounded border border-industrial-600 leading-relaxed whitespace-pre-wrap">{plan.result.advice}</div>
+                            <div className="flex justify-between items-end">
+                                <span className="text-[10px] text-gray-400">法蘭面積: <span className="text-white font-mono">{plan.result.flangeArea}</span> cm²</span>
+                                <span className={`text-xs font-bold ${plan.result.statusColor}`}>{plan.result.statusColor === 'text-green-400' ? '✔ 配置合理' : '⚠ 建議分流'}</span>
+                            </div>
+                            
+                            <div className="bg-industrial-950/50 p-3 rounded-lg border border-gray-700/50">
+                                <div className="text-[10px] text-blue-300 font-bold mb-1 opacity-70">參考計算 (整數)</div>
+                                {plan.result.details.map((detail, i) => (
+                                    <div key={i} className="text-[10px] text-gray-400 font-mono border-b border-gray-800/50 last:border-0 py-0.5">{detail}</div>
+                                ))}
+                            </div>
+                            
+                            <div className="text-xs text-gray-200 bg-industrial-700/30 p-2 rounded border border-industrial-600 leading-relaxed whitespace-pre-wrap">
+                                {plan.result.advice}
+                            </div>
                         </div>
+                    )}
+                    {plan.result && plan.result.error && (
+                        <div className="mt-2 text-red-400 text-xs text-center">{plan.result.error}</div>
                     )}
                 </div>
             ))}
-            <button onClick={addPlan} className="w-full py-3 border border-dashed border-gray-600 text-gray-400 rounded-xl text-sm hover:text-white">+ 新增一台主機</button>
+            
+            <button onClick={addPlan} className="w-full py-3 border border-dashed border-gray-600 text-gray-400 rounded-xl text-sm hover:text-white hover:border-gray-400 transition-all">+ 新增一台主機</button>
         </div>
     );
 };
 
+// --- 降溫模擬 (保持不變) ---
 const CoolingTimeCalculator = ({ state, setState }) => {
     const calculate = () => { const { ping, height, currentTemp, targetTemp, acKw } = state; const time = Math.round(((ping * 3.3 * height) * 1.2 * (currentTemp - targetTemp) * 10) / acKw / 60); setState(p=>({...p, result: time})); };
     return (<div className="animate-fade-in space-y-4"><div className="bg-industrial-800 p-6 rounded-2xl border border-industrial-700 shadow-xl"><div className="flex justify-between items-center mb-4 text-white"><h2 className="text-purple-400 font-bold text-sm flex gap-2"><Icon name="thermometer" className="w-4 h-4"/> 降溫模擬</h2><button onClick={()=>setState({ping:'',height:3.0,currentTemp:32,targetTemp:26,acKw:'',result:null})} className="text-[10px] text-gray-500">重置</button></div><div className="grid grid-cols-2 gap-3 mb-3"><input type="number" value={state.ping} onChange={e=>setState(p=>({...p,ping:e.target.value}))} className="bg-industrial-900 rounded p-2 text-xs text-center text-white" placeholder="坪數" /><input type="number" value={state.acKw} onChange={e=>setState(p=>({...p,acKw:e.target.value}))} className="bg-industrial-900 rounded p-2 text-xs text-center text-white" placeholder="能力kW" /></div><div className="grid grid-cols-2 gap-3 mb-3"><input type="number" value={state.currentTemp} onChange={e=>setState(p=>({...p,currentTemp:e.target.value}))} className="bg-industrial-900 rounded p-2 text-xs text-center text-red-300" placeholder="室溫" /><input type="number" value={state.targetTemp} onChange={e=>setState(p=>({...p,targetTemp:e.target.value}))} className="bg-industrial-900 rounded p-2 text-xs text-center text-blue-300" placeholder="目標" /></div><button onClick={calculate} className="w-full py-3 bg-purple-600 rounded-xl text-white font-bold text-sm">模擬</button></div>{state.result!==null && <div className="bg-industrial-900 p-4 rounded-xl text-center border border-purple-600/50"><div className="text-gray-500 text-xs">預計耗時</div><div className="text-3xl font-bold text-purple-400">{state.result} <span className="text-sm">min</span></div></div>}</div>);
