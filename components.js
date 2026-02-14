@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 =================
+// ================= 2. 共用 UI 元件 (components.js) =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -22,7 +22,7 @@ const Icon = ({ name, className }) => {
 
 const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
 
-// --- 規格詳情視窗 (智慧切換版) ---
+// --- 規格詳情視窗 (SpecModal) ---
 const SpecModal = ({ group, onClose }) => {
     if (!group || !group.variants) return null;
     
@@ -47,6 +47,7 @@ const SpecModal = ({ group, onClose }) => {
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose}></div>
             <div className="bg-industrial-950 w-full max-w-3xl h-[85vh] rounded-2xl border border-gray-700 shadow-2xl flex flex-col relative z-10 overflow-hidden animate-zoom-in">
                 
+                {/* Header */}
                 <div className="glass-header p-5 flex justify-between items-start shrink-0 z-20">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
@@ -78,6 +79,7 @@ const SpecModal = ({ group, onClose }) => {
                     <button onClick={onClose} className="p-2 bg-industrial-800 hover:bg-red-900/50 rounded-full text-gray-400 hover:text-red-400 transition-colors"><Icon name="x" className="w-5 h-5" /></button>
                 </div>
 
+                {/* Tabs */}
                 <div className="flex border-b border-gray-800 bg-industrial-900/50 backdrop-blur-sm sticky top-0 z-10">
                     {['basic:⚡ 效能概覽', 'detail:📦 內外機細節', 'install:🔧 安裝參數'].map(tab => {
                         const [key, label] = tab.split(':');
@@ -90,7 +92,9 @@ const SpecModal = ({ group, onClose }) => {
                     })}
                 </div>
 
+                {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scroll p-5 bg-gradient-to-b from-industrial-950 to-industrial-900">
+                    {/* Tab 1: 效能概覽 (包含新增的詳細電力數據) */}
                     {activeTab === 'basic' && (
                         <div className="space-y-6 animate-fade-in">
                             <div className="grid grid-cols-2 gap-4">
@@ -103,21 +107,48 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="text-lg font-mono font-bold text-white">{currentVariant.modelOdu}</div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="glass-panel p-3 rounded-lg text-center"><div className="text-[10px] text-gray-500 uppercase">冷房能力</div><div className="text-xl font-bold text-blue-400">{currentVariant.maxKw} <span className="text-xs text-gray-500">kW</span></div></div>
-                                <div className="glass-panel p-3 rounded-lg text-center"><div className="text-[10px] text-gray-500 uppercase">CSPF</div><div className="text-xl font-bold text-green-400">{currentVariant.cspf}</div></div>
-                                <div className="glass-panel p-3 rounded-lg text-center"><div className="text-[10px] text-gray-500 uppercase">冷媒</div><div className="text-xl font-bold text-gray-300">{currentVariant.refrigerant}</div></div>
+                            
+                            {/* 新增：詳細能力與電力規格區塊 */}
+                            <div className="glass-panel rounded-xl overflow-hidden">
+                                <div className="bg-industrial-800/80 px-4 py-2 text-xs font-bold text-gray-300 border-b border-gray-700 flex items-center gap-2">
+                                    <Icon name="zap" className="w-3 h-3 text-yellow-500"/> 性能與電力規格
+                                </div>
+                                <div className="p-4 grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-gray-500 text-xs block mb-1">冷氣能力 (額定)</span> 
+                                        <div className="text-blue-400 font-bold text-lg font-mono">{currentVariant.coolCap || currentVariant.maxKw} <span className="text-xs text-gray-500">kW</span></div>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 text-xs block mb-1">暖氣能力 (額定)</span> 
+                                        <div className="text-orange-400 font-bold text-lg font-mono">{currentVariant.heatCap || '-'} <span className="text-xs text-gray-500">kW</span></div>
+                                    </div>
+                                    <div className="bg-industrial-900/50 p-2 rounded border border-gray-800">
+                                        <span className="text-gray-500 text-xs block">運轉電流</span> 
+                                        <div className="text-white font-mono font-bold">{currentVariant.current || '-'} <span className="text-xs text-gray-500">A</span></div>
+                                    </div>
+                                    <div className="bg-industrial-900/50 p-2 rounded border border-gray-800">
+                                        <span className="text-gray-500 text-xs block">消耗電功率</span> 
+                                        <div className="text-white font-mono font-bold">{currentVariant.power || '-'} <span className="text-xs text-gray-500">W</span></div>
+                                    </div>
+                                    <div className="col-span-2 border-t border-gray-700 pt-2 mt-1 flex justify-between items-center">
+                                        <span className="text-gray-500 text-xs">CSPF 能效</span> 
+                                        <span className="text-green-400 font-bold text-xl font-mono">{currentVariant.cspf} <span className="text-xs">kWh/kWh</span></span>
+                                    </div>
+                                </div>
                             </div>
+
+                            {/* 簡易安裝規格摘要 */}
                             <div className="glass-panel rounded-xl overflow-hidden mt-2">
-                                <div className="bg-industrial-800/80 px-4 py-2 text-xs font-bold text-gray-300 border-b border-gray-700 flex items-center gap-2"><Icon name="zap" className="w-3 h-3 text-yellow-500"/> 電力規格 (Electrical)</div>
+                                <div className="bg-industrial-800/80 px-4 py-2 text-xs font-bold text-gray-300 border-b border-gray-700 flex items-center gap-2"><Icon name="wrench" className="w-3 h-3 text-gray-400"/> 安裝摘要</div>
                                 <div className="p-4 grid grid-cols-2 gap-4">
                                     <div><div className="text-[10px] text-gray-500">電源規格</div><div className="text-sm font-mono text-white">{currentVariant.odu?.power}</div></div>
-                                    <div><div className="text-[10px] text-gray-500">最大電流</div><div className="text-sm font-mono text-red-400 font-bold">{currentVariant.odu?.currentMax || '-'}</div></div>
-                                    <div className="col-span-2"><div className="text-[10px] text-gray-500">運轉電流 (冷/暖)</div><div className="text-sm font-mono text-blue-300">{currentVariant.odu?.currentCool || '-'} / {currentVariant.odu?.currentHeat || '-'}</div></div>
+                                    <div><div className="text-[10px] text-gray-500">配管尺寸</div><div className="text-sm font-mono text-blue-300">{currentVariant.pipes}</div></div>
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Tab 2: 內外機細節 (包含法蘭與腳距) */}
                     {activeTab === 'detail' && (
                         <div className="space-y-6 animate-fade-in">
                             <div className="glass-panel rounded-xl overflow-hidden border-l-4 border-l-blue-500">
@@ -127,7 +158,7 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.idu?.weight} kg</span></div>
                                     <div className="spec-row"><span className="spec-label">噪音值</span><span className="spec-val">{currentVariant.idu?.noise || '-'}</span></div>
                                     
-                                    {/* 新增：吊隱式吹出口法蘭尺寸 */}
+                                    {/* 吊隱式：吹出口法蘭尺寸 */}
                                     {(currentVariant.type === '吊隱式' || currentVariant.idu?.flangeDims) && (
                                         <div className="spec-row bg-blue-900/20 -mx-4 px-4 py-2 mt-2 border-t border-blue-800/30">
                                             <span className="spec-label text-blue-300 font-bold">吹出口法蘭 (寬x高)</span>
@@ -142,7 +173,7 @@ const SpecModal = ({ group, onClose }) => {
                                     <div className="spec-row"><span className="spec-label">外觀尺寸 (寬x高x深)</span><span className="spec-val">{currentVariant.odu?.dims} mm</span></div>
                                     <div className="spec-row"><span className="spec-label">機器重量</span><span className="spec-val">{currentVariant.odu?.weight} kg</span></div>
                                     
-                                    {/* 修改：新增安裝固定腳孔距 */}
+                                    {/* 室外機：安裝固定腳孔距 */}
                                     <div className="spec-row bg-green-900/20 -mx-4 px-4 py-2 mt-2 border-t border-green-800/30">
                                         <span className="spec-label text-green-300 font-bold">安裝腳座孔距 (寬x深)</span>
                                         <span className="spec-val text-yellow-400 text-lg">{currentVariant.odu?.footSpacing || '需查閱手冊'} <span className="text-xs text-gray-500">mm</span></span>
@@ -151,6 +182,8 @@ const SpecModal = ({ group, onClose }) => {
                             </div>
                         </div>
                     )}
+
+                    {/* Tab 3: 安裝參數 */}
                     {activeTab === 'install' && (
                         <div className="space-y-5 animate-fade-in">
                             <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 flex items-center gap-4">
@@ -162,6 +195,7 @@ const SpecModal = ({ group, onClose }) => {
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><span className="text-[10px] text-gray-500 block mb-1">電源配線</span><div className="text-sm font-mono text-blue-300">{currentVariant.odu?.powerWire}</div></div>
                                     <div><span className="text-[10px] text-gray-500 block mb-1">內外機訊號線</span><div className="text-sm font-mono text-green-300">{currentVariant.odu?.signalWire}</div></div>
+                                    <div><span className="text-[10px] text-gray-500 block mb-1">最大電流 (無熔絲開關)</span><div className="text-sm font-mono text-red-400">{currentVariant.odu?.currentMax || '-'}</div></div>
                                 </div>
                             </div>
                             <div className="text-center text-[10px] text-gray-600 mt-4">* 實際施工請務必參閱原廠隨機附贈之安裝說明書</div>
@@ -185,7 +219,7 @@ const FilterSelect = ({ label, value, options, onChange }) => (
     </div>
 );
 
-// 搜尋結果卡片 (智慧顯示冷暖/冷專)
+// 搜尋結果卡片
 const ResultCard = ({ group, onClick }) => {
     const hasHeat = group.variants.some(v => v.func === '冷暖');
     const hasCool = group.variants.some(v => v.func === '冷專');
@@ -202,7 +236,9 @@ const ResultCard = ({ group, onClick }) => {
                         {hasHeat && hasCool && <span className="text-[9px] bg-gray-700 text-white px-1 rounded ml-1">冷暖/冷專</span>}
                     </div>
                     <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors">{displayItem.modelIdu}</div>
-                    <div className="text-xs text-gray-400 mt-1 font-mono">{displayItem.maxKw} kW | {displayItem.pipes}</div>
+                    <div className="text-xs text-gray-400 mt-1 font-mono">
+                        {displayItem.coolCap || displayItem.maxKw} kW | {displayItem.pipes}
+                    </div>
                 </div>
                 <button className="bg-industrial-900 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-900/50 rounded-lg px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-all"><Icon name="search" className="w-3 h-3" /> 詳情</button>
             </div>
