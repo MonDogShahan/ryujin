@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 (components.js) V13.13 =================
+// ================= 2. 共用 UI 元件 (components.js) V13.17 =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -22,6 +22,39 @@ const Icon = ({ name, className }) => {
 
 const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
 
+// ★ 新增：電工法規計算邏輯 (推算線徑與NFB)
+const calculateElectric = (maxAmp, powerWatts) => {
+    // 若有提供最大電流，優先使用，否則用功率/220V 估算
+    let current = parseFloat(maxAmp);
+    if (isNaN(current) && powerWatts) current = parseFloat(powerWatts) / 220;
+    if (isNaN(current)) return { wire: '詳見說明書', nfb: '-' };
+
+    // 安全係數 1.25倍
+    const safeCurrent = current * 1.25;
+    
+    let wire = '2.0mm²';
+    let nfb = '15A'; // 最小 NFB
+
+    if (safeCurrent <= 15) {
+        wire = '2.0mm²';
+        nfb = '15A (或20A)';
+    } else if (safeCurrent <= 20) {
+        wire = '3.5mm² (或5.5mm²)';
+        nfb = '20A';
+    } else if (safeCurrent <= 30) {
+        wire = '5.5mm²';
+        nfb = '30A';
+    } else if (safeCurrent <= 40) {
+        wire = '8mm²';
+        nfb = '40A';
+    } else {
+        wire = '14mm²';
+        nfb = '50A+';
+    }
+
+    return { wire, nfb, calc: true };
+};
+
 const SpecModal = ({ group, initialFunc, onClose }) => {
     if (!group || !group.variants) return null;
     const [displayMode, setDisplayMode] = useState(initialFunc === '冷專' ? 'cool' : 'heat');
@@ -37,6 +70,9 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
     const [activeTab, setActiveTab] = useState('basic');
     if (!currentVariant) return null;
 
+    // 取得電氣建議
+    const elecSpec = calculateElectric(currentVariant.odu?.currentMax, currentVariant.power);
+
     return (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 animate-fade-in">
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose}></div>
@@ -48,6 +84,7 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                     </div>
                     <button onClick={onClose} className="p-2 bg-industrial-800 hover:bg-red-900/50 rounded-full text-gray-400 hover:text-red-400 transition-colors"><Icon name="x" className="w-5 h-5" /></button>
                 </div>
+
                 <div className="flex border-b border-gray-800 bg-industrial-900/50 backdrop-blur-sm sticky top-0 z-10">{['basic:⚡ 效能概覽', 'detail:📦 內外機細節', 'install:🔧 安裝參數'].map(tab => { const [key, label] = tab.split(':'); return <button key={key} onClick={() => setActiveTab(key)} className={`flex-1 py-4 text-xs font-bold tracking-widest uppercase transition-all relative ${activeTab === key ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>{label}{activeTab === key && <span className={`absolute bottom-0 left-0 w-full h-0.5 shadow-[0_0_10px] ${key === 'basic' ? 'bg-blue-500 shadow-blue-500/50' : key === 'detail' ? 'bg-green-500 shadow-green-500/50' : 'bg-orange-500 shadow-orange-500/50'}`}></span>}</button>; })}</div>
                 <div className="flex-1 overflow-y-auto custom-scroll p-5 bg-gradient-to-b from-industrial-950 to-industrial-900">
                     {activeTab === 'basic' && (
@@ -65,8 +102,31 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                     {activeTab === 'install' && (
                         <div className="space-y-5 animate-fade-in">
                             <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-4 flex items-center gap-4"><div className="p-3 bg-orange-500/20 rounded-full text-orange-400"><Icon name="wrench" className="w-6 h-6"/></div><div><div className="text-[10px] text-orange-300 font-bold uppercase tracking-widest mb-1">配管尺寸 (液/氣)</div><div className="text-xl font-mono font-bold text-white">{currentVariant.pipes}</div></div></div>
-                            <div className="glass-panel rounded-xl p-4"><h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest border-b border-industrial-700 pb-2">線材規格</h4><div className="grid grid-cols-1 gap-4"><div><span className="text-[10px] text-gray-500 block mb-1">電源配線</span><div className="text-sm font-mono text-blue-300">{currentVariant.odu?.powerWire || '詳見說明書'}</div></div><div><span className="text-[10px] text-gray-500 block mb-1">內外機訊號線</span><div className="text-sm font-mono text-green-300">{currentVariant.odu?.signalWire || '詳見說明書'}</div></div><div><span className="text-[10px] text-gray-500 block mb-1">最大電流 (無熔絲開關)</span><div className="text-sm font-mono text-red-400">{currentVariant.odu?.currentMax || '-'}</div></div></div></div>
-                            <div className="text-center text-[10px] text-gray-600 mt-4">* 實際施工請務必參閱原廠隨機附贈之安裝說明書</div>
+                            <div className="glass-panel rounded-xl p-4">
+                                <h4 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-widest border-b border-industrial-700 pb-2">線材規格 (法規推算)</h4>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {/* 優先顯示資料庫數據，若無則顯示推算值，並標註 (推算) */}
+                                    <div>
+                                        <span className="text-[10px] text-gray-500 block mb-1">建議電源線徑</span>
+                                        <div className="text-sm font-mono text-blue-300">
+                                            {currentVariant.odu?.powerWire || `${elecSpec.wire} ${elecSpec.calc ? '(依電流推算)' : ''}`}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-gray-500 block mb-1">內外機訊號線</span>
+                                        <div className="text-sm font-mono text-green-300">
+                                            {currentVariant.odu?.signalWire || '1.25mm² x 4C (建議)'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-gray-500 block mb-1">建議 NFB (無熔絲開關)</span>
+                                        <div className="text-sm font-mono text-red-400 font-bold">
+                                            {currentVariant.odu?.currentMax ? `${currentVariant.odu.currentMax}A (Max)` : elecSpec.nfb}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-center text-[10px] text-gray-600 mt-4">* 以上數據僅供參考，實際施工請務必參閱原廠安裝說明書與電工法規</div>
                         </div>
                     )}
                 </div>
@@ -84,7 +144,7 @@ const ResultCard = ({ group, onClick }) => {
     const coolVariant = group.variants.find(v => v.func === '冷專');
     const [mode, setMode] = useState(heatVariant ? 'heat' : 'cool');
     const currentItem = mode === 'heat' ? (heatVariant || coolVariant) : (coolVariant || heatVariant);
-    if (!currentItem) return null; // Safety check
+    if (!currentItem) return null;
     const handleToggle = (e, newMode) => { e.stopPropagation(); setMode(newMode); };
 
     return (
