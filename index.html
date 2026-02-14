@@ -3,25 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>龍神空調幫手</title>
-    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23fbbf24%22><path d=%22M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z%22/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
 
     <script>
-        // 禁止右鍵選單
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        // Tailwind 設定
         tailwind.config = {
             theme: {
                 extend: {
@@ -40,15 +32,9 @@
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         zoomIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
                         slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                        runToTitle: { 
-                            '0%': { left: '-120px' }, 
-                            '100%': { left: 'calc(50% - 150px)' }
-                        }
+                        runToTitle: { '0%': { left: '-120px' }, '100%': { left: 'calc(50% - 150px)' } }
                     },
-                    fontFamily: {
-                        'sans': ['"Microsoft JhengHei"', 'sans-serif'],
-                        '8bit': ['"Press Start 2P"', 'cursive']
-                    }
+                    fontFamily: { 'sans': ['"Microsoft JhengHei"', 'sans-serif'], '8bit': ['"Press Start 2P"', 'cursive'] }
                 }
             }
         }
@@ -57,19 +43,21 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" src="data1.js"></script> <script type="text/babel" src="data2.js"></script> <script type="text/babel" src="data3.js"></script> <script type="text/babel">
+    <script src="data1.js"></script>
+    <script src="data2.js"></script>
+    <script src="data3.js"></script>
+
+    <script>
         window.AC_DATABASE = [
             ...(window.DATA_HITACHI || []),
             ...(window.DATA_DAIKIN_FUJITSU || []),
             ...(window.DATA_OTHERS || [])
         ];
-        console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
+        console.log("System Ready: " + window.AC_DATABASE.length + " items loaded.");
     </script>
 
     <script type="text/babel" src="components.js"></script>
-    
     <script type="text/babel" src="calculators.js"></script>
-    
     <script type="text/babel" src="app.js"></script>
 </body>
 </html>
