@@ -11,30 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script>
-        // 禁止右鍵選單
         document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        // Tailwind 設定
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        industrial: { 950: '#0b1121', 900: '#111827', 800: '#1e293b', 700: '#334155', 600: '#475569', accent: '#f59e0b', text: '#e2e8f0' },
-                        heat: { 500: '#f97316', 900: '#7c2d12' }, 
-                        cool: { 500: '#3b82f6', 900: '#1e3a8a' },
-                    },
-                    animation: { 
-                        'fade-in': 'fadeIn 0.3s ease-out', 
-                        'zoom-in': 'zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'run-to-title': 'runToTitle 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
-                    },
-                    keyframes: {
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        zoomIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                        runToTitle: { '0%': { left: '-120px' }, '100%': { left: 'calc(50% - 150px)' } }
-                    },
+                    colors: { industrial: { 950: '#0b1121', 900: '#111827', 800: '#1e293b', 700: '#334155', 600: '#475569', accent: '#f59e0b', text: '#e2e8f0' }, heat: { 500: '#f97316', 900: '#7c2d12' }, cool: { 500: '#3b82f6', 900: '#1e3a8a' } },
+                    animation: { 'fade-in': 'fadeIn 0.3s ease-out', 'zoom-in': 'zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', 'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)', 'run-to-title': 'runToTitle 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' },
+                    keyframes: { fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }, zoomIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } }, slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, runToTitle: { '0%': { left: '-120px' }, '100%': { left: 'calc(50% - 150px)' } } },
                     fontFamily: { 'sans': ['"Microsoft JhengHei"', 'sans-serif'], '8bit': ['"Press Start 2P"', 'cursive'] }
                 }
             }
@@ -44,14 +27,19 @@
 <body>
     <div id="root"></div>
 
-    <script src="data1.js"></script> <script src="data2.js"></script> <script src="data3.js"></script> <script src="data4.js"></script> <script>
+    <script src="data1.js"></script>
+    <script src="data2.js"></script>
+    <script src="data3.js"></script>
+    <script src="data4.js"></script>
+
+    <script>
         window.AC_DATABASE = [
             ...(window.DATA_HITACHI || []),
             ...(window.DATA_DAIKIN_FUJITSU || []),
             ...(window.DATA_OTHERS || []),
             ...(window.DATA_HAWRIN || [])
         ];
-        console.log("System Ready: " + window.AC_DATABASE.length + " items loaded.");
+        console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
     </script>
 
     <script type="text/babel" src="components.js"></script>
