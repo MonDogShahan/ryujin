@@ -1,10 +1,12 @@
-// ================= data_hitachi.js - 日立冷氣 Hitachi (2025 全系列完整版) =================
+// ================= data_hitachi.js - 日立冷氣 Hitachi (2025 終極全錄版) =================
 // 資料來源：2025 綜合型錄 (RAC-2025.03)
-// 收錄：尊榮(NT), 頂級(NJP), 旗艦(HQ), 精品(YS), 頂級埋入(RAD-NJP), 精品埋入(RAD-NY)
+// 修正：補齊頂級/旗艦/精品「冷專」系列，以及 110~160 型大能力機種
 
-// ------------------------------------------
+// ==========================================
+// A. 壁掛式 - 冷暖系列 (Heat & Cool)
+// ==========================================
+
 // 1. 尊榮系列 (NT) - 凍結洗淨3.0+ / 搭載PM2.5濾網
-// ------------------------------------------
 const HITACHI_ZUNRONG = [
     { id: 'hitachi-22nt', brandCN: '日立', series: '尊榮系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.0', power: '393', cspf: '7.60', modelIdu: 'RAS-22NT', modelOdu: 'RAC-22NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
     { id: 'hitachi-28nt', brandCN: '日立', series: '尊榮系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.6', power: '540', cspf: '7.25', modelIdu: 'RAS-28NT', modelOdu: 'RAC-28NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
@@ -17,9 +19,7 @@ const HITACHI_ZUNRONG = [
     { id: 'hitachi-90nt', brandCN: '日立', series: '尊榮系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.6', current: '12.0', power: '2650', cspf: '5.25', modelIdu: 'RAS-90NT', modelOdu: 'RAC-90NP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1080×300×240', weight: '15.0' } }
 ];
 
-// ------------------------------------------
-// 2. 頂級系列 (NJP) - 凍結洗淨 / 體感舒適
-// ------------------------------------------
+// 2. 頂級系列 (NJP) - 冷暖
 const HITACHI_TOP = [
     { id: 'hitachi-22njp', brandCN: '日立', series: '頂級系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.0', power: '393', cspf: '7.60', modelIdu: 'RAS-22NJP', modelOdu: 'RAC-22NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
     { id: 'hitachi-28njp', brandCN: '日立', series: '頂級系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.6', power: '540', cspf: '7.25', modelIdu: 'RAS-28NJP', modelOdu: 'RAC-28NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
@@ -32,9 +32,7 @@ const HITACHI_TOP = [
     { id: 'hitachi-90njp', brandCN: '日立', series: '頂級系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.6', current: '12.0', power: '2650', cspf: '5.25', modelIdu: 'RAS-90NJP', modelOdu: 'RAC-90NP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1080×300×240', weight: '15.0' } }
 ];
 
-// ------------------------------------------
-// 3. 旗艦系列 (HQ) - 3D立體氣流 / 奈米鈦觸媒
-// ------------------------------------------
+// 3. 旗艦系列 (HQ) - 冷暖
 const HITACHI_FLAGSHIP = [
     { id: 'hitachi-22hq', brandCN: '日立', series: '旗艦系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.1', power: '430', cspf: '6.70', modelIdu: 'RAS-22HQ', modelOdu: 'RAC-22HP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
     { id: 'hitachi-28hq', brandCN: '日立', series: '旗艦系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.8', power: '585', cspf: '6.50', modelIdu: 'RAS-28HQ', modelOdu: 'RAC-28HP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
@@ -46,9 +44,7 @@ const HITACHI_FLAGSHIP = [
     { id: 'hitachi-81hq', brandCN: '日立', series: '旗艦系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '9.0', current: '11.8', power: '2550', cspf: '5.10', modelIdu: 'RAS-81HQ', modelOdu: 'RAC-81HP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1060×300×225', weight: '14.0' } }
 ];
 
-// ------------------------------------------
-// 4. 精品系列 (YS) - 極簡美學 / 舒適恆溫
-// ------------------------------------------
+// 4. 精品系列 (YS) - 冷暖
 const HITACHI_PREMIUM = [
     { id: 'hitachi-22ys', brandCN: '日立', series: '精品系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.3', power: '450', cspf: '6.45', modelIdu: 'RAS-22YS', modelOdu: 'RAC-22YP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
     { id: 'hitachi-28ys', brandCN: '日立', series: '精品系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.9', power: '610', cspf: '6.20', modelIdu: 'RAS-28YS', modelOdu: 'RAC-28YP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
@@ -59,9 +55,59 @@ const HITACHI_PREMIUM = [
     { id: 'hitachi-72ys', brandCN: '日立', series: '精品系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', current: '10.5', power: '2250', cspf: '5.10', modelIdu: 'RAS-72YS', modelOdu: 'RAC-72YP', pipes: '3分/5分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1060×300×225', weight: '14.0' } }
 ];
 
-// ------------------------------------------
-// 5. 頂級埋入型 (RAD-NJP) - 內建排水泵 / 凍結洗淨
-// ------------------------------------------
+// 5. 壁掛大能力 (YSP) - 110~160型 (通常用於商用或大空間)
+const HITACHI_LARGE_WALL = [
+    { id: 'hitachi-110ysp', brandCN: '日立', series: '壁掛大能力', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 11.0, coolCap: '11.0', heatCap: '12.0', current: '13.5', power: '3600', cspf: '5.10', modelIdu: 'RAS-110YSP', modelOdu: 'RAC-110SP', pipes: '3分/5分', odu: { dims: '950×1140×370', weight: '84', power: '220V', footSpacing: '600×395' }, idu: { dims: '1250×333×270', weight: '19.0' } },
+    { id: 'hitachi-125ysp', brandCN: '日立', series: '壁掛大能力', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 12.5, coolCap: '12.5', heatCap: '13.5', current: '15.5', power: '4200', cspf: '4.80', modelIdu: 'RAS-125YSP', modelOdu: 'RAC-125SP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '84', power: '220V', footSpacing: '600×395' }, idu: { dims: '1250×333×270', weight: '19.0' } },
+    { id: 'hitachi-140ysp', brandCN: '日立', series: '壁掛大能力', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 14.0, coolCap: '14.0', heatCap: '15.0', current: '17.5', power: '4800', cspf: '4.50', modelIdu: 'RAS-140YSP', modelOdu: 'RAC-140SP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '88', power: '220V', footSpacing: '600×395' }, idu: { dims: '1250×333×270', weight: '19.0' } },
+    { id: 'hitachi-160ysp', brandCN: '日立', series: '壁掛大能力', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 16.0, coolCap: '16.0', heatCap: '17.0', current: '20.0', power: '5500', cspf: '4.30', modelIdu: 'RAS-160YSP', modelOdu: 'RAC-160SP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '88', power: '220V', footSpacing: '600×395' }, idu: { dims: '1250×333×270', weight: '19.0' } }
+];
+
+// ==========================================
+// B. 壁掛式 - 冷專系列 (Cooling Only)
+// ==========================================
+
+// 6. 頂級冷專 (NJK)
+const HITACHI_TOP_COOL = [
+    { id: 'hitachi-22njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '-', current: '2.0', power: '393', cspf: '7.60', modelIdu: 'RAS-22NJK', modelOdu: 'RAC-22JK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
+    { id: 'hitachi-28njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '-', current: '2.6', power: '540', cspf: '7.25', modelIdu: 'RAS-28NJK', modelOdu: 'RAC-28JK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
+    { id: 'hitachi-36njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '-', current: '3.5', power: '775', cspf: '6.85', modelIdu: 'RAS-36NJK', modelOdu: 'RAC-36JK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
+    { id: 'hitachi-40njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '-', current: '4.2', power: '920', cspf: '6.55', modelIdu: 'RAS-40NJK', modelOdu: 'RAC-40JK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '36', power: '220V', footSpacing: '530×305' }, idu: { dims: '820×300×240', weight: '11.0' } },
+    { id: 'hitachi-50njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '-', current: '5.5', power: '1210', cspf: '6.55', modelIdu: 'RAS-50NJK', modelOdu: 'RAC-50JK', pipes: '2分/3分', odu: { dims: '810×685×300', weight: '47', power: '220V', footSpacing: '545×315' }, idu: { dims: '920×300×240', weight: '13.0' } },
+    { id: 'hitachi-63njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '-', current: '7.8', power: '1720', cspf: '6.00', modelIdu: 'RAS-63NJK', modelOdu: 'RAC-63JK', pipes: '2分/4分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1080×300×240', weight: '15.0' } },
+    { id: 'hitachi-71njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '-', current: '9.2', power: '2020', cspf: '5.85', modelIdu: 'RAS-71NJK', modelOdu: 'RAC-71JK', pipes: '3分/5分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1080×300×240', weight: '15.0' } },
+    { id: 'hitachi-81njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '-', current: '10.8', power: '2350', cspf: '5.60', modelIdu: 'RAS-81NJK', modelOdu: 'RAC-81JK', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1080×300×240', weight: '15.0' } },
+    { id: 'hitachi-90njk', brandCN: '日立', series: '頂級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '-', current: '12.0', power: '2650', cspf: '5.25', modelIdu: 'RAS-90NJK', modelOdu: 'RAC-90JK', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1080×300×240', weight: '15.0' } }
+];
+
+// 7. 旗艦冷專 (QK)
+const HITACHI_FLAGSHIP_COOL = [
+    { id: 'hitachi-22qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '-', current: '2.1', power: '430', cspf: '6.70', modelIdu: 'RAS-22QK', modelOdu: 'RAC-22QK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-28qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '-', current: '2.8', power: '585', cspf: '6.50', modelIdu: 'RAS-28QK', modelOdu: 'RAC-28QK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-36qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '-', current: '3.8', power: '820', cspf: '6.30', modelIdu: 'RAS-36QK', modelOdu: 'RAC-36QK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-40qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '-', current: '4.6', power: '1000', cspf: '6.10', modelIdu: 'RAS-40QK', modelOdu: 'RAC-40QK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '36', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '10.0' } },
+    { id: 'hitachi-50qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '-', current: '6.0', power: '1320', cspf: '5.85', modelIdu: 'RAS-50QK', modelOdu: 'RAC-50QK', pipes: '2分/3分', odu: { dims: '810×685×300', weight: '47', power: '220V', footSpacing: '545×315' }, idu: { dims: '910×300×215', weight: '11.0' } },
+    { id: 'hitachi-63qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '-', current: '8.3', power: '1800', cspf: '5.60', modelIdu: 'RAS-63QK', modelOdu: 'RAC-63QK', pipes: '2分/4分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1060×300×225', weight: '14.0' } },
+    { id: 'hitachi-71qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '-', current: '10.0', power: '2150', cspf: '5.40', modelIdu: 'RAS-71QK', modelOdu: 'RAC-71QK', pipes: '3分/5分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1060×300×225', weight: '14.0' } },
+    { id: 'hitachi-81qk', brandCN: '日立', series: '旗艦冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '-', current: '11.8', power: '2550', cspf: '5.10', modelIdu: 'RAS-81QK', modelOdu: 'RAC-81QK', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1060×300×225', weight: '14.0' } }
+];
+
+// 8. 精品冷專 (SK)
+const HITACHI_PREMIUM_COOL = [
+    { id: 'hitachi-22sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '-', current: '2.3', power: '450', cspf: '6.45', modelIdu: 'RAS-22SK', modelOdu: 'RAC-22SK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-28sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '-', current: '2.9', power: '610', cspf: '6.20', modelIdu: 'RAS-28SK', modelOdu: 'RAC-28SK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-36sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '-', current: '4.0', power: '860', cspf: '6.00', modelIdu: 'RAS-36SK', modelOdu: 'RAC-36SK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '9.0' } },
+    { id: 'hitachi-40sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '-', current: '4.8', power: '1050', cspf: '5.90', modelIdu: 'RAS-40SK', modelOdu: 'RAC-40SK', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '36', power: '220V', footSpacing: '530×305' }, idu: { dims: '810×300×215', weight: '10.0' } },
+    { id: 'hitachi-50sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '-', current: '6.5', power: '1380', cspf: '5.50', modelIdu: 'RAS-50SK', modelOdu: 'RAC-50SK', pipes: '2分/3分', odu: { dims: '810×685×300', weight: '47', power: '220V', footSpacing: '545×315' }, idu: { dims: '910×300×215', weight: '11.0' } },
+    { id: 'hitachi-63sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '-', current: '8.8', power: '1900', cspf: '5.30', modelIdu: 'RAS-63SK', modelOdu: 'RAC-63SK', pipes: '2分/4分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1060×300×225', weight: '14.0' } },
+    { id: 'hitachi-72sk', brandCN: '日立', series: '精品冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '-', current: '10.5', power: '2250', cspf: '5.10', modelIdu: 'RAS-72SK', modelOdu: 'RAC-72SK', pipes: '3分/5分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1060×300×225', weight: '14.0' } }
+];
+
+// ==========================================
+// C. 吊隱式系列 (Ducted)
+// ==========================================
+
+// 9. 頂級埋入型 (RAD-NJP) - 內建排水泵 / 凍結洗淨
 const HITACHI_TOP_DUCT = [
     { id: 'hitachi-du-22njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.0', power: '393', cspf: '6.65', modelIdu: 'RAD-22NJP', modelOdu: 'RAC-22NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '750×230×420', weight: '18.0', flangeDims: '內建排水泵' } },
     { id: 'hitachi-du-28njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.6', power: '540', cspf: '6.45', modelIdu: 'RAD-28NJP', modelOdu: 'RAC-28NP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '750×230×420', weight: '18.0', flangeDims: '內建排水泵' } },
@@ -71,12 +117,15 @@ const HITACHI_TOP_DUCT = [
     { id: 'hitachi-du-63njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.1', current: '7.8', power: '1720', cspf: '5.60', modelIdu: 'RAD-63NJP', modelOdu: 'RAC-63NP', pipes: '2分/4分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '920×270×500', weight: '26.0', flangeDims: '內建排水泵' } },
     { id: 'hitachi-du-71njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', current: '9.2', power: '2020', cspf: '5.40', modelIdu: 'RAD-71NJP', modelOdu: 'RAC-71NP', pipes: '3分/5分', odu: { dims: '880×800×315', weight: '53', power: '220V', footSpacing: '600×345' }, idu: { dims: '1330×270×500', weight: '36.0', flangeDims: '內建排水泵' } },
     { id: 'hitachi-du-81njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '9.0', current: '10.8', power: '2350', cspf: '5.30', modelIdu: 'RAD-81NJP', modelOdu: 'RAC-81NP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1330×270×500', weight: '36.0', flangeDims: '內建排水泵' } },
-    { id: 'hitachi-du-90njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.6', current: '12.0', power: '2650', cspf: '5.10', modelIdu: 'RAD-90NJP', modelOdu: 'RAC-90NP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1330×270×500', weight: '36.0', flangeDims: '內建排水泵' } }
+    { id: 'hitachi-du-90njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.6', current: '12.0', power: '2650', cspf: '5.10', modelIdu: 'RAD-90NJP', modelOdu: 'RAC-90NP', pipes: '3分/5分', odu: { dims: '920×885×315', weight: '60', power: '220V', footSpacing: '600×365' }, idu: { dims: '1330×270×500', weight: '36.0', flangeDims: '內建排水泵' } },
+    // 大能力埋入型 (110~160)
+    { id: 'hitachi-du-110njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 11.0, coolCap: '11.0', heatCap: '12.0', current: '13.5', power: '3600', cspf: '5.10', modelIdu: 'RAD-110NJP', modelOdu: 'RAC-110NP', pipes: '3分/5分', odu: { dims: '950×1140×370', weight: '84', power: '220V', footSpacing: '600×395' }, idu: { dims: '1330×350×800', weight: '54.0', flangeDims: '內建排水泵' } },
+    { id: 'hitachi-du-125njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 12.5, coolCap: '12.5', heatCap: '13.5', current: '15.5', power: '4200', cspf: '4.80', modelIdu: 'RAD-125NJP', modelOdu: 'RAC-125NP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '84', power: '220V', footSpacing: '600×395' }, idu: { dims: '1330×350×800', weight: '54.0', flangeDims: '內建排水泵' } },
+    { id: 'hitachi-du-140njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 14.0, coolCap: '14.0', heatCap: '15.0', current: '17.5', power: '4800', cspf: '4.50', modelIdu: 'RAD-140NJP', modelOdu: 'RAC-140NP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '88', power: '220V', footSpacing: '600×395' }, idu: { dims: '1330×350×800', weight: '54.0', flangeDims: '內建排水泵' } },
+    { id: 'hitachi-du-160njp', brandCN: '日立', series: '頂級埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 16.0, coolCap: '16.0', heatCap: '17.0', current: '20.0', power: '5500', cspf: '4.30', modelIdu: 'RAD-160NJP', modelOdu: 'RAC-160NP', pipes: '3分/6分', odu: { dims: '950×1140×370', weight: '88', power: '220V', footSpacing: '600×395' }, idu: { dims: '1330×350×800', weight: '54.0', flangeDims: '內建排水泵' } }
 ];
 
-// ------------------------------------------
-// 6. 精品埋入型 (RAD-NY) - 經濟實惠
-// ------------------------------------------
+// 10. 精品埋入型 (RAD-NY) - 經濟實惠
 const HITACHI_PREMIUM_DUCT = [
     { id: 'hitachi-du-22ny', brandCN: '日立', series: '精品埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.3', power: '450', cspf: '5.80', modelIdu: 'RAD-22NY', modelOdu: 'RAC-22YP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '750×230×420', weight: '18.0', flangeDims: '-' } },
     { id: 'hitachi-du-28ny', brandCN: '日立', series: '精品埋入', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.9', power: '610', cspf: '5.60', modelIdu: 'RAD-28NY', modelOdu: 'RAC-28YP', pipes: '2分/3分', odu: { dims: '730×600×290', weight: '33', power: '220V', footSpacing: '530×305' }, idu: { dims: '750×230×420', weight: '18.0', flangeDims: '-' } },
@@ -93,6 +142,10 @@ window.DATA_HITACHI = [
     ...HITACHI_TOP,
     ...HITACHI_FLAGSHIP,
     ...HITACHI_PREMIUM,
+    ...HITACHI_LARGE_WALL,
+    ...HITACHI_TOP_COOL,
+    ...HITACHI_FLAGSHIP_COOL,
+    ...HITACHI_PREMIUM_COOL,
     ...HITACHI_TOP_DUCT,
     ...HITACHI_PREMIUM_DUCT
 ];
