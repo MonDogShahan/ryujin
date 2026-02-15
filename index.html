@@ -10,7 +10,8 @@
     <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
     
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" type="image/png" href="android-chrome-192x192.png">
+    <link rel="shortcut icon" type="image/png" href="android-chrome-192x192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -55,30 +56,25 @@
 <body>
     <div id="root"></div>
 
-    <script src="data_hitachi.js"></script>    <script src="data_daikin.js"></script>     <script src="data_panasonic.js"></script>  <script src="data_mitsubishi.js"></script> <script src="data_fujitsu.js"></script>    <script src="data_hawrin.js"></script>     <script>
+    <script src="data_hitachi.js"></script>
+    <script src="data_daikin.js"></script>
+    <script src="data_panasonic.js"></script>
+    <script src="data_mitsubishi.js"></script>
+    <script src="data_fujitsu.js"></script>
+    <script src="data_hawrin.js"></script>
+
+    <script>
         window.AC_DATABASE = [
-            // 日立
             ...(window.DATA_HITACHI || []),
-            
-            // 大金 (同時檢查新舊變數名)
-            ...(window.DATA_DAIKIN || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '大金') || []),
-            
-            // 國際
+            ...(window.DATA_DAIKIN || []),
             ...(window.DATA_PANASONIC || []),
-            
-            // 三菱
             ...(window.DATA_MITSUBISHI || []),
-            
-            // 富士通
-            ...(window.DATA_FUJITSU || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '富士通') || []),
-            
-            // 華菱
-            ...(window.DATA_HAWRIN || window.DATA_HAWRIN_2025 || [])
+            ...(window.DATA_FUJITSU || []),
+            ...(window.DATA_HAWRIN || [])
         ];
 
         console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
         
-        // 簡單檢查
         if (window.AC_DATABASE.length === 0) {
             console.error("警告：資料庫為空！請確認 data_*.js 檔案是否存在且路徑正確。");
         }
