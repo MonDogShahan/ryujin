@@ -1,7 +1,7 @@
 // 確保讀取到全域資料庫
 const AC_DATABASE = window.AC_DATABASE || [];
 
-// ================= 4. 主程式 (App) V13.22 =================
+// ================= 4. 主程式 (App) V13.27 =================
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -27,27 +27,54 @@ const App = () => {
         return ['不拘', ...new Set(AC_DATABASE.filter(i => i.brandCN === searchState.brand).map(i => i.series))];
     }, [searchState.brand]);
 
-    // ★ 關鍵修正 1: 搜尋選單選項更新
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
+    // ★ 關鍵修正：精準搜尋邏輯 (標題、型號、KW數、品牌、系列)
     const getFilteredResults = (kw) => {
         return AC_DATABASE.filter(i => {
+            // 1. 下拉選單過濾 (絕對條件)
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
             if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
             if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
             if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
             
+            // 2. 關鍵字搜尋 (精準欄位比對)
             if (kw) {
-                const keywordLower = kw.toLowerCase();
-                const itemString = JSON.stringify(i).toLowerCase();
-                if (!isNaN(parseFloat(kw)) && isFinite(kw)) {
-                    const kwNum = parseFloat(kw);
-                    const isCapacityMatch = Math.abs(parseFloat(i.maxKw) * 10 - kwNum) < 0.5 || Math.abs(parseFloat(i.maxKw) - kwNum) < 0.1;
-                    const isModelMatch = i.modelIdu.toLowerCase().includes(keywordLower) || i.modelOdu.toLowerCase().includes(keywordLower);
-                    return isCapacityMatch || isModelMatch;
+                const k = kw.trim().toLowerCase();
+                
+                // A. 文字欄位比對 (只比對這些欄位，排除尺寸、重量等雜訊)
+                // 包含：品牌中文、系列名稱、室內機型號、室外機型號
+                const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
+                const isTextMatch = targetText.includes(k);
+
+                // B. KW 數值智慧比對 (容許些微誤差)
+                let isKwMatch = false;
+                // 移除輸入字串中的非數字字元 (例如 "2.8kw" -> 2.8)
+                const numStr = k.replace(/[^0-9.]/g, ''); 
+                
+                if (numStr && !isNaN(numStr)) {
+                    const searchNum = parseFloat(numStr);
+                    const machineCap = parseFloat(i.maxKw); // 機器實際能力 (例如 2.8)
+                    
+                    // 情況 1: 直接輸入能力 (例如輸入 2.8 或 7.2) -> 容許 0.2 誤差
+                    if (Math.abs(machineCap - searchNum) <= 0.2) {
+                        isKwMatch = true;
+                    }
+                    // 情況 2: 輸入型號級距 (例如輸入 28 或 71) -> 自動除以10後比對
+                    // 28 -> 2.8 (吻合)
+                    // 71 -> 7.1 (與 7.2 誤差 0.1，判定吻合)
+                    else if (searchNum >= 20) { 
+                        if (Math.abs(machineCap - (searchNum / 10)) <= 0.2) {
+                            isKwMatch = true;
+                        }
+                    }
                 }
-                return itemString.includes(keywordLower);
+
+                // 文字符合 或 KW數值符合 均可列入結果
+                return isTextMatch || isKwMatch;
             }
+            
+            // 沒有關鍵字時，回傳符合下拉選單的所有項目
             return true;
         });
     };
@@ -71,7 +98,8 @@ const App = () => {
     
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
-        const matches = AC_DATABASE.filter(i => JSON.stringify(i).toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
+        // 建議字串僅從「型號」中撈取，避免雜訊
+        const matches = AC_DATABASE.filter(i => i.modelIdu.toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
         return [...new Set(matches)];
     }, [searchState.keyword, searchState.history]);
 
@@ -82,7 +110,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.22</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.27</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
@@ -93,12 +121,11 @@ const App = () => {
                     <div className="animate-fade-in h-full flex flex-col">
                         <div className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 shadow-inner mb-4 space-y-4 shrink-0">
                             <div className="grid grid-cols-2 gap-4"><FilterSelect label="品牌" value={searchState.brand} options={['不拘', '日立', '大金', '三菱重工', '國際牌', '富士通', '華菱']} onChange={v => setSearchState(p => ({...p, brand: v, series: '不拘'}))} /><FilterSelect label="系列" value={searchState.series} options={availableSeries} onChange={v => setSearchState(p => ({...p, series: v}))} /></div>
-                            {/* ★ 關鍵修正 2: 套用新的 typeOptions */}
                             <div className="grid grid-cols-2 gap-4"><FilterSelect label="功能" value={searchState.func} options={['不拘', '冷暖', '冷專']} onChange={v => setSearchState(p => ({...p, func: v}))} /><FilterSelect label="型式" value={searchState.type} options={typeOptions} onChange={v => setSearchState(p => ({...p, type: v}))} /></div>
                             <div className="relative pt-2">
-                                <span className="absolute top-0 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10">型號關鍵字</span>
+                                <span className="absolute top-0 left-2 bg-industrial-800 px-1 text-[10px] text-industrial-accent font-bold tracking-widest z-10">型號或 KW</span>
                                 <div className="absolute inset-y-0 left-0 pl-3 pt-2 flex items-center pointer-events-none text-gray-500"><Icon name="search" className="w-4 h-4" /></div>
-                                <input type="text" className="w-full pl-9 pr-8 py-3 bg-industrial-900 border border-industrial-700 rounded-lg text-sm text-white focus:border-industrial-accent transition-all" placeholder="輸入 28, NJP..." value={searchState.keyword} onChange={e => { setSearchState(p => ({...p, keyword: e.target.value})); setShowHistory(true); }} onFocus={() => setShowHistory(true)} onKeyDown={e => e.key === 'Enter' && executeSearch()} />
+                                <input type="text" className="w-full pl-9 pr-8 py-3 bg-industrial-900 border border-industrial-700 rounded-lg text-sm text-white focus:border-industrial-accent transition-all" placeholder="輸入 28, 71, 2.8, ZSXT..." value={searchState.keyword} onChange={e => { setSearchState(p => ({...p, keyword: e.target.value})); setShowHistory(true); }} onFocus={() => setShowHistory(true)} onKeyDown={e => e.key === 'Enter' && executeSearch()} />
                                 {searchState.keyword && <button onClick={() => { setSearchState(p => ({...p, keyword: ''})); setShowHistory(false); }} className="absolute right-2 top-5 text-gray-500 hover:text-white"><Icon name="x" className="w-4 h-4"/></button>}
                             </div>
                             {showHistory && suggestions.length > 0 && (<div className="bg-industrial-900 border border-industrial-700 rounded-lg overflow-hidden animate-slide-up mb-2"><div className="max-h-40 overflow-y-auto">{suggestions.map((h, i) => (<button key={i} onClick={() => { setSearchState(p => ({...p, keyword: h})); executeSearch(); setShowHistory(false); }} className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-industrial-800 border-b border-gray-800 last:border-0 flex items-center justify-between group"><span>{h}</span><Icon name="chevron" className="w-3 h-3 text-gray-600 group-hover:text-white" /></button>))}</div><div className="bg-industrial-950 p-2 text-right"><button onClick={clearHistory} className="text-xs text-red-400 hover:text-red-300 flex items-center justify-end gap-1 w-full"><Icon name="trash" className="w-3 h-3"/> 清除紀錄</button></div></div>)}
