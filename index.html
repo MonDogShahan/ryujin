@@ -15,7 +15,6 @@
 
     <script>
         document.addEventListener('contextmenu', e => e.preventDefault());
-        
         tailwind.config = {
             theme: {
                 extend: {
@@ -49,31 +48,36 @@
     <div id="root"></div>
 
     <script src="data_hitachi.js"></script>    <script src="data_daikin.js"></script>     <script src="data_panasonic.js"></script>  <script src="data_mitsubishi.js"></script> <script src="data_fujitsu.js"></script>    <script src="data_hawrin.js"></script>     <script>
-        // 為了防止變數名稱不一致導致白屏，這裡做了多重檢查
+        // 這裡使用 || (OR) 邏輯，不管資料庫檔案是用新名稱還是舊名稱，全部通吃
         window.AC_DATABASE = [
+            // 日立
             ...(window.DATA_HITACHI || []),
             
-            // 大金
-            ...(window.DATA_DAIKIN || []),
+            // 大金 (同時檢查新舊變數名)
+            ...(window.DATA_DAIKIN || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '大金') || []),
             
-            // 國際 (相容舊名 DATA_OTHERS 或新名 DATA_PANASONIC)
-            ...(window.DATA_PANASONIC || window.DATA_OTHERS?.filter(i => i.brandCN === '國際牌') || []),
+            // 國際
+            ...(window.DATA_PANASONIC || []),
             
-            // 三菱 (相容舊名 DATA_OTHERS 或新名 DATA_MITSUBISHI)
-            ...(window.DATA_MITSUBISHI || window.DATA_OTHERS?.filter(i => i.brandCN === '三菱重工') || []),
+            // 三菱
+            ...(window.DATA_MITSUBISHI || []),
             
-            // 富士通 (相容舊名 DATA_DAIKIN_FUJITSU 或新名 DATA_FUJITSU)
+            // 富士通 (同時檢查新舊變數名)
             ...(window.DATA_FUJITSU || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '富士通') || []),
             
-            // 華菱 (相容 DATA_HAWRIN 或 DATA_HAWRIN_2025)
+            // 華菱 (同時檢查新舊變數名)
             ...(window.DATA_HAWRIN || window.DATA_HAWRIN_2025 || [])
         ];
 
         console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
         
-        // 簡單檢查，若數量為 0 則在 Console 發出警告
-        if (window.AC_DATABASE.length === 0) {
-            console.error("警告：資料庫為空！請檢查 data_*.js 檔案路徑與變數名稱是否正確。");
+        // 驗證是否有大金資料
+        const hasDaikin = window.AC_DATABASE.some(i => i.brandCN === '大金');
+        if (!hasDaikin) {
+            console.error("嚴重警告：系統仍然找不到「大金」的資料！請檢查 data_daikin.js 檔案內容是否空白或有語法錯誤。");
+            alert("系統偵測到「大金」資料庫載入失敗，請檢查檔案內容。");
+        } else {
+            console.log("✅ 大金資料庫載入成功！");
         }
     </script>
 
