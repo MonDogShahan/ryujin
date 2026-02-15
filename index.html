@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>龍神空調幫手</title>
     
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
+    
+    <link rel="icon" href="favicon.ico">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -50,12 +57,23 @@
 
     <script src="data_hitachi.js"></script>    <script src="data_daikin.js"></script>     <script src="data_panasonic.js"></script>  <script src="data_mitsubishi.js"></script> <script src="data_fujitsu.js"></script>    <script src="data_hawrin.js"></script>     <script>
         window.AC_DATABASE = [
+            // 日立
             ...(window.DATA_HITACHI || []),
-            ...(window.DATA_DAIKIN || []),
+            
+            // 大金 (同時檢查新舊變數名)
+            ...(window.DATA_DAIKIN || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '大金') || []),
+            
+            // 國際
             ...(window.DATA_PANASONIC || []),
+            
+            // 三菱
             ...(window.DATA_MITSUBISHI || []),
-            ...(window.DATA_FUJITSU || []),
-            ...(window.DATA_HAWRIN || [])
+            
+            // 富士通
+            ...(window.DATA_FUJITSU || window.DATA_DAIKIN_FUJITSU?.filter(i => i.brandCN === '富士通') || []),
+            
+            // 華菱
+            ...(window.DATA_HAWRIN || window.DATA_HAWRIN_2025 || [])
         ];
 
         console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
