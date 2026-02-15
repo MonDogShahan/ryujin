@@ -1,7 +1,7 @@
 // 確保讀取到全域資料庫
 const AC_DATABASE = window.AC_DATABASE || [];
 
-// ================= 4. 主程式 (App) V13.33 =================
+// ================= 4. 主程式 (App) V13.47 =================
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,6 +13,16 @@ const App = () => {
     });
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
+
+    // ★★★ 新增：用於控制搜尋結果捲動的 Ref ★★★
+    const resultsRef = useRef(null);
+
+    // ★★★ 新增：當搜尋結果改變時，自動捲動到頂部 ★★★
+    useEffect(() => {
+        if (resultsRef.current) {
+            resultsRef.current.scrollTop = 0;
+        }
+    }, [searchState.results]);
 
     // 計算機狀態
     const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
@@ -29,7 +39,7 @@ const App = () => {
 
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
-    // ★★★ V13.33 回歸標準：下拉選單絕對優先 + 精準欄位比對 ★★★
+    // 搜尋核心邏輯 (維持 V13.33 標準：下拉選單絕對優先)
     const getFilteredResults = (kw) => {
         const k = kw ? kw.trim().toLowerCase() : '';
         
@@ -40,10 +50,9 @@ const App = () => {
             if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
             if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
             
-            // 2. 第二關：關鍵字精準比對 (如果沒打字就全部通過)
+            // 2. 第二關：關鍵字精準比對
             if (k) {
                 // A. 數值比對 (KW / 型號數字) - 解決 "28" 搜到 "22" (腳距) 的問題
-                // 邏輯：只比對 maxKw 欄位，不比對 dimensions
                 const numStr = k.replace(/[^0-9.]/g, ''); 
                 let isCapacityMatch = false;
 
@@ -55,17 +64,13 @@ const App = () => {
                     if (Math.abs(machineCap - searchNum) <= 0.2) isCapacityMatch = true;
                     
                     // 情況 2: 輸入 28 或 71 (自動除以 10)
-                    // 限制輸入 >= 20 才除以 10，避免輸入 "2" 變成 0.2kW
                     else if (searchNum >= 20 && Math.abs(machineCap - (searchNum / 10)) <= 0.2) isCapacityMatch = true;
                 }
 
                 // B. 文字比對 (只比對：品牌、系列、型號)
-                // ★重點：這裡把 brandCN 加回來，這樣如果選單是"不拘"，打"大金"才能搜得到
-                // ★重點：絕對不比對 dimensions (尺寸) 或 weight (重量)
                 const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
                 const isTextMatch = targetText.includes(k);
 
-                // 只要符合其中一項即可
                 return isTextMatch || isCapacityMatch;
             }
             
@@ -103,7 +108,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.33</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.47</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
@@ -124,7 +129,13 @@ const App = () => {
                             {showHistory && suggestions.length > 0 && (<div className="bg-industrial-900 border border-industrial-700 rounded-lg overflow-hidden animate-slide-up mb-2"><div className="max-h-40 overflow-y-auto">{suggestions.map((h, i) => (<button key={i} onClick={() => { setSearchState(p => ({...p, keyword: h})); executeSearch(); setShowHistory(false); }} className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-industrial-800 border-b border-gray-800 last:border-0 flex items-center justify-between group"><span>{h}</span><Icon name="chevron" className="w-3 h-3 text-gray-600 group-hover:text-white" /></button>))}</div><div className="bg-industrial-950 p-2 text-right"><button onClick={clearHistory} className="text-xs text-red-400 hover:text-red-300 flex items-center justify-end gap-1 w-full"><Icon name="trash" className="w-3 h-3"/> 清除紀錄</button></div></div>)}
                             <button onClick={executeSearch} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1" style={{maxHeight: 'calc(100vh - 400px)'}}>
+                        
+                        {/* ★★★ 這裡加入了 ref={resultsRef} ★★★ */}
+                        <div 
+                            ref={resultsRef}
+                            className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1" 
+                            style={{maxHeight: 'calc(100vh - 400px)'}}
+                        >
                             {searchState.results.map((g, i) => <ResultCard key={i} group={g} onClick={(group, currentFunc) => setSelectedSpecGroup({ ...group, initialFunc: currentFunc })} />)}
                             {searchState.results.length === 0 && <div className="text-center text-gray-500 py-10">請選擇條件並執行搜尋</div>}
                         </div>
