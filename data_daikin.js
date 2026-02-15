@@ -1,21 +1,25 @@
 // ================= data_daikin.js - 大金 Daikin (2026 全系列完整版) =================
-// 修正：補齊室外機「安裝腳座孔距」 (寬 x 深)
+// 資料來源：2026 綜合型錄 (PCW2026-1)
+// 包含：橫綱Y, 橫綱Z, 大關Z, 大關U, 豪菁Z, 經典V, 隱藏(FDXV), 家用多聯, VRV mini
+// 修正：補齊室外機腳座孔距 (footSpacing)
 
-window.DATA_DAIKIN = [
-    // ------------------------------------------
-    // 1. 橫綱 Y 系列 (FTXM-Y) - 2026 頂級旗艦
-    // ------------------------------------------
+// ------------------------------------------
+// 1. 橫綱 Y 系列 (FTXM-Y) - 2026 頂級旗艦
+// ------------------------------------------
+const DAIKIN_Y_SERIES = [
     { id: 'daikin-22y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.3', power: '360', cspf: '7.81', modelIdu: 'FTXM22YVLT', modelOdu: 'RXM22YVLT', pipes: '2分/3分', odu: { dims: '550×675×284', weight: '32', power: '220V', currentMax: '9.0', footSpacing: '490×290' }, idu: { dims: '299×920×275', weight: '13.0' } },
     { id: 'daikin-28y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.5', power: '496', cspf: '7.51', modelIdu: 'FTXM28YVLT', modelOdu: 'RXM28YVLT', pipes: '2分/3分', odu: { dims: '595×845×300', weight: '38', power: '220V', currentMax: '10.5', footSpacing: '540×290' }, idu: { dims: '299×920×275', weight: '13.0' } },
     { id: 'daikin-36y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.5', heatCap: '3.8', current: '3.5', power: '734', cspf: '7.09', modelIdu: 'FTXM36YVLT', modelOdu: 'RXM36YVLT', pipes: '2分/3分', odu: { dims: '595×845×300', weight: '38', power: '220V', currentMax: '13.0', footSpacing: '540×290' }, idu: { dims: '299×920×275', weight: '13.0' } },
     { id: 'daikin-41y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '4.7', current: '4.3', power: '890', cspf: '7.13', modelIdu: 'FTXM41YVLT', modelOdu: 'RXM41YVLT', pipes: '2分/4分', odu: { dims: '595×845×300', weight: '40', power: '220V', currentMax: '14.5', footSpacing: '540×290' }, idu: { dims: '299×1100×275', weight: '15.0' } },
     { id: 'daikin-50y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '6.0', current: '6.1', power: '1040', cspf: '7.00', modelIdu: 'FTXM50YVLT', modelOdu: 'RXM50YVLT', pipes: '2分/4分', odu: { dims: '695×930×350', weight: '53', power: '220V', currentMax: '15.5', footSpacing: '600×320' }, idu: { dims: '299×1100×275', weight: '15.0' } },
     { id: 'daikin-60y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.0, coolCap: '6.0', heatCap: '7.2', current: '5.0', power: '1230', cspf: '6.48', modelIdu: 'FTXM60YVLT', modelOdu: 'RXM60YVLT', pipes: '2分/4分', odu: { dims: '695×930×350', weight: '53', power: '220V', currentMax: '17.5', footSpacing: '600×320' }, idu: { dims: '299×1100×275', weight: '15.0' } },
-    { id: 'daikin-71y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', current: '7.3', power: '1530', cspf: '6.25', modelIdu: 'FTXM71YVLT', modelOdu: 'RXM71YVLT', pipes: '2分/5分', odu: { dims: '695×930×350', weight: '56', power: '220V', currentMax: '20.0', footSpacing: '600×320' }, idu: { dims: '299×1100×275', weight: '15.0' } },
+    { id: 'daikin-71y', brandCN: '大金', series: '橫綱Y系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', current: '7.3', power: '1530', cspf: '6.25', modelIdu: 'FTXM71YVLT', modelOdu: 'RXM71YVLT', pipes: '2分/5分', odu: { dims: '695×930×350', weight: '56', power: '220V', currentMax: '20.0', footSpacing: '600×320' }, idu: { dims: '299×1100×275', weight: '15.0' } }
+];
 
-    // ------------------------------------------
-    // 2. 橫綱 Z 系列 (FTXM-Z)
-    // ------------------------------------------
+// ------------------------------------------
+// 2. 橫綱 Z 系列 (FTXM-Z)
+// ------------------------------------------
+const DAIKIN_Z_SERIES = [
     { id: 'daikin-22z', brandCN: '大金', series: '橫綱Z系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', current: '2.7', power: '540', cspf: '6.90', modelIdu: 'FTXM22ZVLT', modelOdu: 'RXM22ZVLT', pipes: '2分/3分', odu: { dims: '550×675×284', weight: '28', power: '220V', currentMax: '9.0', footSpacing: '490×290' }, idu: { dims: '299×838×275', weight: '12.0' } },
     { id: 'daikin-28z', brandCN: '大金', series: '橫綱Z系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', current: '2.2', power: '435', cspf: '6.60', modelIdu: 'FTXM28ZVLT', modelOdu: 'RXM28ZVLT', pipes: '2分/3分', odu: { dims: '550×675×284', weight: '28', power: '220V', currentMax: '10.5', footSpacing: '490×290' }, idu: { dims: '299×838×275', weight: '12.0' } },
     { id: 'daikin-36z', brandCN: '大金', series: '橫綱Z系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.5', heatCap: '3.8', current: '2.9', power: '600', cspf: '6.84', modelIdu: 'FTXM36ZVLT', modelOdu: 'RXM36ZVLT', pipes: '2分/3分', odu: { dims: '595×845×300', weight: '38', power: '220V', currentMax: '12.0', footSpacing: '540×290' }, idu: { dims: '299×838×275', weight: '12.0' } },
@@ -100,4 +104,17 @@ window.DATA_DAIKIN = [
     { id: 'daikin-vrv-mini-4', brandCN: '大金', series: 'VRV mini', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 11.2, coolCap: '11.2', heatCap: '12.5', current: '-', power: '-', cspf: '6.35', modelIdu: '-', modelOdu: 'RXYCQ4BVET', pipes: '依設計', odu: { dims: '990×940×320', weight: '78', power: '220V', currentMax: '30.0', footSpacing: '600×370' }, idu: { dims: '-', weight: '-' } },
     { id: 'daikin-vrv-mini-5', brandCN: '大金', series: 'VRV mini', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 12.5, coolCap: '12.5', heatCap: '14.0', current: '-', power: '-', cspf: '6.27', modelIdu: '-', modelOdu: 'RXYCQ5BVET', pipes: '依設計', odu: { dims: '990×940×320', weight: '78', power: '220V', currentMax: '35.0', footSpacing: '600×370' }, idu: { dims: '-', weight: '-' } },
     { id: 'daikin-vrv-mini-6', brandCN: '大金', series: 'VRV mini', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 14.0, coolCap: '14.0', heatCap: '16.0', current: '-', power: '-', cspf: '6.21', modelIdu: '-', modelOdu: 'RXYCQ6BVET', pipes: '依設計', odu: { dims: '990×940×320', weight: '78', power: '220V', currentMax: '40.0', footSpacing: '600×370' }, idu: { dims: '-', weight: '-' } }
+];
+
+// 合併所有系列到主變數
+window.DATA_DAIKIN_FUJITSU = [
+    ...DAIKIN_Y_SERIES,
+    ...DAIKIN_Z_SERIES,
+    ...DAIKIN_DKZ_SERIES,
+    ...DAIKIN_DKU_SERIES,
+    ...DAIKIN_HJZ_SERIES,
+    ...DAIKIN_CV_SERIES,
+    ...DAIKIN_DUCT_SERIES,
+    ...DAIKIN_MULTI_SERIES,
+    ...DAIKIN_VRV_SERIES
 ];
