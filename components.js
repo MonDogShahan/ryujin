@@ -1,4 +1,4 @@
-// ================= 2. 共用 UI 元件 (components.js) V13.21 =================
+// ================= 2. 共用 UI 元件 (components.js) V13.22 =================
 const { useState, useEffect, useMemo, useRef } = React;
 
 const Icon = ({ name, className }) => {
@@ -22,7 +22,6 @@ const Icon = ({ name, className }) => {
 
 const conditionLabels = { westSun: '西曬', allDaySun: '全日曬', topFloor: '頂樓', highCeiling: '挑高', ironSheet: '鐵皮', blackIron: '黑鐵皮' };
 
-// 電工法規計算邏輯
 const calculateElectric = (maxAmp, powerWatts) => {
     let current = parseFloat(maxAmp);
     if (isNaN(current) && powerWatts) current = parseFloat(powerWatts) / 220;
@@ -125,12 +124,16 @@ const ResultCard = ({ group, onClick }) => {
                     {/* Header Row: 品牌、型式、系列、(KW標籤移到這裡) */}
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="text-[10px] font-bold text-industrial-accent bg-industrial-950 px-2 py-0.5 rounded">{currentItem.brandCN}</span>
+                        
+                        {/* ★ 修正型式標籤：加入 室外機(家用) 樣式 */}
                         <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
                             currentItem.type === '吊隱式' ? 'text-purple-300 border-purple-800 bg-purple-900/20' :
                             currentItem.type === '四方吹' ? 'text-pink-300 border-pink-800 bg-pink-900/20' :
                             currentItem.type === '窗型' ? 'text-green-300 border-green-800 bg-green-900/20' :
+                            currentItem.type.includes('室外機') ? 'text-gray-300 border-gray-600 bg-gray-800/50' :
                             'text-cyan-300 border-cyan-800 bg-cyan-900/20'
                         }`}>{currentItem.type}</span>
+                        
                         <span className="text-[10px] text-gray-400 border border-industrial-600 px-1.5 py-0.5 rounded">{currentItem.series}</span>
                         {/* ★ 新增：KW 能力標籤 (補償下方移除的資訊) */}
                         <span className="text-[10px] font-mono font-bold text-yellow-400 bg-industrial-950 px-1.5 py-0.5 rounded border border-yellow-600/50">
@@ -141,7 +144,7 @@ const ResultCard = ({ group, onClick }) => {
                     </div>
                     
                     {/* Model Name */}
-                    <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors flex items-center gap-2">{currentItem.modelIdu}</div>
+                    <div className="text-lg font-bold text-white tracking-wide group-hover:text-industrial-accent transition-colors flex items-center gap-2">{currentItem.modelIdu !== '-' ? currentItem.modelIdu : currentItem.modelOdu}</div>
                     
                     {/* ★ 簡介列：只顯示 冷暖/冷專 | 銅管 */}
                     <div className="text-xs text-gray-400 mt-1 font-mono flex gap-3">
