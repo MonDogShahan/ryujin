@@ -1,7 +1,15 @@
 // 確保讀取到全域資料庫
 const AC_DATABASE = window.AC_DATABASE || [];
 
-// ================= 4. 主程式 (App) V13.29 =================
+// 除錯：在 Console 顯示目前載入的品牌與數量，方便確認資料庫是否完整
+const debugDatabase = () => {
+    const brands = {};
+    AC_DATABASE.forEach(i => { brands[i.brandCN] = (brands[i.brandCN] || 0) + 1; });
+    console.log("目前系統載入機型統計:", brands);
+};
+setTimeout(debugDatabase, 1000);
+
+// ================= 4. 主程式 (App) V13.30 =================
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,7 +22,7 @@ const App = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
-    // 計算機狀態
+    // 計算機狀態 (維持不變)
     const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
     const [capacityResult, setCapacityResult] = useState(null);
     const [ductedPlans, setDuctedPlans] = useState([{ id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', outlets: 1, result: null }]);
@@ -29,59 +37,87 @@ const App = () => {
 
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
-    // ★★★ 核心修正：品牌關鍵字絕對優先 ★★★
+    // ★★★ V13.30 終極修正：品牌關鍵字剝離搜尋法 ★★★
     const getFilteredResults = (kw) => {
-        const k = kw ? kw.trim().toLowerCase() : '';
+        // 1. 預處理關鍵字
+        let k = kw ? kw.trim() : '';
         
-        // 1. 偵測使用者是否輸入了品牌名稱
-        const knownBrands = ['大金', '日立', '三菱', '國際', '富士通', '華菱'];
-        const detectedBrand = knownBrands.find(b => k.includes(b)); // 例如 k="大金 28", detected="大金"
-
-        return AC_DATABASE.filter(i => {
-            // --- 策略 A：如果偵測到品牌關鍵字 (例如輸入了 "大金") ---
-            if (detectedBrand) {
-                // 1. 先把非該品牌的全部過濾掉
-                if (i.brandCN !== detectedBrand) return false;
-
-                // 2. 如果關鍵字就只有品牌名 (例如只打 "大金")，忽略所有下拉選單，直接回傳 true
-                if (k === detectedBrand) return true;
-
-                // 3. 如果還有其他字 (例如 "大金 28")，繼續往下跑比對邏輯，但也忽略下拉選單
-            } 
-            // --- 策略 B：沒有輸入品牌關鍵字 ---
-            else {
-                // 嚴格遵守下拉選單的篩選條件
+        // 如果沒有任何搜尋條件，預設顯示全部 (或視需求回傳空陣列)
+        if (!k && searchState.brand === '不拘' && searchState.series === '不拘' && searchState.func === '不拘' && searchState.type === '不拘') {
+            return []; // 剛進來時不顯示任何東西，比較乾淨
+        } else if (!k) {
+            // 沒打字但有選選單，則依選單過濾
+            return AC_DATABASE.filter(i => {
                 if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
                 if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
                 if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
                 if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
-            }
-            
-            // --- 策略 C：關鍵字內容比對 (型號/能力) ---
-            if (k) {
-                // C-1. 數值比對 (處理 28, 2.8, 71, 7.2)
-                const numStr = k.replace(/[^0-9.]/g, ''); 
-                let isCapacityMatch = false;
+                return true;
+            });
+        }
 
+        const kLower = k.toLowerCase();
+        
+        // 2. 偵測使用者是否輸入了品牌名稱 (這是解決您問題的關鍵)
+        const knownBrands = ['大金', '日立', '三菱', '國際', '富士通', '華菱'];
+        const detectedBrand = knownBrands.find(b => kLower.includes(b)); 
+
+        // 3. 剝離品牌關鍵字：
+        // 如果輸入 "大金"，剝離後剩 "" -> 顯示大金全部
+        // 如果輸入 "大金 28"，剝離後剩 "28" -> 顯示大金的 2.8kW
+        let realKeyword = kLower;
+        if (detectedBrand) {
+            realKeyword = kLower.replace(detectedBrand, '').trim();
+        }
+
+        return AC_DATABASE.filter(i => {
+            // --- A. 品牌過濾層 ---
+            if (detectedBrand) {
+                // 如果使用者打 "大金"，我們強制只看大金 (無視下拉選單)
+                if (i.brandCN !== detectedBrand) return false;
+            } else {
+                // 如果沒打品牌，就乖乖聽下拉選單的
+                if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
+            }
+
+            // --- B. 其他選單過濾 (系列/型式...) ---
+            // 讓這些選單依然有效
+            if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
+            if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
+            if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
+
+            // --- C. 關鍵字比對 (針對 "剩下的字") ---
+            
+            // 情況 1: 如果剝離後沒字了 (例如原本打 "大金"，剝離後剩 "")
+            // 代表使用者只想找該品牌，直接回傳 true (顯示該品牌全部)
+            if (detectedBrand && !realKeyword) {
+                return true; 
+            }
+
+            // 情況 2: 如果還有剩下的字 (例如 "28" 或 "ZSXT")，才去比對規格
+            if (realKeyword) {
+                // C-1. 數值比對 (KW / 型號數字)
+                const numStr = realKeyword.replace(/[^0-9.]/g, '');
+                let isCapacityMatch = false;
+                
                 if (numStr && !isNaN(numStr)) {
                     const searchNum = parseFloat(numStr);
                     const machineCap = parseFloat(i.maxKw);
                     
-                    // 情況 1: 輸入 2.8 或 7.2 (容許 0.2 誤差)
+                    // 2.8 找 2.8 (容許 0.2 誤差)
                     if (Math.abs(machineCap - searchNum) <= 0.2) isCapacityMatch = true;
-                    
-                    // 情況 2: 輸入 28 或 71 (自動除以 10)
+                    // 28 找 2.8 (自動除以10)
                     else if (searchNum >= 20 && Math.abs(machineCap - (searchNum / 10)) <= 0.2) isCapacityMatch = true;
                 }
 
-                // C-2. 文字比對 (只比對：品牌、系列、型號)
-                // 絕對不比對尺寸 (避免 280 腳距誤判為 28型)
-                const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
-                const isTextMatch = targetText.includes(k);
+                // C-2. 文字比對 (只比對特定欄位，絕不比對尺寸)
+                // 這裡我們不比對 brandCN 了，因為上面已經處理過品牌
+                const targetText = `${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
+                const isTextMatch = targetText.includes(realKeyword);
 
                 return isTextMatch || isCapacityMatch;
             }
-            
+
             return true;
         });
     };
@@ -116,7 +152,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.29</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.30</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
