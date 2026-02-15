@@ -1,7 +1,6 @@
 // ================= data_daikin.js - 大金 Daikin (2026 全系列完整版) =================
 // 資料來源：2026 綜合型錄 (PCW2026-1)
-// 包含：橫綱Y, 橫綱Z, 大關Z, 大關U, 豪菁Z, 經典V, 隱藏(FDXV), 家用多聯, VRV mini
-// 修正：補齊室外機腳座孔距 (footSpacing)
+// 修正：修正檔案末端變數名稱，解決「搜尋不到大金」的問題
 
 // ------------------------------------------
 // 1. 橫綱 Y 系列 (FTXM-Y) - 2026 頂級旗艦
@@ -95,9 +94,7 @@ const DAIKIN_Z_SERIES = [
     { id: 'daikin-multi-90', brandCN: '大金', series: '家用多聯', func: '冷暖', type: '室外機(家用)', refrigerant: 'R32', maxKw: 8.5, coolCap: '8.5', heatCap: '9.0', current: '-', power: '-', cspf: '6.3', modelIdu: '-', modelOdu: '3MXM90YVLT', pipes: '依室內機', odu: { dims: '695×930×350', weight: '57', power: '220V', currentMax: '22.0', footSpacing: '600×320' }, idu: { dims: '-', weight: '-' } },
     { id: 'daikin-multi-110', brandCN: '大金', series: '家用多聯', func: '冷暖', type: '室外機(家用)', refrigerant: 'R32', maxKw: 10.5, coolCap: '10.5', heatCap: '11.5', current: '-', power: '-', cspf: '6.41', modelIdu: '-', modelOdu: '4MXM110YVLT', pipes: '依室內機', odu: { dims: '990×940×320', weight: '83', power: '220V', currentMax: '28.0', footSpacing: '600×370' }, idu: { dims: '-', weight: '-' } },
 
-    // ------------------------------------------
-    // 9. VRV mini (RSUYQ/RXYCQ) - 室外機(家用)
-    // ------------------------------------------
+    // --- VRV mini (RSUYQ/RXYCQ) ---
     { id: 'daikin-vrv-112', brandCN: '大金', series: 'VRV S', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 11.2, coolCap: '11.2', heatCap: '12.5', current: '-', power: '-', cspf: '7.03', modelIdu: '-', modelOdu: 'RSUYQ112AVT', pipes: '依設計', odu: { dims: '870×1100×460', weight: '98', power: '220V', currentMax: '32.0' }, idu: { dims: '-', weight: '-' } },
     { id: 'daikin-vrv-140', brandCN: '大金', series: 'VRV S', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 14.0, coolCap: '14.0', heatCap: '16.0', current: '-', power: '-', cspf: '6.61', modelIdu: '-', modelOdu: 'RSUYQ140AVT', pipes: '依設計', odu: { dims: '870×1100×460', weight: '98', power: '220V', currentMax: '40.0' }, idu: { dims: '-', weight: '-' } },
     { id: 'daikin-vrv-160', brandCN: '大金', series: 'VRV S', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 16.0, coolCap: '16.0', heatCap: '18.0', current: '-', power: '-', cspf: '6.38', modelIdu: '-', modelOdu: 'RSUYQ160AVT', pipes: '依設計', odu: { dims: '870×1100×460', weight: '98', power: '220V', currentMax: '45.0' }, idu: { dims: '-', weight: '-' } },
@@ -106,8 +103,8 @@ const DAIKIN_Z_SERIES = [
     { id: 'daikin-vrv-mini-6', brandCN: '大金', series: 'VRV mini', func: '冷暖', type: '室外機(家用)', refrigerant: 'R410A', maxKw: 14.0, coolCap: '14.0', heatCap: '16.0', current: '-', power: '-', cspf: '6.21', modelIdu: '-', modelOdu: 'RXYCQ6BVET', pipes: '依設計', odu: { dims: '990×940×320', weight: '78', power: '220V', currentMax: '40.0', footSpacing: '600×370' }, idu: { dims: '-', weight: '-' } }
 ];
 
-// 合併所有系列到主變數
-window.DATA_DAIKIN_FUJITSU = [
+// 合併所有系列到主變數 (修正：DATA_DAIKIN)
+window.DATA_DAIKIN = [
     ...DAIKIN_Y_SERIES,
     ...DAIKIN_Z_SERIES,
     ...DAIKIN_DKZ_SERIES,
