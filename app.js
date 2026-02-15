@@ -1,12 +1,20 @@
 // 確保讀取到全域資料庫
 const AC_DATABASE = window.AC_DATABASE || [];
 
-// ================= 4. 主程式 (App) V13.27 =================
+// 除錯：在 Console 顯示目前載入的品牌與數量，方便確認資料庫是否完整
+const debugDatabase = () => {
+    const brands = {};
+    AC_DATABASE.forEach(i => { brands[i.brandCN] = (brands[i.brandCN] || 0) + 1; });
+    console.log("目前系統載入機型統計:", brands);
+    if (!brands['大金']) console.warn("⚠️ 警告：系統未偵測到「大金」的資料，請檢查 data_daikin.js 是否正確引入！");
+};
+setTimeout(debugDatabase, 1000);
+
+// ================= 4. 主程式 (App) V13.28 =================
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
-    // 搜尋功能狀態
     const [searchState, setSearchState] = useState({ 
         brand: '不拘', series: '不拘', func: '不拘', type: '不拘', 
         keyword: '', results: [], history: [] 
@@ -29,52 +37,60 @@ const App = () => {
 
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
-    // ★ 關鍵修正：精準搜尋邏輯 (標題、型號、KW數、品牌、系列)
+    // ★★★ 核心修正：智慧搜尋邏輯 ★★★
     const getFilteredResults = (kw) => {
+        const k = kw ? kw.trim().toLowerCase() : '';
+        
+        // 1. 智慧品牌偵測：檢查關鍵字是否包含品牌名稱
+        // 如果使用者打了 "大金"，我們就自動把搜尋範圍鎖定在 "大金"，忽略下拉選單的設定
+        const knownBrands = ['大金', '日立', '三菱', '國際', '富士通', '華菱'];
+        const detectedBrand = knownBrands.find(b => k.includes(b));
+
         return AC_DATABASE.filter(i => {
-            // 1. 下拉選單過濾 (絕對條件)
-            if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
+            // A. 品牌過濾邏輯
+            if (detectedBrand) {
+                // 如果關鍵字裡有品牌名 (例如 "大金")，則強制只顯示該品牌
+                if (i.brandCN !== detectedBrand) return false;
+            } else {
+                // 如果關鍵字沒品牌名，則嚴格遵守下拉選單
+                if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
+            }
+
+            // B. 其他篩選器 (系列/功能/型式) - 保持嚴格過濾
             if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
             if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
             if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
             
-            // 2. 關鍵字搜尋 (精準欄位比對)
-            if (kw) {
-                const k = kw.trim().toLowerCase();
-                
-                // A. 文字欄位比對 (只比對這些欄位，排除尺寸、重量等雜訊)
-                // 包含：品牌中文、系列名稱、室內機型號、室外機型號
-                const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
-                const isTextMatch = targetText.includes(k);
+            // C. 關鍵字比對 (精準欄位)
+            if (k) {
+                // 如果關鍵字只是品牌名 (例如只打 "大金")，因為上面 A 步驟已經過濾了，這裡直接通過
+                if (detectedBrand && k === detectedBrand) return true;
 
-                // B. KW 數值智慧比對 (容許些微誤差)
-                let isKwMatch = false;
-                // 移除輸入字串中的非數字字元 (例如 "2.8kw" -> 2.8)
+                // C-1. 數值比對 (處理 28, 2.8, 71, 7.2)
+                // 移除所有非數字字符 (例如 "2.8kw" -> "2.8")
                 const numStr = k.replace(/[^0-9.]/g, ''); 
-                
+                let isCapacityMatch = false;
+
                 if (numStr && !isNaN(numStr)) {
                     const searchNum = parseFloat(numStr);
                     const machineCap = parseFloat(i.maxKw); // 機器實際能力 (例如 2.8)
                     
-                    // 情況 1: 直接輸入能力 (例如輸入 2.8 或 7.2) -> 容許 0.2 誤差
-                    if (Math.abs(machineCap - searchNum) <= 0.2) {
-                        isKwMatch = true;
-                    }
+                    // 情況 1: 直接輸入能力 (例如輸入 2.8 或 7.2) -> 容許 0.2 誤差 (解決 7.1 vs 7.2)
+                    if (Math.abs(machineCap - searchNum) <= 0.2) isCapacityMatch = true;
+                    
                     // 情況 2: 輸入型號級距 (例如輸入 28 或 71) -> 自動除以10後比對
-                    // 28 -> 2.8 (吻合)
-                    // 71 -> 7.1 (與 7.2 誤差 0.1，判定吻合)
-                    else if (searchNum >= 20) { 
-                        if (Math.abs(machineCap - (searchNum / 10)) <= 0.2) {
-                            isKwMatch = true;
-                        }
-                    }
+                    // 28 -> 2.8 (吻合), 71 -> 7.1 (與 7.2 誤差 0.1 -> 吻合)
+                    else if (searchNum >= 20 && Math.abs(machineCap - (searchNum / 10)) <= 0.2) isCapacityMatch = true;
                 }
 
-                // 文字符合 或 KW數值符合 均可列入結果
-                return isTextMatch || isKwMatch;
+                // C-2. 文字比對 (★修正：只比對 品牌、系列、型號，絕不比對尺寸！)
+                const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
+                const isTextMatch = targetText.includes(k);
+
+                // 只要 數值吻合 或 文字吻合 就算找到
+                return isTextMatch || isCapacityMatch;
             }
             
-            // 沒有關鍵字時，回傳符合下拉選單的所有項目
             return true;
         });
     };
@@ -98,8 +114,7 @@ const App = () => {
     
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
-        // 建議字串僅從「型號」中撈取，避免雜訊
-        const matches = AC_DATABASE.filter(i => i.modelIdu.toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
+        const matches = AC_DATABASE.filter(i => (i.modelIdu).toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
         return [...new Set(matches)];
     }, [searchState.keyword, searchState.history]);
 
@@ -110,7 +125,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.27</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.28</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
