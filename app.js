@@ -1,4 +1,5 @@
-// ================= 4. 主程式 (App) V13.80 穩定版 =================
+// ================= app.js (V13.80 - 穩定版) =================
+// 包含：主頁面邏輯, Tab切換, 搜尋過濾
 
 const { useState, useEffect, useRef, useMemo } = React;
 
@@ -11,7 +12,7 @@ const App = () => {
     
     // 搜尋狀態
     const [searchState, setSearchState] = useState({ brand: '不拘', series: '不拘', func: '不拘', type: '不拘', keyword: '', results: [], history: [] });
-    const [isSearchExpanded, setIsSearchExpanded] = useState(true); // 搜尋面板收合狀態
+    const [isSearchExpanded, setIsSearchExpanded] = useState(true);
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
@@ -24,8 +25,6 @@ const App = () => {
     const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', result: null });
 
     useEffect(() => { const saved = localStorage.getItem('searchHistory'); if (saved) setSearchState(p => ({ ...p, history: JSON.parse(saved) })); }, []);
-
-    // 搜尋後自動捲動
     useEffect(() => { if (resultsRef.current) resultsRef.current.scrollTop = 0; }, [searchState.results]);
 
     const availableSeries = useMemo(() => {
@@ -73,9 +72,9 @@ const App = () => {
             return { ...p, results: grouped.sort((a,b) => a.maxKw - b.maxKw), history: newHistory };
         });
         setShowHistory(false);
-        setIsSearchExpanded(false); // 搜尋後自動收合
+        setIsSearchExpanded(false);
     };
-    
+
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
         const matches = AC_DATABASE.filter(i => (i.modelIdu || '').toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
@@ -83,7 +82,7 @@ const App = () => {
     }, [searchState.keyword, searchState.history]);
 
     const clearHistory = () => { localStorage.removeItem('searchHistory'); setSearchState(p => ({ ...p, history: [] })); };
-    
+
     const { Icon, FilterSelect, ResultCard, SpecModal } = window.Components;
 
     const SidebarBtnWrapper = ({ id, icon, label }) => ( <button onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }} className={`flex items-center gap-4 w-full text-left px-4 py-3.5 rounded-xl transition-all ${activeTab === id ? 'bg-industrial-800 border border-industrial-700 text-industrial-accent font-bold' : 'text-gray-400 hover:text-white'}`}> <Icon name={icon} className="w-5 h-5" /><span className="text-sm tracking-widest">{label}</span> </button> );
@@ -93,7 +92,7 @@ const App = () => {
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.80</span></div>
-                <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
+                <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div>
             </header>
 
             <div className={`fixed inset-0 z-[200] ${isSidebarOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}><div className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsSidebarOpen(false)}></div><div className={`absolute top-0 left-0 w-64 h-full bg-industrial-900 border-r border-industrial-700 transform transition-transform duration-300 flex flex-col shadow-2xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}><div className="p-5 border-b border-industrial-700 bg-industrial-950 flex justify-between items-center"><span className="text-lg font-bold text-white tracking-widest">選單</span><button onClick={() => setIsSidebarOpen(false)} className="text-gray-500"><Icon name="x" className="w-5 h-5" /></button></div><div className="flex-1 overflow-y-auto py-4 space-y-1.5 px-3"><SidebarBtnWrapper id="search" icon="search" label="機型與規格查詢" /><SidebarBtnWrapper id="capacity" icon="ruler" label="負載與機型配置" /><SidebarBtnWrapper id="cooling" icon="thermometer" label="物理降溫模擬" /><SidebarBtnWrapper id="ducted" icon="box" label="吊隱式風管規劃" /></div></div></div>
