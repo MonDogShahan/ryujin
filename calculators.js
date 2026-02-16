@@ -1,9 +1,10 @@
-// ================= calculators.js (V13.85 還原邏輯版) =================
-// 吊隱式回歸集風箱計算，負載計算回歸鐵皮選項
+// ================= calculators.js (V13.86 復刻邏輯修復版) =================
+// 修正：移除封裝，確保全域讀取
+// 功能：還原鐵皮屋、黑鐵皮、挑高選項、PDF 匯出、重置確認
 
-var { useState, useRef } = React;
+var { useState } = React;
 
-// PDF 匯出
+// PDF 匯出函數
 window.exportToPDF = (elementId, title) => {
     const input = document.getElementById(elementId);
     if (!input) return;
@@ -12,7 +13,7 @@ window.exportToPDF = (elementId, title) => {
     btn.innerText = "生成中...";
     
     if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-        alert("請檢查網路連線 (html2canvas/jspdf)");
+        alert("PDF 庫未載入，請檢查網路");
         btn.innerText = originalText;
         return;
     }
@@ -28,7 +29,7 @@ window.exportToPDF = (elementId, title) => {
         btn.innerText = originalText;
     }).catch(err => {
         console.error(err);
-        alert("PDF 失敗");
+        alert("PDF 生成失敗");
         btn.innerText = originalText;
     });
 };
@@ -38,14 +39,14 @@ window.MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }
     const addRoom = () => setRooms([...rooms, { id: Date.now(), name: `房間 ${rooms.length + 1}`, w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
     
     const resetAll = () => {
-        if (confirm("確定重置？")) {
+        if (confirm("確定重置所有資料？")) {
             setRooms([{ id: Date.now(), name: '客廳', w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
             setResult(null);
         }
     };
 
     const removeRoom = (id) => {
-        if (rooms.length > 1 && confirm("確定刪除？")) setRooms(rooms.filter(r => r.id !== id));
+        if (rooms.length > 1 && confirm("確定刪除此房間？")) setRooms(rooms.filter(r => r.id !== id));
     };
     
     const updateRoom = (id, field, val) => {
@@ -63,7 +64,6 @@ window.MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }
         setRooms(rooms.map(r => {
             if (r.id !== roomId) return r;
             let newConds = { ...r.conditions };
-            // 鐵皮互斥邏輯
             if (cond === 'iron') newConds.blackIron = false;
             if (cond === 'blackIron') newConds.iron = false;
             newConds[cond] = !newConds[cond];
@@ -74,7 +74,7 @@ window.MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }
     const calculate = () => {
         let totalKw = 0;
         const calculatedRooms = rooms.map(r => {
-            let baseKcal = 500; // 基礎值
+            let baseKcal = 500;
             if (r.conditions.top) baseKcal += 100;
             if (r.conditions.west) baseKcal += 80;
             if (r.conditions.fullSun) baseKcal += 150;
@@ -102,7 +102,7 @@ window.MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }
     return (
         <div id="capacity-calculator" className="space-y-4 animate-fade-in pb-20">
             <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2"><window.Icon name="ruler" /> 負載計算</h3>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2"><window.Icon name="ruler" /> 空間負載計算</h3>
                 <div className="flex gap-2">
                     <button onClick={resetAll} className="text-xs bg-red-900/50 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded border border-red-700/50">重置</button>
                     <button onClick={addRoom} className="text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-1.5 rounded">+ 房間</button>
@@ -132,7 +132,7 @@ window.MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }
             </div>
 
             <div className="flex gap-3 mt-6">
-                <button onClick={calculate} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-xl shadow-lg flex justify-center items-center gap-2"><window.Icon name="check" /> 開始計算</button>
+                <button onClick={calculate} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-xl shadow-lg flex justify-center items-center gap-2"><window.Icon name="check" /> 計算配置</button>
                 {result && <button onClick={() => window.exportToPDF('capacity-calculator', '負載計算表')} className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center gap-1"><window.Icon name="pdf" className="w-5 h-5"/> PDF</button>}
             </div>
 
@@ -170,11 +170,11 @@ window.CoolingTimeCalculator = ({ state, setState }) => {
         <div className="space-y-4 animate-fade-in glass-panel p-5 rounded-xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2"><window.Icon name="thermometer" /> 降溫時間模擬</h3>
             <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-[10px] text-gray-400">空間坪數</label><input type="number" value={state.ping} onChange={e => setState({...state, ping: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2" /></div>
-                <div><label className="text-[10px] text-gray-400">天花板高(m)</label><input type="number" value={state.height} onChange={e => setState({...state, height: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2" /></div>
-                <div><label className="text-[10px] text-gray-400">目前室溫</label><input type="number" value={state.currentTemp} onChange={e => setState({...state, currentTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2" /></div>
-                <div><label className="text-[10px] text-gray-400">目標溫度</label><input type="number" value={state.targetTemp} onChange={e => setState({...state, targetTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2" /></div>
-                <div className="col-span-2"><label className="text-[10px] text-gray-400">冷氣能力 (kW)</label><input type="number" value={state.acKw} onChange={e => setState({...state, acKw: e.target.value})} className="w-full bg-black/40 border border-yellow-500/50 rounded text-yellow-500 font-bold p-2" /></div>
+                <div><label className="text-[10px] text-gray-400">空間坪數</label><input type="number" value={state.ping} onChange={e => setState({...state, ping: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
+                <div><label className="text-[10px] text-gray-400">天花板高(m)</label><input type="number" value={state.height} onChange={e => setState({...state, height: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
+                <div><label className="text-[10px] text-gray-400">目前室溫</label><input type="number" value={state.currentTemp} onChange={e => setState({...state, currentTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
+                <div><label className="text-[10px] text-gray-400">目標溫度</label><input type="number" value={state.targetTemp} onChange={e => setState({...state, targetTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
+                <div className="col-span-2"><label className="text-[10px] text-gray-400">冷氣能力 (kW)</label><input type="number" value={state.acKw} onChange={e => setState({...state, acKw: e.target.value})} className="w-full bg-black/40 border border-yellow-500/50 rounded text-yellow-500 font-bold p-2 text-sm" /></div>
             </div>
             <button onClick={calculate} className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl shadow transition-colors">計算預估時間</button>
             {state.result && (<div className="text-center p-4 bg-black/30 rounded-xl border border-white/10 mt-4"><span className="text-gray-400 text-xs">預計降溫時間</span><div className="text-4xl font-black text-yellow-500 my-2">{state.result} <span className="text-sm">分鐘</span></div></div>)}
@@ -269,3 +269,6 @@ window.DuctedCalculator = ({ plans, setPlans }) => {
         </div>
     );
 };
+
+// 匯出
+window.Calculators = { MultiRoomCapacityCalculator: window.MultiRoomCapacityCalculator, CoolingTimeCalculator: window.CoolingTimeCalculator, DuctedCalculator: window.DuctedCalculator };
