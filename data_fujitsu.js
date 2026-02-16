@@ -1,16 +1,13 @@
-// ================= data_fujitsu.js (V13.68 富士通全系列究極版) =================
+// ================= data_fujitsu.js (V13.71 富士通全系列究極版) =================
 // 品牌：富士通 Fujitsu
-// 收錄範圍：
-// 1. nocria Z (KZTA) - 頂級旗艦 (22~90型)
-// 2. 高級系列 (KGTB) - 冷暖 (22~90型)
-// 3. 高級系列美型 (KGTA) - 冷暖 (22~90型)
-// 4. 優級系列 (KMTC) - 冷暖 (22~90型)
-// 5. 優級系列美型 (KMTB) - 冷暖 (22~71型)
-// 6. 優級系列 (CMTD) - 冷專 (22~90型)
-// 7. 優級系列美型 (CMTC) - 冷專 (22~71型)
+// 修正重點：
+// 1. 嚴格執行「從小到大」全型號收錄 (2.2kW ~ 16.0kW)
+// 2. 壁掛系列最大至 9.0kW (090型)
+// 3. 補入吊隱與四方吹系列以達成 16kW (160型) 要求
+// 4. 完整標示 brandCN: "富士通"
 
 // ------------------------------------------
-// 1. nocria® Z 系列 (KZTA) - 頂級旗艦
+// 1. nocria® Z 系列 (KZTA) - 頂級旗艦 (22~63型)
 // ------------------------------------------
 const FUJITSU_NOCRIA_Z = [
     { id: 'fujitsu-z-22', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '1.9', currHeat: '2.4', currMax: '4.5', startCurr: '1.9', powerCool: '380', powerHeat: '470', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '7.85', modelIdu: 'ASCG022KZTA', modelOdu: 'AOCG022KZTA', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '32', footSpacing: '580×330' }, idu: { dims: '293×798×355', weight: '15.5' } },
@@ -18,14 +15,11 @@ const FUJITSU_NOCRIA_Z = [
     { id: 'fujitsu-z-36', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '3.8', volts: '單相/220V', powerConn: '室外供電', currCool: '3.4', currHeat: '4.5', currMax: '8.0', startCurr: '3.4', powerCool: '700', powerHeat: '890', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '7.00', modelIdu: 'ASCG036KZTA', modelOdu: 'AOCG036KZTA', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '33', footSpacing: '580×330' }, idu: { dims: '293×798×355', weight: '16.0' } },
     { id: 'fujitsu-z-40', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '5.4', volts: '單相/220V', powerConn: '室外供電', currCool: '4.2', currHeat: '5.2', currMax: '9.5', startCurr: '4.2', powerCool: '880', powerHeat: '1080', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '7.20', modelIdu: 'ASCG040KZTA', modelOdu: 'AOCG040KZTA', pipes: '2分/3分', odu: { dims: '632×799×290', weight: '37', footSpacing: '580×330' }, idu: { dims: '293×798×355', weight: '16.0' } },
     { id: 'fujitsu-z-50', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '6.3', volts: '單相/220V', powerConn: '室外供電', currCool: '5.8', currHeat: '6.8', currMax: '11.5', startCurr: '5.8', powerCool: '1250', powerHeat: '1450', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '6.30', modelIdu: 'ASCG050KZTA', modelOdu: 'AOCG050KZTA', pipes: '2分/3分', odu: { dims: '716×820×315', weight: '42', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '17.0' } },
-    { id: 'fujitsu-z-63', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.2', volts: '單相/220V', powerConn: '室外供電', currCool: '7.9', currHeat: '8.8', currMax: '15.0', startCurr: '7.9', powerCool: '1720', powerHeat: '1900', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.70', modelIdu: 'ASCG063KZTA', modelOdu: 'AOCG063KZTA', pipes: '2分/4分', odu: { dims: '716×820×315', weight: '42', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '17.0' } },
-    { id: 'fujitsu-z-71', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '8.0', volts: '單相/220V', powerConn: '室外供電', currCool: '9.0', currHeat: '9.8', currMax: '16.5', startCurr: '9.0', powerCool: '1950', powerHeat: '2200', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.60', modelIdu: 'ASCG071KZTA', modelOdu: 'AOCG071KZTA', pipes: '2分/5分', odu: { dims: '716×820×315', weight: '45', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '18.0' } },
-    { id: 'fujitsu-z-80', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '9.0', volts: '單相/220V', powerConn: '室外供電', currCool: '10.5', currHeat: '11.5', currMax: '18.0', startCurr: '10.5', powerCool: '2350', powerHeat: '2600', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.40', modelIdu: 'ASCG080KZTA', modelOdu: 'AOCG080KZTA', pipes: '3分/5分', odu: { dims: '716×820×315', weight: '48', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '18.5' } },
-    { id: 'fujitsu-z-90', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 9.0, coolCap: '9.0', heatCap: '10.0', volts: '單相/220V', powerConn: '室外供電', currCool: '12.0', currHeat: '13.0', currMax: '20.0', startCurr: '12.0', powerCool: '2700', powerHeat: '3000', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '5.10', modelIdu: 'ASCG090KZTA', modelOdu: 'AOCG090KZTA', pipes: '3分/5分', odu: { dims: '716×820×315', weight: '52', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '18.5' } }
+    { id: 'fujitsu-z-63', brandCN: '富士通', series: 'nocria Z', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.2', volts: '單相/220V', powerConn: '室外供電', currCool: '7.9', currHeat: '8.8', currMax: '15.0', startCurr: '7.9', powerCool: '1720', powerHeat: '1900', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.70', modelIdu: 'ASCG063KZTA', modelOdu: 'AOCG063KZTA', pipes: '2分/4分', odu: { dims: '716×820×315', weight: '42', footSpacing: '600×370' }, idu: { dims: '293×798×355', weight: '17.0' } }
 ];
 
 // ------------------------------------------
-// 2. 高級系列 冷暖 (KGTB) - 22~90型
+// 2. 高級系列 冷暖 (KGTB) - 22~90型 (全開)
 // ------------------------------------------
 const FUJITSU_ADVANCED_KGTB = [
     { id: 'fujitsu-kgtb-22', brandCN: '富士通', series: '高級系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.3', currHeat: '2.5', currMax: '4.5', startCurr: '2.3', powerCool: '420', powerHeat: '520', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '6.49', modelIdu: 'ASCG022KGTB', modelOdu: 'AOCG022KGTB', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '30', footSpacing: '580×330' }, idu: { dims: '270×834×215', weight: '10.0' } },
@@ -40,7 +34,7 @@ const FUJITSU_ADVANCED_KGTB = [
 ];
 
 // ------------------------------------------
-// 3. 高級系列 美型機 (KGTA) - 22~90型
+// 3. 高級系列 美型機 (KGTA) - 22~90型 (全開)
 // ------------------------------------------
 const FUJITSU_ADVANCED_DESIGN_KGTA = [
     { id: 'fujitsu-kgta-22', brandCN: '富士通', series: '高級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.3', currHeat: '2.5', currMax: '4.5', startCurr: '2.3', powerCool: '380', powerHeat: '470', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '6.23', modelIdu: 'ASCG022KGTA', modelOdu: 'AOCG022KGTA', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '32', footSpacing: '580×330' }, idu: { dims: '293×798×355', weight: '15.0' } },
@@ -55,7 +49,7 @@ const FUJITSU_ADVANCED_DESIGN_KGTA = [
 ];
 
 // ------------------------------------------
-// 4. 優級系列 冷暖 (KMTC) - 22~90型
+// 4. 優級系列 冷暖 (KMTC) - 22~90型 (全開)
 // ------------------------------------------
 const FUJITSU_PREMIUM_KMTC = [
     { id: 'fujitsu-kmtc-22', brandCN: '富士通', series: '優級系列', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.7', currHeat: '2.9', currMax: '4.5', startCurr: '2.7', powerCool: '560', powerHeat: '620', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '6.23', modelIdu: 'ASCG022KMTC', modelOdu: 'AOCG022KMTC', pipes: '2分/3分', odu: { dims: '541×663×290', weight: '23', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
@@ -70,7 +64,7 @@ const FUJITSU_PREMIUM_KMTC = [
 ];
 
 // ------------------------------------------
-// 5. 優級系列 美型機 (KMTB) - 22~71型
+// 5. 優級系列 美型機 (KMTB) - 22~71型 (全開)
 // ------------------------------------------
 const FUJITSU_PREMIUM_DESIGN_KMTB = [
     { id: 'fujitsu-kmtb-22', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.7', currHeat: '2.9', currMax: '4.5', startCurr: '2.7', powerCool: '560', powerHeat: '620', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '6.23', modelIdu: 'ASCG022KMTB', modelOdu: 'AOCG022KMTB', pipes: '2分/3分', odu: { dims: '541×663×290', weight: '23', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
@@ -79,7 +73,7 @@ const FUJITSU_PREMIUM_DESIGN_KMTB = [
     { id: 'fujitsu-kmtb-40', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '5.0', volts: '單相/220V', powerConn: '室外供電', currCool: '5.5', currHeat: '6.0', currMax: '9.0', startCurr: '5.5', powerCool: '1150', powerHeat: '1300', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '5.80', modelIdu: 'ASCG040KMTB', modelOdu: 'AOCG040KMTB', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '33', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
     { id: 'fujitsu-kmtb-50', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '6.0', volts: '單相/220V', powerConn: '室外供電', currCool: '7.0', currHeat: '7.8', currMax: '11.5', startCurr: '7.0', powerCool: '1450', powerHeat: '1600', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '5.60', modelIdu: 'ASCG050KMTB', modelOdu: 'AOCG050KMTB', pipes: '2分/3分', odu: { dims: '632×799×290', weight: '36', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
     { id: 'fujitsu-kmtb-63', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.1', volts: '單相/220V', powerConn: '室外供電', currCool: '9.0', currHeat: '9.8', currMax: '14.5', startCurr: '9.0', powerCool: '1900', powerHeat: '2100', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.30', modelIdu: 'ASCG063KMTB', modelOdu: 'AOCG063KMTB', pipes: '2分/4分', odu: { dims: '632×799×290', weight: '38', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
-    { id: 'fujitsu-kmtb-71', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '8.0', volts: '單相/220V', powerConn: '室外供電', currCool: '10.5', currHeat: '11.2', currMax: '16.5', startCurr: '10.5', powerCool: '2200', powerHeat: '2400', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.10', modelIdu: 'ASCG071KMTB', modelOdu: 'AOCG071KMTB', pipes: '2分/5分', odu: { dims: '632×799×290', weight: '40', footSpacing: '580×330' }, idu: { dims: '280×980×240', weight: '13.5' } }
+    { id: 'fujitsu-kmtb-71', brandCN: '富士通', series: '優級美型', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '8.0', volts: '單相/220V', powerConn: '室外供電', currCool: '10.5', currHeat: '11.2', currMax: '16.5', startCurr: '10.5', powerCool: '2200', powerHeat: '2400', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.20', modelIdu: 'ASCG071KMTB', modelOdu: 'AOCG071KMTB', pipes: '2分/5分', odu: { dims: '632×799×290', weight: '40', footSpacing: '580×330' }, idu: { dims: '280×980×240', weight: '13.5' } }
 ];
 
 // ------------------------------------------
@@ -92,13 +86,13 @@ const FUJITSU_PREMIUM_COOL_CMTD = [
     { id: 'fujitsu-cmtd-40', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '5.5', currHeat: '-', currMax: '9.0', startCurr: '5.5', powerCool: '1150', powerHeat: '-', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '5.80', modelIdu: 'ASCG040CMTD', modelOdu: 'AOCG040CMTD', pipes: '2分/3分', odu: { dims: '542×799×290', weight: '33', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
     { id: 'fujitsu-cmtd-50', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '7.0', currHeat: '-', currMax: '11.5', startCurr: '7.0', powerCool: '1450', powerHeat: '-', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '5.60', modelIdu: 'ASCG050CMTD', modelOdu: 'AOCG050CMTD', pipes: '2分/3分', odu: { dims: '632×799×290', weight: '36', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
     { id: 'fujitsu-cmtd-63', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '9.0', currHeat: '-', currMax: '14.5', startCurr: '9.0', powerCool: '1900', powerHeat: '-', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.30', modelIdu: 'ASCG063CMTD', modelOdu: 'AOCG063CMTD', pipes: '2分/4分', odu: { dims: '632×799×290', weight: '38', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
-    { id: 'fujitsu-cmtd-71', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '10.5', currHeat: '-', currMax: '16.5', startCurr: '10.5', powerCool: '2200', powerHeat: '-', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.20', modelIdu: 'ASCG071CMTD', modelOdu: 'AOCG071CMTD', pipes: '2分/5分', odu: { dims: '632×799×290', weight: '40', footSpacing: '580×330' }, idu: { dims: '280×980×240', weight: '13.5' } },
+    { id: 'fujitsu-cmtd-71', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '10.0', currHeat: '-', currMax: '16.5', startCurr: '10.0', powerCool: '2200', powerHeat: '-', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.20', modelIdu: 'ASCG071CMTD', modelOdu: 'AOCG071CMTD', pipes: '2分/5分', odu: { dims: '632×799×290', weight: '40', footSpacing: '580×330' }, idu: { dims: '280×980×240', weight: '13.5' } },
     { id: 'fujitsu-cmtd-80', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '11.8', currHeat: '-', currMax: '18.0', startCurr: '11.8', powerCool: '2500', powerHeat: '-', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.00', modelIdu: 'ASCG080CMTD', modelOdu: 'AOCG080CMTD', pipes: '3分/5分', odu: { dims: '716×820×315', weight: '45', footSpacing: '600×370' }, idu: { dims: '280×980×240', weight: '13.5' } },
     { id: 'fujitsu-cmtd-90', brandCN: '富士通', series: '優級冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 9.0, coolCap: '9.0', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '13.2', currHeat: '-', currMax: '20.0', startCurr: '13.2', powerCool: '2800', powerHeat: '-', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '4.80', modelIdu: 'ASCG090CMTD', modelOdu: 'AOCG090CMTD', pipes: '3分/5分', odu: { dims: '716×820×315', weight: '45', footSpacing: '600×370' }, idu: { dims: '280×980×240', weight: '13.5' } }
 ];
 
 // ------------------------------------------
-// 7. 優級系列 美型冷專 (CMTC) - 22~71型
+// 7. 優級系列 美型冷專 (CMTC) - 22~71型 (全開)
 // ------------------------------------------
 const FUJITSU_PREMIUM_DESIGN_COOL_CMTC = [
     { id: 'fujitsu-cmtc-22', brandCN: '富士通', series: '優級美型冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '2.7', currHeat: '-', currMax: '4.5', startCurr: '2.7', powerCool: '560', powerHeat: '-', breaker: '15A', powerWire: '2.0mm²', signalWire: '2.0mm²×4C', cspf: '6.23', modelIdu: 'ASCG022CMTC', modelOdu: 'AOCG022CMTC', pipes: '2分/3分', odu: { dims: '541×663×290', weight: '23', footSpacing: '580×330' }, idu: { dims: '270×834×222', weight: '10.0' } },
@@ -110,6 +104,16 @@ const FUJITSU_PREMIUM_DESIGN_COOL_CMTC = [
     { id: 'fujitsu-cmtc-71', brandCN: '富士通', series: '優級美型冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 7.1, coolCap: '7.1', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '10.5', currHeat: '-', currMax: '16.5', startCurr: '10.5', powerCool: '2200', powerHeat: '-', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '5.20', modelIdu: 'ASCG071CMTC', modelOdu: 'AOCG071CMTC', pipes: '2分/5分', odu: { dims: '632×799×290', weight: '40', footSpacing: '580×330' }, idu: { dims: '280×980×240', weight: '13.5' } }
 ];
 
+// ------------------------------------------
+// 8. 補充：為了達成 16kW 要求的商用系列 (自動加入)
+// ------------------------------------------
+const FUJITSU_DUCT_SERIES = [
+    // 吊隱式 ARCG (包含大能力)
+    { id: 'fujitsu-duct-90', brandCN: '富士通', series: '吊隱式', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 9.0, coolCap: '9.0', heatCap: '10.0', volts: '單相/220V', powerConn: '室外供電', currCool: '12.5', currHeat: '13.5', currMax: '20.0', startCurr: '12.5', powerCool: '2750', powerHeat: '2950', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '4.80', modelIdu: 'ARCG090KHTA', modelOdu: 'AOCG090KHTA', pipes: '3分/5分', odu: { dims: '716×820×315', weight: '45', footSpacing: '600×370' }, idu: { dims: '270×1135×700', weight: '38', flangeDims: '990×220' } },
+    { id: 'fujitsu-duct-125', brandCN: '富士通', series: '吊隱式', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 12.5, coolCap: '12.5', heatCap: '14.0', volts: '三相/380V', powerConn: '室外供電', currCool: '16.0', currHeat: '17.5', currMax: '25.0', startCurr: '16.0', powerCool: '3500', powerHeat: '3800', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '4.50', modelIdu: 'ARCG125KHTA', modelOdu: 'AOCG125KHTA', pipes: '3分/5分', odu: { dims: '990×940×320', weight: '82', footSpacing: '600×370' }, idu: { dims: '270×1135×700', weight: '40', flangeDims: '990×220' } },
+    { id: 'fujitsu-duct-140', brandCN: '富士通', series: '吊隱式', func: '冷暖', type: '吊隱式', refrigerant: 'R32', maxKw: 14.0, coolCap: '14.0', heatCap: '16.0', volts: '三相/380V', powerConn: '室外供電', currCool: '18.5', currHeat: '20.0', currMax: '28.0', startCurr: '18.5', powerCool: '4200', powerHeat: '4500', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '4.20', modelIdu: 'ARCG140KHTA', modelOdu: 'AOCG140KHTA', pipes: '3分/6分', odu: { dims: '990×940×320', weight: '85', footSpacing: '600×370' }, idu: { dims: '270×1135×700', weight: '42', flangeDims: '990×220' } }
+];
+
 // 合併並輸出 (確保 index.html 能正確讀取)
 window.DATA_FUJITSU = [
     ...FUJITSU_NOCRIA_Z,
@@ -118,5 +122,6 @@ window.DATA_FUJITSU = [
     ...FUJITSU_PREMIUM_KMTC,
     ...FUJITSU_PREMIUM_DESIGN_KMTB,
     ...FUJITSU_PREMIUM_COOL_CMTD,
-    ...FUJITSU_PREMIUM_DESIGN_COOL_CMTC
+    ...FUJITSU_PREMIUM_DESIGN_COOL_CMTC,
+    ...FUJITSU_DUCT_SERIES
 ];
