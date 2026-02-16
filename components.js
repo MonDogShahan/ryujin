@@ -1,5 +1,5 @@
-// ================= components.js (V13.53 - 支援詳細機電規格版) =================
-// 包含：Icon圖示, 下拉選單, 結果卡片, 詳細規格視窗(含電氣專區)
+// ================= components.js (V13.54 - 支援進階電氣規格版) =================
+// 包含：Icon圖示, 下拉選單, 結果卡片, 詳細規格視窗(含進階電氣專區)
 
 // 1. 通用圖示元件
 const Icon = ({ name, className = "w-6 h-6" }) => {
@@ -12,7 +12,8 @@ const Icon = ({ name, className = "w-6 h-6" }) => {
         ruler: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />,
         thermometer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
         box: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
-        bolt: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        bolt: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />,
+        check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     };
     return (
         <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,6 +46,9 @@ const ResultCard = ({ group, onClick }) => {
     const main = group.variants[0];
     const isMulti = main.type.includes('室外機');
 
+    // 優先顯示冷氣電流，若無則顯示一般電流
+    const displayCurrent = main.currCool ? `${main.currCool} A` : (main.current ? `${main.current} A` : '-');
+
     return (
         <div 
             onClick={() => onClick(group, main.func)}
@@ -70,7 +74,7 @@ const ResultCard = ({ group, onClick }) => {
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-t border-industrial-700 pt-3">
                 <div className="flex justify-between"><span className="text-gray-500">冷房能力</span><span className="text-gray-200 font-mono">{main.coolCap} kW</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">電源</span><span className="text-industrial-accent font-mono">{main.volts || '220V'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">運轉電流</span><span className="text-industrial-accent font-mono">{displayCurrent}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">配管</span><span className="text-gray-200 font-mono">{main.pipes}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">CSPF</span><span className="text-gray-200 font-mono">{main.cspf || '-'}</span></div>
             </div>
@@ -124,11 +128,20 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                         <SpecRow label="室內機型號" value={isMulti ? '-' : val(activeData.modelIdu)} />
                         <SpecRow label="室外機型號" value={val(activeData.modelOdu)} />
                         <SpecRow label="CSPF 能效" value={val(activeData.cspf)} />
-                        <SpecRow label="銅管管徑" value={val(activeData.pipes)} />
-                        <SpecRow label="消耗功率" value={`${val(activeData.power)} W`} />
+                        <SpecRow label="液管/氣管" value={val(activeData.pipes)} />
+                        
+                        {/* 智慧判斷顯示功率 */}
+                        {activeData.powerCool ? (
+                            <>
+                                <SpecRow label="冷房消耗功率" value={`${activeData.powerCool} W`} />
+                                {activeData.powerHeat && <SpecRow label="暖房消耗功率" value={`${activeData.powerHeat} W`} />}
+                            </>
+                        ) : (
+                            <SpecRow label="消耗功率" value={`${val(activeData.power)} W`} />
+                        )}
                     </div>
 
-                    {/* ★★★ 機電配置專區 (新增) ★★★ */}
+                    {/* ★★★ 機電配置專區 (完整支援 V13.52 資料庫) ★★★ */}
                     <div className="space-y-0.5 mb-6 bg-industrial-950/50 p-3 rounded-xl border border-white/5">
                         <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/5">
                             <Icon name="bolt" className="w-4 h-4 text-yellow-400" />
@@ -139,9 +152,10 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                         <SpecRow label="無熔絲開關(NFB)" value={val(activeData.breaker)} />
                         <SpecRow label="建議電源線徑" value={val(activeData.powerWire)} />
                         <SpecRow label="內外機訊號線" value={val(activeData.signalWire)} />
+                        
                         <div className="h-2"></div>
                         <div className="grid grid-cols-2 gap-2">
-                            <MiniSpecBox label="冷氣運轉電流" value={activeData.currCool ? `${activeData.currCool} A` : '-'} />
+                            <MiniSpecBox label="冷氣運轉電流" value={activeData.currCool ? `${activeData.currCool} A` : (activeData.current ? `${activeData.current} A` : '-')} />
                             <MiniSpecBox label="暖氣運轉電流" value={activeData.currHeat ? `${activeData.currHeat} A` : '-'} />
                             <MiniSpecBox label="最大運轉電流" value={activeData.currMax ? `${activeData.currMax} A` : '-'} />
                             <MiniSpecBox label="啟動電流" value={activeData.startCurr ? `${activeData.startCurr} A` : '-'} />
