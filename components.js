@@ -1,8 +1,7 @@
-// ================= components.js (V13.85 還原介面版) =================
-// 確保 React 變數可用
-var { useState, useEffect } = React;
+// ================= components.js (V13.86 去除封裝修復版) =================
+// 確保變數直接掛載到 window，避免讀取失敗
 
-// 1. 圖示庫
+// 1. 定義 Icon 元件
 window.Icon = ({ name, className = "w-6 h-6" }) => {
     const icons = {
         menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />,
@@ -21,7 +20,7 @@ window.Icon = ({ name, className = "w-6 h-6" }) => {
     return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">{icons[name] || null}</svg>;
 };
 
-// 2. 下拉選單
+// 2. 定義 FilterSelect
 window.FilterSelect = ({ label, value, options, onChange }) => (
     <div className="flex flex-col gap-1.5 relative">
         <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold ml-1">{label}</label>
@@ -34,7 +33,7 @@ window.FilterSelect = ({ label, value, options, onChange }) => (
     </div>
 );
 
-// 3. 標籤
+// 3. 定義 Badge
 window.Badge = ({ text, type }) => {
     let styleClass = "bg-gray-700/50 text-gray-300 border-gray-600/50";
     if (text === '冷暖') styleClass = "bg-orange-500/20 text-orange-400 border-orange-500/30";
@@ -43,7 +42,7 @@ window.Badge = ({ text, type }) => {
     return <span className={`text-[10px] px-2 py-0.5 rounded border ${styleClass} font-bold tracking-wider whitespace-nowrap backdrop-blur-md`}>{text}</span>;
 };
 
-// 4. 結果卡片
+// 4. 定義 ResultCard
 window.ResultCard = ({ group, onClick }) => {
     if (!group || !group.variants || group.variants.length === 0) return null;
     const main = group.variants[0];
@@ -72,16 +71,16 @@ window.ResultCard = ({ group, onClick }) => {
                 <div className="text-gray-500 group-hover:text-yellow-400 transition-colors"><window.Icon name="chevron" className="w-5 h-5 -rotate-90" /></div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-t border-white/10 pt-3">
-                <div className="flex justify-between"><span className="text-gray-500">冷房能力</span><span className="text-white font-mono">{main.coolCap} kW</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">運轉電流</span><span className="text-yellow-400 font-mono">{displayCurrent}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">配管</span><span className="text-white font-mono">{main.pipes}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">CSPF</span><span className="text-white font-mono">{main.cspf || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">冷房能力</span><span className="text-gray-200 font-mono">{main.coolCap} kW</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">運轉電流</span><span className="text-yellow-400 font-mono">{displayCurrent}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">配管</span><span className="text-gray-200 font-mono">{main.pipes}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">CSPF</span><span className="text-gray-200 font-mono">{main.cspf || '-'}</span></div>
             </div>
         </div>
     );
 };
 
-// 5. 詳細規格視窗
+// 5. 定義 SpecModal
 window.SpecModal = ({ group, initialFunc, onClose }) => {
     const [currentFunc, setCurrentFunc] = React.useState(initialFunc);
     const activeData = group.variants.find(v => v.func === currentFunc) || group.variants[0];
@@ -147,7 +146,7 @@ window.SpecModal = ({ group, initialFunc, onClose }) => {
                         <SpecRow label="訊號線" value={val(activeData.signalWire)} />
                         <div className="h-2"></div>
                         <div className="grid grid-cols-2 gap-2">
-                            <MiniSpecBox label="運轉電流(冷)" value={activeData.currCool ? `${activeData.currCool} A` : (activeData.current ? `${activeData.current} A` : '-')} />
+                            <MiniSpecBox label="運轉電流(冷)" value={activeData.currCool ? `${activeData.currCool} A` : '-'} />
                             <MiniSpecBox label="運轉電流(暖)" value={activeData.currHeat ? `${activeData.currHeat} A` : '-'} />
                         </div>
                     </div>
@@ -159,9 +158,26 @@ window.SpecModal = ({ group, initialFunc, onClose }) => {
                             <div className="text-[9px] text-gray-500 mt-2 text-right">* 法蘭為內徑尺寸</div>
                         </div>
                     )}
+                    <div className="space-y-2">
+                        <div className="text-[10px] text-yellow-500 font-bold mb-1 pl-1 tracking-wider uppercase">外觀尺寸 (mm)</div>
+                        {!isMulti && !isDucted && (
+                            <div className="bg-black/30 rounded-lg p-3 border border-white/10">
+                                <div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室內機</span><span className="text-xs text-white font-mono">{val(activeData.idu?.dims)}</span></div>
+                                <div className="flex justify-between"><span className="text-xs text-gray-400">重量</span><span className="text-xs text-white font-mono">{val(activeData.idu?.weight)} kg</span></div>
+                            </div>
+                        )}
+                        <div className="bg-black/30 rounded-lg p-3 border border-white/10">
+                            <div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室外機</span><span className="text-xs text-white font-mono">{val(activeData.odu?.dims)}</span></div>
+                            <div className="flex justify-between mb-1"><span className="text-xs text-gray-400">重量</span><span className="text-xs text-white font-mono">{val(activeData.odu?.weight)} kg</span></div>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-white/10"><span className="text-xs text-yellow-500">腳座孔距</span><span className="text-xs text-yellow-500 font-mono font-bold">{val(activeData.odu?.footSpacing)}</span></div>
+                        </div>
+                    </div>
                 </div>
                 <div className="p-4 border-t border-white/10 text-center bg-black/20"><button onClick={onClose} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold transition-colors">關閉視窗</button></div>
             </div>
         </div>
     );
 };
+
+// 將組件集合掛載到 window
+window.Components = { Icon: window.Icon, FilterSelect: window.FilterSelect, ResultCard: window.ResultCard, SpecModal: window.SpecModal };
