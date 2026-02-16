@@ -1,7 +1,11 @@
+// ================= 4. 主程式 (App) V13.51 緊急修復版 =================
+
+// ★★★ 關鍵修正：定義 React 核心功能 (之前漏了這行導致白屏) ★★★
+const { useState, useEffect, useRef, useMemo } = React;
+
 // 確保讀取到全域資料庫
 const AC_DATABASE = window.AC_DATABASE || [];
 
-// ================= 4. 主程式 (App) V13.47 =================
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,10 +18,10 @@ const App = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
-    // ★★★ 新增：用於控制搜尋結果捲動的 Ref ★★★
+    // 用於控制搜尋結果捲動的 Ref
     const resultsRef = useRef(null);
 
-    // ★★★ 新增：當搜尋結果改變時，自動捲動到頂部 ★★★
+    // 當搜尋結果改變時，自動捲動到頂部
     useEffect(() => {
         if (resultsRef.current) {
             resultsRef.current.scrollTop = 0;
@@ -39,41 +43,29 @@ const App = () => {
 
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
-    // 搜尋核心邏輯 (維持 V13.33 標準：下拉選單絕對優先)
+    // 搜尋核心邏輯
     const getFilteredResults = (kw) => {
         const k = kw ? kw.trim().toLowerCase() : '';
         
         return AC_DATABASE.filter(i => {
-            // 1. 第一關：嚴格遵守下拉選單 (選什麼就是什麼)
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
             if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
             if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
             if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
             
-            // 2. 第二關：關鍵字精準比對
             if (k) {
-                // A. 數值比對 (KW / 型號數字) - 解決 "28" 搜到 "22" (腳距) 的問題
                 const numStr = k.replace(/[^0-9.]/g, ''); 
                 let isCapacityMatch = false;
-
                 if (numStr && !isNaN(numStr)) {
                     const searchNum = parseFloat(numStr);
-                    const machineCap = parseFloat(i.maxKw); // 例如 2.8
-                    
-                    // 情況 1: 輸入 2.8 或 7.2 (容許 0.2 誤差)
+                    const machineCap = parseFloat(i.maxKw);
                     if (Math.abs(machineCap - searchNum) <= 0.2) isCapacityMatch = true;
-                    
-                    // 情況 2: 輸入 28 或 71 (自動除以 10)
                     else if (searchNum >= 20 && Math.abs(machineCap - (searchNum / 10)) <= 0.2) isCapacityMatch = true;
                 }
-
-                // B. 文字比對 (只比對：品牌、系列、型號)
                 const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
                 const isTextMatch = targetText.includes(k);
-
                 return isTextMatch || isCapacityMatch;
             }
-            
             return true;
         });
     };
@@ -97,18 +89,22 @@ const App = () => {
     
     const suggestions = useMemo(() => {
         if (!searchState.keyword) return searchState.history;
-        const matches = AC_DATABASE.filter(i => (i.modelIdu).toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
+        const matches = AC_DATABASE.filter(i => (i.modelIdu || '').toLowerCase().includes(searchState.keyword.toLowerCase())).map(i => i.modelIdu).slice(0, 5);
         return [...new Set(matches)];
     }, [searchState.keyword, searchState.history]);
 
     const clearHistory = () => { localStorage.removeItem('searchHistory'); setSearchState(p => ({ ...p, history: [] })); };
+    
+    // 從 window.Components 取得元件
+    const { Icon, FilterSelect, ResultCard, SpecModal } = window.Components;
+
     const SidebarBtnWrapper = ({ id, icon, label }) => ( <button onClick={() => { setActiveTab(id); setIsSidebarOpen(false); }} className={`flex items-center gap-4 w-full text-left px-4 py-3.5 rounded-xl transition-all ${activeTab === id ? 'bg-industrial-800 border border-industrial-700 text-industrial-accent font-bold' : 'text-gray-400 hover:text-white'}`}> <Icon name={icon} className="w-5 h-5" /><span className="text-sm tracking-widest">{label}</span> </button> );
 
     return (
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.47</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.51</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
@@ -130,7 +126,7 @@ const App = () => {
                             <button onClick={executeSearch} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
                         </div>
                         
-                        {/* ★★★ 這裡加入了 ref={resultsRef} ★★★ */}
+                        {/* 這裡加入了 ref={resultsRef} 用於自動捲動 */}
                         <div 
                             ref={resultsRef}
                             className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1" 
@@ -141,9 +137,12 @@ const App = () => {
                         </div>
                     </div>
                 )}
-                {activeTab === 'capacity' && <MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
-                {activeTab === 'cooling' && <CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
-                {activeTab === 'ducted' && <DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} db={AC_DATABASE} />}
+                {/* 注意：這裡我們假設 React 元件已在 components.js 定義並可全域存取，或您需要在此處整合其他計算機代碼。
+                    由於之前的上下文，calculators.js 應該包含了 MultiRoomCapacityCalculator 等定義。
+                    若無，請確保 calculators.js 也已正確載入。 */}
+                {activeTab === 'capacity' && window.Calculators && <window.Calculators.MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
+                {activeTab === 'cooling' && window.Calculators && <window.Calculators.CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
+                {activeTab === 'ducted' && window.Calculators && <window.Calculators.DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} db={AC_DATABASE} />}
             </main>
             {selectedSpecGroup && <SpecModal group={selectedSpecGroup} initialFunc={selectedSpecGroup.initialFunc} onClose={() => setSelectedSpecGroup(null)} />}
         </div>
