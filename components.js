@@ -1,5 +1,5 @@
-// ================= components.js (V13.54 - 支援進階電氣規格版) =================
-// 包含：Icon圖示, 下拉選單, 結果卡片, 詳細規格視窗(含進階電氣專區)
+// ================= components.js (V13.57 - 標籤全回歸版) =================
+// 包含：Icon圖示, 下拉選單, 結果卡片(含標籤), 詳細規格視窗(含標籤+電氣專區)
 
 // 1. 通用圖示元件
 const Icon = ({ name, className = "w-6 h-6" }) => {
@@ -41,12 +41,27 @@ const FilterSelect = ({ label, value, options, onChange }) => (
     </div>
 );
 
+// ★★★ 標籤小元件 (新增) ★★★
+const Badge = ({ text, type }) => {
+    let styleClass = "bg-gray-700 text-gray-300 border-gray-600"; // 預設
+    
+    if (text === '冷暖') styleClass = "bg-orange-900/40 text-orange-400 border-orange-700/50";
+    else if (text === '冷專') styleClass = "bg-blue-900/40 text-blue-400 border-blue-700/50";
+    else if (type === 'type') styleClass = "bg-teal-900/40 text-teal-400 border-teal-700/50";
+
+    return (
+        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${styleClass} font-bold tracking-wider whitespace-nowrap`}>
+            {text}
+        </span>
+    );
+};
+
 // 3. 結果卡片 (ResultCard) - 點擊開啟彈窗
 const ResultCard = ({ group, onClick }) => {
     const main = group.variants[0];
     const isMulti = main.type.includes('室外機');
 
-    // 優先顯示冷氣電流，若無則顯示一般電流
+    // 優先顯示冷氣電流
     const displayCurrent = main.currCool ? `${main.currCool} A` : (main.current ? `${main.current} A` : '-');
 
     return (
@@ -63,6 +78,11 @@ const ResultCard = ({ group, onClick }) => {
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded">{main.brandCN}</span>
                             <span className="text-sm font-bold text-white tracking-wide">{main.series}</span>
+                        </div>
+                        {/* ★★★ 這裡補回了標籤 (Tag) ★★★ */}
+                        <div className="flex gap-1 mb-1">
+                            <Badge text={main.func} />
+                            <Badge text={main.type} type="type" />
                         </div>
                         <div className="text-xs text-gray-400 font-mono">{isMulti ? main.modelOdu : main.modelIdu}</div>
                     </div>
@@ -98,9 +118,12 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                 {/* Header */}
                 <div className="p-5 border-b border-industrial-700 flex justify-between items-start bg-industrial-950 rounded-t-2xl">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                             <span className="text-xs font-bold bg-industrial-accent text-black px-2 py-0.5 rounded">{activeData.brandCN}</span>
                             <span className="text-lg font-bold text-white tracking-wide">{activeData.series}</span>
+                            {/* ★★★ 這裡補回了標籤 (Tag) ★★★ */}
+                            <Badge text={activeData.func} />
+                            <Badge text={activeData.type} type="type" />
                         </div>
                         <div className="text-sm text-industrial-400 font-mono">{isMulti ? activeData.modelOdu : activeData.modelIdu}</div>
                     </div>
@@ -128,7 +151,7 @@ const SpecModal = ({ group, initialFunc, onClose }) => {
                         <SpecRow label="室內機型號" value={isMulti ? '-' : val(activeData.modelIdu)} />
                         <SpecRow label="室外機型號" value={val(activeData.modelOdu)} />
                         <SpecRow label="CSPF 能效" value={val(activeData.cspf)} />
-                        <SpecRow label="液管/氣管" value={val(activeData.pipes)} />
+                        <SpecRow label="銅管管徑" value={val(activeData.pipes)} />
                         
                         {/* 智慧判斷顯示功率 */}
                         {activeData.powerCool ? (
