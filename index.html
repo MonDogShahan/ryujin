@@ -1,82 +1,82 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神空調幫手</title>
-    
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
-    <link rel="icon" type="image/png" sizes="192x192" href="android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
-    
-    <link rel="icon" type="image/png" href="android-chrome-192x192.png">
-    <link rel="shortcut icon" type="image/png" href="android-chrome-192x192.png">
+    <title>龍神空調幫手 Professional</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-
     <script>
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        industrial: { 950: '#0b1121', 900: '#111827', 800: '#1e293b', 700: '#334155', 600: '#475569', accent: '#f59e0b', text: '#e2e8f0' },
-                        heat: { 500: '#f97316', 900: '#7c2d12' }, 
+                        industrial: {
+                            50: '#f5f7fa', 100: '#e4e7eb', 200: '#cbd2d9', 300: '#9aa5b1',
+                            400: '#7b8794', 500: '#616e7c', 600: '#52606d', 700: '#3e4c59',
+                            800: '#323f4b', 900: '#1f2933', 950: '#111827',
+                            accent: '#fbbf24', // Amber 400
+                        },
                         cool: { 500: '#3b82f6', 900: '#1e3a8a' },
+                        heat: { 500: '#ef4444' }
                     },
-                    animation: { 
-                        'fade-in': 'fadeIn 0.3s ease-out', 
-                        'zoom-in': 'zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'run-to-title': 'runToTitle 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'zoom-in': 'zoomIn 0.2s ease-out',
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        zoomIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-                        runToTitle: { '0%': { left: '-120px' }, '100%': { left: 'calc(50% - 150px)' } }
-                    },
-                    fontFamily: {
-                        'sans': ['"Microsoft JhengHei"', 'sans-serif'],
-                        '8bit': ['"Press Start 2P"', 'cursive']
+                        slideUp: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        zoomIn: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
                     }
                 }
             }
         }
     </script>
+    
+    <style>
+        body { background-color: #111827; color: #f5f7fa; -webkit-tap-highlight-color: transparent; }
+        /* 自定義捲軸 */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1f2933; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        /* 隱藏預設選單箭頭 */
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+    </style>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
 
     <script src="data_hitachi.js"></script>
     <script src="data_daikin.js"></script>
-    <script src="data_panasonic.js"></script>
     <script src="data_mitsubishi.js"></script>
     <script src="data_fujitsu.js"></script>
+    <script src="data_panasonic.js"></script>
     <script src="data_hawrin.js"></script>
 
     <script>
+        // 這裡會嘗試讀取各個檔案定義的變數，如果有缺漏會用 [] 空陣列補上，避免報錯
         window.AC_DATABASE = [
-            ...(window.DATA_HITACHI || []),
-            ...(window.DATA_DAIKIN || []),
-            ...(window.DATA_PANASONIC || []),
-            ...(window.DATA_MITSUBISHI || []),
-            ...(window.DATA_FUJITSU || []),
-            ...(window.DATA_HAWRIN || [])
+            ...(window.DATA_HITACHI || []),     // 日立
+            ...(window.DATA_DAIKIN || []),      // 大金
+            ...(window.DATA_MITSUBISHI || []),  // 三菱重工 (對應您的 data_mitsubishi.js)
+            ...(window.DATA_FUJITSU || []),     // 富士通
+            ...(window.DATA_PANASONIC || []),   // 國際牌
+            ...(window.DATA_HAWRIN || [])       // 華菱
         ];
 
-        console.log("資料庫載入完成，共 " + window.AC_DATABASE.length + " 筆資料");
+        console.log("✅ 資料庫整合完成，總機型數:", window.AC_DATABASE.length);
         
+        // 如果資料庫是空的，顯示提示 (除錯用)
         if (window.AC_DATABASE.length === 0) {
-            console.error("警告：資料庫為空！請確認 data_*.js 檔案是否存在且路徑正確。");
+            console.warn("⚠️ 警告：目前沒有讀取到任何空調資料，請檢查 data_*.js 檔案是否與 index.html 在同一資料夾。");
         }
     </script>
 
