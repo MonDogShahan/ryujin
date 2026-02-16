@@ -1,62 +1,42 @@
-// ================= components.js (V13.80 - 穩定版) =================
-// 包含：Icon圖示, 下拉選單, 結果卡片(含標籤), 詳細規格視窗(含完整機電數據)
+// components.js - 介面元件庫
 
-// 1. 通用圖示元件
 const Icon = ({ name, className = "w-6 h-6" }) => {
     const icons = {
-        menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />,
-        x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />,
-        search: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
-        chevron: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />,
-        trash: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
-        ruler: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />,
-        thermometer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-        box: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
-        bolt: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />,
-        check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />,
-        tool: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        menu: <path d="M4 6h16M4 12h16M4 18h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        x: <path d="M6 18L18 6M6 6l12 12" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        chevron: <path d="M19 9l-7 7-7-7" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        trash: <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        ruler: <path d="M4 6h16M4 10h16M4 14h16M4 18h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        thermometer: <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        box: <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        bolt: <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        tool: <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+        check: <path d="M5 13l4 4L19 7" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />
     };
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {icons[name] || null}
-        </svg>
-    );
+    return <svg className={className} fill="none" viewBox="0 0 24 24">{icons[name]}</svg>;
 };
 
-// 2. 下拉選單元件
 const FilterSelect = ({ label, value, options, onChange }) => (
     <div className="flex flex-col gap-1.5 relative">
         <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold ml-1">{label}</label>
         <div className="relative">
-            <select 
-                value={value} 
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full appearance-none bg-industrial-900 border border-industrial-600 text-gray-100 py-3 px-4 pr-8 rounded-lg focus:outline-none focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent transition-all text-sm font-medium shadow-sm"
-            >
+            <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full appearance-none bg-industrial-900 border border-industrial-600 text-gray-100 py-3 px-4 pr-8 rounded-lg focus:outline-none focus:border-industrial-accent focus:ring-1 focus:ring-industrial-accent transition-all text-sm font-medium shadow-sm">
                 {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-industrial-accent">
-                <Icon name="chevron" className="w-4 h-4" />
-            </div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-industrial-accent"><Icon name="chevron" className="w-4 h-4" /></div>
         </div>
     </div>
 );
 
-// 3. 標籤小元件
 const Badge = ({ text, type }) => {
-    let styleClass = "bg-gray-700 text-gray-300 border-gray-600";
-    if (text === '冷暖') styleClass = "bg-orange-900/40 text-orange-400 border-orange-700/50";
-    else if (text === '冷專') styleClass = "bg-blue-900/40 text-blue-400 border-blue-700/50";
-    else if (type === 'type') styleClass = "bg-teal-900/40 text-teal-400 border-teal-700/50";
-
-    return (
-        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${styleClass} font-bold tracking-wider whitespace-nowrap`}>
-            {text}
-        </span>
-    );
+    let style = "bg-gray-700 text-gray-300 border-gray-600";
+    if (text === '冷暖') style = "bg-orange-900/40 text-orange-400 border-orange-700/50";
+    else if (text === '冷專') style = "bg-blue-900/40 text-blue-400 border-blue-700/50";
+    else if (type === 'type') style = "bg-teal-900/40 text-teal-400 border-teal-700/50";
+    return <span className={`text-[10px] px-1.5 py-0.5 rounded border ${style} font-bold tracking-wider`}>{text}</span>;
 };
 
-// 4. 結果卡片
 const ResultCard = ({ group, onClick }) => {
     if (!group || !group.variants || group.variants.length === 0) return null;
     const main = group.variants[0];
@@ -82,153 +62,13 @@ const ResultCard = ({ group, onClick }) => {
                         <div className="text-xs text-gray-400 font-mono">{isMulti ? main.modelOdu : main.modelIdu}</div>
                     </div>
                 </div>
-                <div className="text-industrial-600 group-hover:text-industrial-accent transition-colors">
-                    <Icon name="chevron" className="w-5 h-5 -rotate-90" />
-                </div>
+                <div className="text-industrial-600 group-hover:text-industrial-accent transition-colors"><Icon name="chevron" className="w-5 h-5 -rotate-90" /></div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-t border-industrial-700 pt-3">
                 <div className="flex justify-between"><span className="text-gray-500">冷房能力</span><span className="text-gray-200 font-mono">{main.coolCap} kW</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">運轉電流</span><span className="text-industrial-accent font-mono">{displayCurrent}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">配管</span><span className="text-gray-200 font-mono">{main.pipes}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">CSPF</span><span className="text-gray-200 font-mono">{main.cspf || '-'}</span></div>
-            </div>
-        </div>
-    );
-};
-
-// 5. 詳細規格彈窗
-const SpecModal = ({ group, initialFunc, onClose }) => {
-    const [currentFunc, setCurrentFunc] = React.useState(initialFunc);
-    const activeData = group.variants.find(v => v.func === currentFunc) || group.variants[0];
-    const isMulti = activeData.type.includes('室外機');
-    const isDucted = activeData.type.includes('吊隱');
-    const val = (v) => v || '-';
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="bg-industrial-900 w-full max-w-md rounded-2xl shadow-2xl border border-industrial-700 flex flex-col max-h-[90vh] relative z-10 animate-zoom-in">
-                
-                {/* Header */}
-                <div className="p-5 border-b border-industrial-700 flex justify-between items-start bg-industrial-950 rounded-t-2xl">
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <span className="text-xs font-bold bg-industrial-accent text-black px-2 py-0.5 rounded">{activeData.brandCN}</span>
-                            <span className="text-lg font-bold text-white tracking-wide">{activeData.series}</span>
-                            <Badge text={activeData.func} />
-                            <Badge text={activeData.type} type="type" />
-                        </div>
-                        <div className="text-sm text-industrial-400 font-mono">{isMulti ? activeData.modelOdu : activeData.modelIdu}</div>
-                    </div>
-                    <button onClick={onClose} className="p-1 rounded-full bg-industrial-800 text-gray-400 hover:text-white hover:bg-industrial-700 transition-colors"><Icon name="x" /></button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-5 custom-scroll">
-                    
-                    {/* 冷暖能力 */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 flex flex-col items-center justify-center">
-                            <span className="text-[10px] text-gray-500 mb-1">冷房能力</span>
-                            <span className="text-xl font-black text-white">{activeData.coolCap} <span className="text-xs font-normal text-gray-400">kW</span></span>
-                        </div>
-                        <div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 flex flex-col items-center justify-center">
-                            <span className="text-[10px] text-gray-500 mb-1">暖房能力</span>
-                            <span className={`text-xl font-black ${activeData.heatCap === '-' ? 'text-gray-600' : 'text-heat-500'}`}>{activeData.heatCap === '-' ? 'N/A' : activeData.heatCap} <span className="text-xs font-normal text-gray-400">{activeData.heatCap === '-' ? '' : 'kW'}</span></span>
-                        </div>
-                    </div>
-
-                    {/* 基本規格 */}
-                    <div className="space-y-0.5 mb-6">
-                        <div className="text-[10px] text-industrial-accent font-bold mb-2 pl-1 tracking-wider">基本規格</div>
-                        <SpecRow label="室內機型號" value={isMulti ? '-' : val(activeData.modelIdu)} />
-                        <SpecRow label="室外機型號" value={val(activeData.modelOdu)} />
-                        <SpecRow label="CSPF 能效" value={val(activeData.cspf)} />
-                        <SpecRow label="銅管管徑" value={val(activeData.pipes)} />
-                        {activeData.powerCool ? (
-                            <>
-                                <SpecRow label="冷房消耗功率" value={`${activeData.powerCool} W`} />
-                                {activeData.powerHeat && activeData.powerHeat !== '-' && <SpecRow label="暖房消耗功率" value={`${activeData.powerHeat} W`} />}
-                            </>
-                        ) : (
-                            <SpecRow label="消耗功率" value={`${val(activeData.power)} W`} />
-                        )}
-                    </div>
-
-                    {/* 機電配置專區 */}
-                    <div className="space-y-0.5 mb-6 bg-industrial-950/50 p-3 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/5">
-                            <Icon name="bolt" className="w-4 h-4 text-yellow-400" />
-                            <span className="text-[10px] text-yellow-400 font-bold tracking-wider">機電配置建議</span>
-                        </div>
-                        <SpecRow label="電源相位/電壓" value={val(activeData.volts)} highlight />
-                        <SpecRow label="電源供應位置" value={val(activeData.powerConn)} highlight />
-                        <SpecRow label="無熔絲開關(NFB)" value={val(activeData.breaker)} />
-                        <SpecRow label="建議電源線徑" value={val(activeData.powerWire)} />
-                        <SpecRow label="內外機訊號線" value={val(activeData.signalWire)} />
-                        
-                        <div className="h-2"></div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <MiniSpecBox label="冷氣運轉電流" value={activeData.currCool ? `${activeData.currCool} A` : (activeData.current ? `${activeData.current} A` : '-')} />
-                            <MiniSpecBox label="暖氣運轉電流" value={activeData.currHeat ? `${activeData.currHeat} A` : '-'} />
-                            <MiniSpecBox label="最大運轉電流" value={activeData.currMax ? `${activeData.currMax} A` : '-'} />
-                            <MiniSpecBox label="啟動電流" value={activeData.startCurr ? `${activeData.startCurr} A` : '-'} />
-                        </div>
-                    </div>
-
-                    {/* 吊隱式專屬區塊 */}
-                    {isDucted && (
-                        <div className="mb-6 bg-industrial-800/80 p-3 rounded-xl border border-dashed border-industrial-600">
-                             <div className="flex items-center gap-2 mb-2 pb-1 border-b border-industrial-600/50">
-                                <Icon name="tool" className="w-4 h-4 text-blue-400" />
-                                <span className="text-[10px] text-blue-400 font-bold tracking-wider">風管工程規格</span>
-                            </div>
-                            <SpecRow label="室內機尺寸" value={val(activeData.idu?.dims)} />
-                            <div className="flex justify-between py-2 px-3 rounded bg-blue-900/20 mt-1">
-                                <span className="text-xs text-blue-300">出風口法蘭 (寬x高)</span>
-                                <span className="text-sm font-mono font-bold text-blue-300">{val(activeData.idu?.flangeDims)}</span>
-                            </div>
-                            <div className="text-[9px] text-gray-500 mt-2 text-right">* 法蘭尺寸為內徑，製作風箱時請預留保溫厚度</div>
-                        </div>
-                    )}
-
-                    {/* 尺寸規格 */}
-                    <div className="space-y-2">
-                        <div className="text-[10px] text-industrial-accent font-bold mb-1 pl-1 tracking-wider">尺寸規格 (寬x高x深 mm)</div>
-                        
-                        {!isMulti && !isDucted && (
-                            <div className="bg-industrial-800/50 rounded-lg p-3 border border-industrial-700/50">
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-xs text-gray-400">室內機</span>
-                                    <span className="text-xs text-white font-mono">{val(activeData.idu?.dims)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-xs text-gray-500">重量</span>
-                                    <span className="text-xs text-gray-400 font-mono">{val(activeData.idu?.weight)} kg</span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="bg-industrial-800/50 rounded-lg p-3 border border-industrial-700/50">
-                            <div className="flex justify-between mb-1">
-                                <span className="text-xs text-gray-400">室外機</span>
-                                <span className="text-xs text-white font-mono">{val(activeData.odu?.dims)}</span>
-                            </div>
-                            <div className="flex justify-between mb-1">
-                                <span className="text-xs text-gray-500">重量</span>
-                                <span className="text-xs text-gray-400 font-mono">{val(activeData.odu?.weight)} kg</span>
-                            </div>
-                            <div className="flex justify-between mt-2 pt-2 border-t border-white/5">
-                                <span className="text-xs text-industrial-accent">腳座孔距 (寬x深)</span>
-                                <span className="text-xs text-industrial-accent font-mono font-bold">{val(activeData.odu?.footSpacing)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-industrial-800 text-center">
-                    <button onClick={onClose} className="w-full py-3 bg-industrial-800 hover:bg-industrial-700 text-white rounded-xl text-sm font-bold transition-colors">關閉視窗</button>
-                </div>
             </div>
         </div>
     );
@@ -248,5 +88,103 @@ const MiniSpecBox = ({ label, value }) => (
     </div>
 );
 
-// 匯出元件
+const SpecModal = ({ group, initialFunc, onClose }) => {
+    const [currentFunc, setCurrentFunc] = React.useState(initialFunc);
+    const activeData = group.variants.find(v => v.func === currentFunc) || group.variants[0];
+    const isMulti = activeData.type.includes('室外機');
+    const isDucted = activeData.type.includes('吊隱');
+    const val = (v) => v || '-';
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="bg-industrial-900 w-full max-w-md rounded-2xl shadow-2xl border border-industrial-700 flex flex-col max-h-[90vh] relative z-10 animate-zoom-in">
+                <div className="p-5 border-b border-industrial-700 flex justify-between items-start bg-industrial-950 rounded-t-2xl">
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <span className="text-xs font-bold bg-industrial-accent text-black px-2 py-0.5 rounded">{activeData.brandCN}</span>
+                            <span className="text-lg font-bold text-white tracking-wide">{activeData.series}</span>
+                            <Badge text={activeData.func} />
+                            <Badge text={activeData.type} type="type" />
+                        </div>
+                        <div className="text-sm text-industrial-400 font-mono">{isMulti ? activeData.modelOdu : activeData.modelIdu}</div>
+                    </div>
+                    <button onClick={onClose} className="p-1 rounded-full bg-industrial-800 text-gray-400 hover:text-white"><Icon name="x" /></button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-5 custom-scroll">
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 flex flex-col items-center justify-center">
+                            <span className="text-[10px] text-gray-500 mb-1">冷房能力</span>
+                            <span className="text-xl font-black text-white">{activeData.coolCap} <span className="text-xs font-normal text-gray-400">kW</span></span>
+                        </div>
+                        <div className="bg-industrial-800 p-3 rounded-xl border border-industrial-700 flex flex-col items-center justify-center">
+                            <span className="text-[10px] text-gray-500 mb-1">暖房能力</span>
+                            <span className={`text-xl font-black ${activeData.heatCap === '-' ? 'text-gray-600' : 'text-heat-500'}`}>{activeData.heatCap === '-' ? 'N/A' : activeData.heatCap} <span className="text-xs font-normal text-gray-400">{activeData.heatCap === '-' ? '' : 'kW'}</span></span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-0.5 mb-6">
+                        <div className="text-[10px] text-industrial-accent font-bold mb-2 pl-1 tracking-wider">基本規格</div>
+                        <SpecRow label="室內機型號" value={isMulti ? '-' : val(activeData.modelIdu)} />
+                        <SpecRow label="室外機型號" value={val(activeData.modelOdu)} />
+                        <SpecRow label="CSPF 能效" value={val(activeData.cspf)} />
+                        <SpecRow label="銅管管徑" value={val(activeData.pipes)} />
+                        {activeData.powerCool ? (
+                            <>
+                                <SpecRow label="冷房消耗功率" value={`${activeData.powerCool} W`} />
+                                {activeData.powerHeat && activeData.powerHeat !== '-' && <SpecRow label="暖房消耗功率" value={`${activeData.powerHeat} W`} />}
+                            </>
+                        ) : (
+                            <SpecRow label="消耗功率" value={`${val(activeData.power)} W`} />
+                        )}
+                    </div>
+
+                    <div className="space-y-0.5 mb-6 bg-industrial-950/50 p-3 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/5"><Icon name="bolt" className="w-4 h-4 text-yellow-400" /><span className="text-[10px] text-yellow-400 font-bold tracking-wider">機電配置建議</span></div>
+                        <SpecRow label="電源相位/電壓" value={val(activeData.volts)} highlight />
+                        <SpecRow label="電源供應位置" value={val(activeData.powerConn)} highlight />
+                        <SpecRow label="無熔絲開關(NFB)" value={val(activeData.breaker)} />
+                        <SpecRow label="建議電源線徑" value={val(activeData.powerWire)} />
+                        <SpecRow label="內外機訊號線" value={val(activeData.signalWire)} />
+                        <div className="h-2"></div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <MiniSpecBox label="冷氣運轉電流" value={activeData.currCool ? `${activeData.currCool} A` : (activeData.current ? `${activeData.current} A` : '-')} />
+                            <MiniSpecBox label="暖氣運轉電流" value={activeData.currHeat ? `${activeData.currHeat} A` : '-'} />
+                            <MiniSpecBox label="最大運轉電流" value={activeData.currMax ? `${activeData.currMax} A` : '-'} />
+                            <MiniSpecBox label="啟動電流" value={activeData.startCurr ? `${activeData.startCurr} A` : '-'} />
+                        </div>
+                    </div>
+
+                    {isDucted && (
+                        <div className="mb-6 bg-industrial-800/80 p-3 rounded-xl border border-dashed border-industrial-600">
+                            <div className="flex items-center gap-2 mb-2 pb-1 border-b border-industrial-600/50"><Icon name="tool" className="w-4 h-4 text-blue-400" /><span className="text-[10px] text-blue-400 font-bold tracking-wider">風管工程規格</span></div>
+                            <SpecRow label="室內機尺寸" value={val(activeData.idu?.dims)} />
+                            <div className="flex justify-between py-2 px-3 rounded bg-blue-900/20 mt-1"><span className="text-xs text-blue-300">出風口法蘭 (寬x高)</span><span className="text-sm font-mono font-bold text-blue-300">{val(activeData.idu?.flangeDims)}</span></div>
+                            <div className="text-[9px] text-gray-500 mt-2 text-right">* 法蘭尺寸為內徑，製作風箱時請預留保溫厚度</div>
+                        </div>
+                    )}
+
+                    <div className="space-y-2">
+                        <div className="text-[10px] text-industrial-accent font-bold mb-1 pl-1 tracking-wider">設備尺寸 (寬x高x深 mm)</div>
+                        {!isMulti && !isDucted && (
+                            <div className="bg-industrial-800/50 rounded-lg p-3 border border-industrial-700/50">
+                                <div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室內機</span><span className="text-xs text-white font-mono">{val(activeData.idu?.dims)}</span></div>
+                                <div className="flex justify-between"><span className="text-xs text-gray-500">重量</span><span className="text-xs text-gray-400 font-mono">{val(activeData.idu?.weight)} kg</span></div>
+                            </div>
+                        )}
+                        <div className="bg-industrial-800/50 rounded-lg p-3 border border-industrial-700/50">
+                            <div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室外機</span><span className="text-xs text-white font-mono">{val(activeData.odu?.dims)}</span></div>
+                            <div className="flex justify-between mb-1"><span className="text-xs text-gray-500">重量</span><span className="text-xs text-gray-400 font-mono">{val(activeData.odu?.weight)} kg</span></div>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-white/5"><span className="text-xs text-industrial-accent">腳座孔距 (寬x深)</span><span className="text-xs text-industrial-accent font-mono font-bold">{val(activeData.odu?.footSpacing)}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 border-t border-industrial-800 text-center"><button onClick={onClose} className="w-full py-3 bg-industrial-800 hover:bg-industrial-700 text-white rounded-xl text-sm font-bold transition-colors">關閉視窗</button></div>
+            </div>
+        </div>
+    );
+};
+
+// 必須掛載到 window，讓 app.js 讀取
 window.Components = { Icon, FilterSelect, ResultCard, SpecModal };
