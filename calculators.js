@@ -1,10 +1,8 @@
-// ================= calculators.js (V13.80 - 穩定版) =================
-// 包含：負載計算、降溫模擬、吊隱式規劃(智慧搜尋)
+// calculators.js - 計算工具庫
 
 const { useState } = React;
 const { Icon } = window.Components;
 
-// 1. 負載與機型配置計算
 const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }) => {
     const addRoom = () => setRooms([...rooms, { id: Date.now(), name: `房間 ${rooms.length + 1}`, w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
     const removeRoom = (id) => setRooms(rooms.filter(r => r.id !== id));
@@ -25,104 +23,48 @@ const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db })
     const toggleCondition = (roomId, cond) => {
         setRooms(rooms.map(r => {
             if (r.id !== roomId) return r;
-            const newConds = { ...r.conditions, [cond]: !r.conditions[cond] };
-            return { ...r, conditions: newConds };
+            return { ...r, conditions: { ...r.conditions, [cond]: !r.conditions[cond] } };
         }));
     };
 
     const calculate = () => {
         let totalKw = 0;
         const calculatedRooms = rooms.map(r => {
-            let baseKcal = 450; 
+            let baseKcal = 450;
             if (r.conditions.top) baseKcal += 100;
             if (r.conditions.west) baseKcal += 80;
             if (r.conditions.window) baseKcal += 150;
             if (r.conditions.heat) baseKcal += 100;
-
             const reqKcal = parseFloat(r.ping) * baseKcal;
             const reqKw = reqKcal / 860;
             totalKw += reqKw;
-
-            const suitable = db.filter(m => !m.type.includes('室外') && parseFloat(m.maxKw) >= reqKw)
-                               .sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
-
+            const suitable = db.filter(m => !m.type.includes('室外') && parseFloat(m.maxKw) >= reqKw).sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
             return { ...r, reqKw: reqKw.toFixed(2), match: suitable ? `${suitable.brandCN} ${suitable.modelIdu} (${suitable.maxKw}kW)` : '無合適機型' };
         });
-        
-        const suitableOdu = db.filter(m => m.type.includes('室外') && parseFloat(m.maxKw) >= totalKw)
-                              .sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
-
+        const suitableOdu = db.filter(m => m.type.includes('室外') && parseFloat(m.maxKw) >= totalKw).sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
         setResult({ totalKw: totalKw.toFixed(2), rooms: calculatedRooms, odu: suitableOdu });
     };
 
     return (
         <div className="space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="ruler" /> 空間負載計算</h3>
-                <button onClick={addRoom} className="text-xs bg-industrial-800 hover:bg-industrial-700 px-3 py-1.5 rounded border border-industrial-600 transition-colors">+ 新增房間</button>
-            </div>
-            
-            <div className="space-y-3">
-                {rooms.map((room, idx) => (
-                    <div key={room.id} className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 relative">
-                        <div className="flex justify-between mb-2">
-                            <input type="text" value={room.name} onChange={(e) => updateRoom(room.id, 'name', e.target.value)} className="bg-transparent text-industrial-accent font-bold text-sm w-20 border-b border-dashed border-gray-600 focus:border-industrial-accent outline-none" />
-                            {rooms.length > 1 && <button onClick={() => removeRoom(room.id)} className="text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4" /></button>}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 mb-3">
-                            <div><label className="text-[10px] text-gray-500 block">長 (cm)</label><input type="number" value={room.d} onChange={e => updateRoom(room.id, 'd', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded px-2 py-1 text-xs text-white" /></div>
-                            <div><label className="text-[10px] text-gray-500 block">寬 (cm)</label><input type="number" value={room.w} onChange={e => updateRoom(room.id, 'w', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded px-2 py-1 text-xs text-white" /></div>
-                            <div><label className="text-[10px] text-gray-500 block">坪數</label><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-full bg-industrial-900 border border-industrial-500 rounded px-2 py-1 text-xs text-industrial-accent font-bold" /></div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {['top:頂樓', 'west:西曬', 'window:大窗', 'heat:熱源'].map(c => {
-                                const [key, label] = c.split(':');
-                                return (
-                                    <button key={key} onClick={() => toggleCondition(room.id, key)} className={`text-[10px] px-2 py-1 rounded border transition-colors ${room.conditions[key] ? 'bg-red-900/30 border-red-500 text-red-400' : 'bg-industrial-900 border-gray-700 text-gray-500'}`}>
-                                        {label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+            <div className="flex justify-between items-center"><h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="ruler" /> 空間負載計算</h3><button onClick={addRoom} className="text-xs bg-industrial-800 hover:bg-industrial-700 px-3 py-1.5 rounded border border-industrial-600">+ 新增房間</button></div>
+            <div className="space-y-3">{rooms.map((room, idx) => (
+                <div key={room.id} className="bg-industrial-800 p-4 rounded-xl border border-industrial-700 relative">
+                    <div className="flex justify-between mb-2"><input type="text" value={room.name} onChange={(e) => updateRoom(room.id, 'name', e.target.value)} className="bg-transparent text-industrial-accent font-bold text-sm w-20 border-b border-dashed border-gray-600 focus:border-industrial-accent outline-none" />{rooms.length > 1 && <button onClick={() => removeRoom(room.id)} className="text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4" /></button>}</div>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div><label className="text-[10px] text-gray-500 block">長 (cm)</label><input type="number" value={room.d} onChange={e => updateRoom(room.id, 'd', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded px-2 py-1 text-xs text-white" /></div>
+                        <div><label className="text-[10px] text-gray-500 block">寬 (cm)</label><input type="number" value={room.w} onChange={e => updateRoom(room.id, 'w', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded px-2 py-1 text-xs text-white" /></div>
+                        <div><label className="text-[10px] text-gray-500 block">坪數</label><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-full bg-industrial-900 border border-industrial-500 rounded px-2 py-1 text-xs text-industrial-accent font-bold" /></div>
                     </div>
-                ))}
-            </div>
-
-            <button onClick={calculate} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-black font-bold rounded-xl shadow-lg active:scale-95 transition-transform flex justify-center items-center gap-2"><Icon name="check" /> 開始計算配置</button>
-
-            {result && (
-                <div className="bg-industrial-900 p-4 rounded-xl border border-industrial-600 animate-slide-up">
-                    <div className="text-center mb-4">
-                        <span className="text-xs text-gray-400">總熱負載需求</span>
-                        <div className="text-3xl font-black text-white">{result.totalKw} <span className="text-sm font-normal text-gray-500">kW</span></div>
-                    </div>
-                    <div className="space-y-2 mb-4">
-                        {result.rooms.map((r, i) => (
-                            <div key={i} className="flex justify-between text-xs border-b border-gray-800 pb-1">
-                                <span className="text-gray-300">{r.name} ({r.ping}坪)</span>
-                                <div className="text-right">
-                                    <div className="text-industrial-accent font-bold">{r.reqKw} kW</div>
-                                    <div className="text-[9px] text-gray-500">{r.match}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="bg-industrial-800 p-3 rounded-lg border border-industrial-700">
-                        <span className="text-[10px] text-gray-400 block mb-1">建議室外機</span>
-                        {result.odu ? (
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm font-bold text-white">{result.odu.modelOdu}</span>
-                                <span className="text-xs bg-industrial-700 px-2 py-0.5 rounded text-gray-300">{result.odu.maxKw} kW</span>
-                            </div>
-                        ) : <span className="text-xs text-red-400">無單一主機可滿足，建議分拆系統</span>}
-                    </div>
+                    <div className="flex flex-wrap gap-2">{['top:頂樓', 'west:西曬', 'window:大窗', 'heat:熱源'].map(c => { const [key, label] = c.split(':'); return (<button key={key} onClick={() => toggleCondition(room.id, key)} className={`text-[10px] px-2 py-1 rounded border transition-colors ${room.conditions[key] ? 'bg-red-900/30 border-red-500 text-red-400' : 'bg-industrial-900 border-gray-700 text-gray-500'}`}>{label}</button>); })}</div>
                 </div>
-            )}
+            ))}</div>
+            <button onClick={calculate} className="w-full py-3 bg-industrial-accent hover:bg-yellow-500 text-black font-bold rounded-xl shadow-lg active:scale-95 transition-transform flex justify-center items-center gap-2"><Icon name="check" /> 開始計算配置</button>
+            {result && (<div className="bg-industrial-900 p-4 rounded-xl border border-industrial-600 animate-slide-up"><div className="text-center mb-4"><span className="text-xs text-gray-400">總熱負載需求</span><div className="text-3xl font-black text-white">{result.totalKw} <span className="text-sm font-normal text-gray-500">kW</span></div></div><div className="space-y-2 mb-4">{result.rooms.map((r, i) => (<div key={i} className="flex justify-between text-xs border-b border-gray-800 pb-1"><span className="text-gray-300">{r.name} ({r.ping}坪)</span><div className="text-right"><div className="text-industrial-accent font-bold">{r.reqKw} kW</div><div className="text-[9px] text-gray-500">{r.match}</div></div></div>))}</div><div className="bg-industrial-800 p-3 rounded-lg border border-industrial-700"><span className="text-[10px] text-gray-400 block mb-1">建議室外機</span>{result.odu ? (<div className="flex justify-between items-center"><span className="text-sm font-bold text-white">{result.odu.modelOdu}</span><span className="text-xs bg-industrial-700 px-2 py-0.5 rounded text-gray-300">{result.odu.maxKw} kW</span></div>) : <span className="text-xs text-red-400">無單一主機可滿足，建議分拆系統</span>}</div></div>)}
         </div>
     );
 };
 
-// 2. 物理降溫模擬
 const CoolingTimeCalculator = ({ state, setState }) => {
     const calculate = () => {
         if (!state.ping || !state.acKw) return;
@@ -132,10 +74,8 @@ const CoolingTimeCalculator = ({ state, setState }) => {
         const power = parseFloat(state.acKw);
         const seconds = energyNeeded / power;
         const minutes = Math.ceil(seconds / 60);
-        
         setState(p => ({ ...p, result: minutes }));
     };
-
     return (
         <div className="space-y-4 animate-fade-in">
             <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="thermometer" /> 降溫時間模擬</h3>
@@ -147,18 +87,11 @@ const CoolingTimeCalculator = ({ state, setState }) => {
                 <div className="col-span-2"><label className="text-[10px] text-gray-500">冷氣能力 (kW)</label><input type="number" value={state.acKw} onChange={e => setState({...state, acKw: e.target.value})} className="w-full bg-industrial-800 border-industrial-500 rounded text-industrial-accent font-bold p-2" /></div>
             </div>
             <button onClick={calculate} className="w-full py-3 bg-industrial-700 hover:bg-industrial-600 text-white font-bold rounded-xl shadow transition-colors">計算預估時間</button>
-            {state.result && (
-                <div className="text-center p-6 bg-industrial-900 rounded-xl border border-industrial-600">
-                    <span className="text-gray-400 text-xs">預計降溫時間</span>
-                    <div className="text-4xl font-black text-industrial-accent my-2">{state.result} <span className="text-sm">分鐘</span></div>
-                    <span className="text-gray-500 text-[10px]">此為物理理論值，未考慮熱源持續產生的狀況</span>
-                </div>
-            )}
+            {state.result && (<div className="text-center p-6 bg-industrial-900 rounded-xl border border-industrial-600"><span className="text-gray-400 text-xs">預計降溫時間</span><div className="text-4xl font-black text-industrial-accent my-2">{state.result} <span className="text-sm">分鐘</span></div><span className="text-gray-500 text-[10px]">此為物理理論值，未考慮熱源持續產生的狀況</span></div>)}
         </div>
     );
 };
 
-// 3. 吊隱式風管規劃
 const DuctedCalculator = ({ plans, setPlans, db }) => {
     const [searchKw, setSearchKw] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -172,24 +105,23 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
         if (!keyword) { setSearchResults([]); return; }
         const res = db.filter(item => 
             item.type.includes('吊隱') && 
-            (item.modelIdu.toLowerCase().includes(keyword.toLowerCase()) || item.series.includes(keyword) || item.brandCN.includes(keyword))
+            (item.modelIdu.toLowerCase().includes(keyword.toLowerCase()) || 
+             item.series.includes(keyword) || 
+             item.brandCN.includes(keyword))
         ).slice(0, 5);
         setSearchResults(res);
     };
 
     const selectModel = (machine) => {
-        const planIndex = plans.findIndex(p => p.id === activePlanId);
-        if (planIndex === -1) return;
-        const newPlans = [...plans];
-        const plan = newPlans[planIndex];
-        plan.brand = machine.brandCN;
-        plan.model = machine.modelIdu;
-        plan.kw = machine.maxKw;
-        if (machine.idu && machine.idu.flangeDims) {
-            const dims = machine.idu.flangeDims.match(/(\d+)\s*[x×X*]\s*(\d+)/);
-            if (dims) { plan.flangeW = dims[1]; plan.flangeH = dims[2]; } 
-            else { plan.flangeW = ''; plan.flangeH = ''; }
-        } else { plan.flangeW = ''; plan.flangeH = ''; }
+        const newPlans = plans.map(p => {
+            if (p.id !== activePlanId) return p;
+            let fw = '', fh = '';
+            if (machine.idu && machine.idu.flangeDims) {
+                const dims = machine.idu.flangeDims.match(/(\d+)\s*[x×X*]\s*(\d+)/);
+                if (dims) { fw = dims[1]; fh = dims[2]; }
+            }
+            return { ...p, brand: machine.brandCN, model: machine.modelIdu, kw: machine.maxKw, flangeW: fw, flangeH: fh };
+        });
         setPlans(newPlans);
         setSearchKw('');
         setSearchResults([]);
@@ -215,10 +147,7 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
 
     return (
         <div className="space-y-6 animate-fade-in pb-10">
-             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="box" /> 吊隱式出風口規劃</h3>
-                <button onClick={addPlan} className="text-xs bg-industrial-800 hover:bg-industrial-700 px-3 py-1.5 rounded border border-industrial-600">+ 新增機台</button>
-            </div>
+             <div className="flex justify-between items-center"><h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="box" /> 吊隱式出風口規劃</h3><button onClick={addPlan} className="text-xs bg-industrial-800 hover:bg-industrial-700 px-3 py-1.5 rounded border border-industrial-600">+ 新增機台</button></div>
             {plans.map((p, idx) => (
                 <div key={p.id} className="bg-industrial-800 p-5 rounded-xl border border-industrial-700 relative">
                      <div className="absolute top-3 right-3 text-industrial-800 font-black text-5xl opacity-20 pointer-events-none">{idx+1}</div>
@@ -245,7 +174,7 @@ const DuctedCalculator = ({ plans, setPlans, db }) => {
                         <div><label className="text-[10px] text-gray-500">冷房能力 (kW)</label><input type="number" value={p.kw} onChange={e => updatePlan(p.id, 'kw', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded p-2 text-white" placeholder="自帶數據" /></div>
                          <div><label className="text-[10px] text-gray-500">出風口數量</label><select value={p.outlets} onChange={e => updatePlan(p.id, 'outlets', e.target.value)} className="w-full bg-industrial-900 border border-gray-700 rounded p-2 text-white"><option value="1">1 (集中)</option><option value="2">2 (分流)</option><option value="3">3 (多點)</option></select></div>
                     </div>
-                    <button onClick={() => calculate(p.id)} className="w-full py-2 bg-industrial-700 hover:bg-industrial-600 text-gray-200 text-xs font-bold rounded mb-4">計算風速與建議尺寸</button>
+                    <button onClick={() => calculate(p.id)} className="w-full py-2 bg-industrial-700 hover:bg-industrial-600 text-gray-200 text-xs font-bold rounded mb-4">計算</button>
                     {p.result && (
                         <div className="bg-black/30 rounded p-3 text-xs space-y-1 border border-industrial-600/30">
                             <div className="flex justify-between"><span className="text-gray-400">估計總風量</span> <span className="text-white font-mono">{p.result.cmh} CMH</span></div>
