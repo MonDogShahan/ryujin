@@ -1,9 +1,13 @@
-// ================= data_hawrin.js (V13.73 華菱 160/142型 補完版) =================
+// ================= data_hawrin.js (V13.75 華菱全開究極版) =================
 // 品牌：華菱 Hawrin
-// 更新重點：
-// 1. [BHI/BHI-S] 壁掛系列追加 140, 160 型 (16.0kW)
-// 2. [DTR] 多聯式追加 112, 142 型 (14.0kW)
-// 3. [DNC/HSBF/TSI/HANR] 維持全級距收錄
+// 收錄範圍：
+// 1. DNC 旗艦潔淨 (2.3~11.0kW)
+// 2. BHI 精緻時尚 (2.3~16.0kW) - 含大能力
+// 3. BHI-S 精緻冷專 (2.3~16.0kW) - 含大能力
+// 4. HSBF 正壓吊隱 (2.8~16.0kW) - 含大能力
+// 5. TSI 四方吹 (5.0~16.0kW) - 含大能力
+// 6. HANR 窗型變頻 (2.3~7.2kW)
+// 7. DTR 多聯式 (5.0~14.2kW)
 
 // ------------------------------------------
 // 1. 旗艦潔淨系列 (DNC) - R32 冷暖 (2.3~11.0kW)
@@ -22,7 +26,7 @@ const HAWRIN_DNC_SERIES = [
 ];
 
 // ------------------------------------------
-// 2. 精緻時尚系列 (BHI) - R32 冷暖 (2.3~16.0kW) - 補齊140/160
+// 2. 精緻時尚系列 (BHI) - R32 冷暖 (2.3~16.0kW)
 // ------------------------------------------
 const HAWRIN_BHI_SERIES = [
     { id: 'hawrin-bhi-23', brandCN: '華菱', series: '精緻BHI', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.3, coolCap: '2.3', heatCap: '2.4', volts: '單相/220V', powerConn: '室外供電', currCool: '2.5', currHeat: '2.6', currMax: '4.5', startCurr: '2.5', powerCool: '450', powerHeat: '480', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '6.05', modelIdu: 'HP-23BHI', modelOdu: 'HPO-23BHI', pipes: '2分/3分', odu: { dims: '800×545×315', weight: '28', footSpacing: '545×315' }, idu: { dims: '820×300×225', weight: '10.0' } },
@@ -40,7 +44,7 @@ const HAWRIN_BHI_SERIES = [
 ];
 
 // ------------------------------------------
-// 3. 精緻超值系列 (BHI-S) - R32 冷專 (2.3~16.0kW) - 補齊140/160
+// 3. 精緻超值系列 (BHI-S) - R32 冷專 (2.3~16.0kW)
 // ------------------------------------------
 const HAWRIN_BHI_S_SERIES = [
     { id: 'hawrin-bhis-23', brandCN: '華菱', series: '精緻冷專', func: '冷專', type: '壁掛式', refrigerant: 'R32', maxKw: 2.3, coolCap: '2.3', heatCap: '-', volts: '單相/220V', powerConn: '室外供電', currCool: '2.5', currHeat: '-', currMax: '4.5', startCurr: '2.5', powerCool: '450', powerHeat: '-', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '6.05', modelIdu: 'HP-23BHI-S', modelOdu: 'HPO-23BHI-S', pipes: '2分/3分', odu: { dims: '800×545×315', weight: '28', footSpacing: '545×315' }, idu: { dims: '820×300×225', weight: '10.0' } },
@@ -75,7 +79,7 @@ const HAWRIN_HSBF_SERIES = [
 ];
 
 // ------------------------------------------
-// 5. 四方吹系列 (TSI) - 商用冷暖
+// 5. 四方吹系列 (TSI) - 商用冷暖 (含16.0kW)
 // ------------------------------------------
 const HAWRIN_TSI_SERIES = [
     { id: 'hawrin-tsi-50', brandCN: '華菱', series: '四方吹', func: '冷暖', type: '四方吹', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '5.2', volts: '單相/220V', powerConn: '室外供電', currCool: '6.5', currHeat: '6.8', currMax: '11.5', startCurr: '6.5', powerCool: '1450', powerHeat: '1500', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '5.60', modelIdu: 'DT-50TSI', modelOdu: 'DTO-50TSI', pipes: '2分/4分', odu: { dims: '825×655×325', weight: '42', footSpacing: '540×335' }, idu: { dims: '570×570×260', weight: '18', flangeDims: '-' } },
