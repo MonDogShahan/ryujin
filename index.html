@@ -11,9 +11,17 @@
             theme: {
                 extend: {
                     colors: {
-                        // 使用深色半透明基底
-                        glass: { 100: 'rgba(255,255,255,0.1)', 200: 'rgba(255,255,255,0.2)', 800: 'rgba(30,41,59,0.7)', 900: 'rgba(15,23,42,0.8)' },
-                        industrial: { 50:'#f5f7fa',100:'#e4e7eb',800:'#323f4b',900:'#1f2933',950:'#111827', accent:'#fbbf24' },
+                        // 玻璃質感配色
+                        glass: { 
+                            100: 'rgba(255,255,255,0.1)', 
+                            200: 'rgba(255,255,255,0.2)', 
+                            800: 'rgba(30,41,59,0.7)', 
+                            900: 'rgba(15,23,42,0.8)' 
+                        },
+                        industrial: { 
+                            50:'#f5f7fa',100:'#e4e7eb',800:'#323f4b',900:'#1f2933',950:'#111827', 
+                            accent:'#fbbf24' // 琥珀黃
+                        },
                         cool: { 500:'#3b82f6', 900:'#1e3a8a' },
                         heat: { 500:'#ef4444' }
                     },
@@ -22,9 +30,24 @@
             }
         }
     </script>
+    
     <style>
-        body { background-color: #0f172a; color: #f5f7fa; background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); }
-        .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { 
+            background-color: #0f172a; 
+            color: #f5f7fa; 
+            /* 恢復深色放射狀漸層背景，營造玻璃質感 */
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        /* 玻璃面板共用樣式 */
+        .glass-panel { 
+            background: rgba(30, 41, 59, 0.6); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
@@ -34,12 +57,12 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
+    <div id="error-msg" style="color:red; padding:20px; display:none; text-align:center;"></div>
 
     <script src="data_hitachi.js"></script>
     <script src="data_daikin.js"></script>
@@ -50,10 +73,26 @@
 
     <script>
         window.AC_DATABASE = [];
-        const checkList = ['DATA_HITACHI', 'DATA_DAIKIN', 'DATA_MITSUBISHI', 'DATA_FUJITSU', 'DATA_PANASONIC', 'DATA_HAWRIN'];
-        checkList.forEach(name => {
-            if (window[name]) window.AC_DATABASE.push(...window[name]);
+        // 嘗試讀取所有品牌變數
+        const brands = [
+            'DATA_HITACHI', 'DATA_DAIKIN', 'DATA_MITSUBISHI', 
+            'DATA_FUJITSU', 'DATA_PANASONIC', 'DATA_HAWRIN'
+        ];
+        
+        brands.forEach(name => {
+            if (window[name]) {
+                window.AC_DATABASE.push(...window[name]);
+            } else {
+                console.warn(`${name} 未載入，請確認檔案名稱與變數是否正確`);
+            }
         });
+
+        // 全域錯誤捕捉
+        window.onerror = function(message, source, lineno, colno, error) {
+            const el = document.getElementById('error-msg');
+            el.style.display = 'block';
+            el.innerHTML = `<h3>⚠️ 系統發生錯誤</h3><p>${message}</p><p>Line: ${lineno}</p>`;
+        };
     </script>
 
     <script type="text/babel" src="components.js"></script>
