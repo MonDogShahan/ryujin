@@ -1,34 +1,29 @@
-// ================= data_panasonic.js (V13.74 國際牌全系列究極版) =================
-// 品牌：國際牌 Panasonic
-// 收錄範圍：
-// 1. VX 極致旗艦 (22~125)
-// 2. UX 頂級旗艦 (22~160)
-// 3. UX 頂級旗艦-落地改裝 (22~28 FDA2)
-// 4. UJ 精緻 (22~110)
-// 5. UK/U 標準 (22~160)
-// 6. Y 舒適 (22~71)
-// 7. SX 超薄隱藏 (22~125)
-// 8. J 標準隱藏 (22~160)
+// ================= data_panasonic.js (V13.75 國際牌 2026 全系列究極版) =================
+// 更新重點：
+// 1. 收錄 2026 新年式 VX/UX/UJ/UK/Y/SX/J 全系列
+// 2. 補齊 2.2kW ~ 16.0kW 全級距
+// 3. 補齊 UX 落地型 (FDA2)
+// 4. 完整機電規格 (含法蘭尺寸、電流、NFB)
 
 // ------------------------------------------
-// 1. VX 極致旗艦系列 (CS-VX) - R32 冷暖 (2.2~12.5kW)
+// 1. VX 極致旗艦系列 (CS-VX) - 2.2~12.5kW
 // ------------------------------------------
 const PANASONIC_VX_SERIES = [
-    { id: 'pana-vx-22', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '1.3', currHeat: '1.9', currMax: '4.5', startCurr: '1.3', powerCool: '310', powerHeat: '400', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '9.12', modelIdu: 'CS-VX22FA2', modelOdu: 'CU-UX22FHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '315×820×250', weight: '12.0' } },
-    { id: 'pana-vx-28', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', volts: '單相/220V', powerConn: '室外供電', currCool: '1.9', currHeat: '2.6', currMax: '6.0', startCurr: '1.9', powerCool: '430', powerHeat: '540', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.67', modelIdu: 'CS-VX28FA2', modelOdu: 'CU-UX28FHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '315×820×250', weight: '12.0' } },
-    { id: 'pana-vx-36', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '3.8', volts: '單相/220V', powerConn: '室外供電', currCool: '2.8', currHeat: '3.2', currMax: '7.5', startCurr: '2.8', powerCool: '650', powerHeat: '700', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.25', modelIdu: 'CS-VX36FA2', modelOdu: 'CU-UX36FHA2', pipes: '2分/3分', odu: { dims: '666×860×289', weight: '37', footSpacing: '540×290' }, idu: { dims: '315×980×250', weight: '14.0' } },
-    { id: 'pana-vx-40', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '4.5', volts: '單相/220V', powerConn: '室外供電', currCool: '3.5', currHeat: '4.0', currMax: '9.0', startCurr: '3.5', powerCool: '809', powerHeat: '880', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.00', modelIdu: 'CS-VX40FA2', modelOdu: 'CU-UX40FHA2', pipes: '2分/3分', odu: { dims: '666×860×289', weight: '37', footSpacing: '540×290' }, idu: { dims: '315×980×250', weight: '14.0' } },
-    { id: 'pana-vx-50', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '5.6', volts: '單相/220V', powerConn: '室外供電', currCool: '4.8', currHeat: '5.8', currMax: '11.5', startCurr: '4.8', powerCool: '1050', powerHeat: '1280', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '7.97', modelIdu: 'CS-VX50FA2', modelOdu: 'CU-UX50FHA2', pipes: '2分/4分', odu: { dims: '666×860×289', weight: '42', footSpacing: '540×330' }, idu: { dims: '315×1080×250', weight: '16.0' } },
-    { id: 'pana-vx-63', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.2', volts: '單相/220V', powerConn: '室外供電', currCool: '6.8', currHeat: '7.9', currMax: '14.5', startCurr: '6.8', powerCool: '1500', powerHeat: '1750', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '7.18', modelIdu: 'CS-VX63FA2', modelOdu: 'CU-UX63FHA2', pipes: '2分/4分', odu: { dims: '795×880×340', weight: '48', footSpacing: '540×370' }, idu: { dims: '315×1080×250', weight: '16.0' } },
-    { id: 'pana-vx-71', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', volts: '單相/220V', powerConn: '室外供電', currCool: '8.5', currHeat: '9.5', currMax: '16.5', startCurr: '8.5', powerCool: '1850', powerHeat: '2100', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '7.00', modelIdu: 'CS-VX71FA2', modelOdu: 'CU-UX71FHA2', pipes: '2分/5分', odu: { dims: '795×880×340', weight: '53', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
-    { id: 'pana-vx-80', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '9.1', volts: '單相/220V', powerConn: '室外供電', currCool: '9.8', currHeat: '10.8', currMax: '18.0', startCurr: '9.8', powerCool: '2160', powerHeat: '2380', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '6.88', modelIdu: 'CS-VX80FA2', modelOdu: 'CU-UX80FHA2', pipes: '2分/5分', odu: { dims: '920×880×340', weight: '56', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
-    { id: 'pana-vx-90', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.5', volts: '單相/220V', powerConn: '室外供電', currCool: '11.5', currHeat: '12.5', currMax: '20.0', startCurr: '11.5', powerCool: '2550', powerHeat: '2750', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '6.63', modelIdu: 'CS-VX90FA2', modelOdu: 'CU-UX90FHA2', pipes: '2分/5分', odu: { dims: '920×880×340', weight: '58', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
-    { id: 'pana-vx-110', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 11.0, coolCap: '11.0', heatCap: '13.5', volts: '單相/220V', powerConn: '室外供電', currCool: '14.0', currHeat: '15.0', currMax: '22.0', startCurr: '14.0', powerCool: '3000', powerHeat: '3300', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '6.05', modelIdu: 'CS-VX110FA2', modelOdu: 'CU-UX110FHA2', pipes: '3分/5分', odu: { dims: '955×1100×370', weight: '76', footSpacing: '570×390' }, idu: { dims: '335×1280×250', weight: '19.0' } },
-    { id: 'pana-vx-125', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 12.5, coolCap: '12.5', heatCap: '14.0', volts: '單相/220V', powerConn: '室外供電', currCool: '17.0', currHeat: '18.0', currMax: '25.0', startCurr: '17.0', powerCool: '3800', powerHeat: '4000', breaker: '50A', powerWire: '14.0mm²', signalWire: '2.0mm²×4C', cspf: '5.35', modelIdu: 'CS-VX125FA2', modelOdu: 'CU-UX125FHA2', pipes: '3分/5分', odu: { dims: '955×1100×370', weight: '76', footSpacing: '570×390' }, idu: { dims: '335×1280×250', weight: '19.0' } }
+    { id: 'pana-vx-22', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '1.3', currHeat: '1.9', currMax: '4.5', startCurr: '1.3', powerCool: '310', powerHeat: '400', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '9.12', modelIdu: 'CS-VX22FA2', modelOdu: 'CU-VX22FHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '315×820×250', weight: '12.0' } },
+    { id: 'pana-vx-28', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.8, coolCap: '2.8', heatCap: '3.4', volts: '單相/220V', powerConn: '室外供電', currCool: '1.9', currHeat: '2.6', currMax: '6.0', startCurr: '1.9', powerCool: '430', powerHeat: '540', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.67', modelIdu: 'CS-VX28FA2', modelOdu: 'CU-VX28FHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '315×820×250', weight: '12.0' } },
+    { id: 'pana-vx-36', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 3.6, coolCap: '3.6', heatCap: '3.8', volts: '單相/220V', powerConn: '室外供電', currCool: '2.8', currHeat: '3.2', currMax: '7.5', startCurr: '2.8', powerCool: '650', powerHeat: '700', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.25', modelIdu: 'CS-VX36FA2', modelOdu: 'CU-VX36FHA2', pipes: '2分/3分', odu: { dims: '666×860×289', weight: '37', footSpacing: '540×290' }, idu: { dims: '315×980×250', weight: '14.0' } },
+    { id: 'pana-vx-40', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 4.1, coolCap: '4.1', heatCap: '4.5', volts: '單相/220V', powerConn: '室外供電', currCool: '3.5', currHeat: '4.0', currMax: '9.0', startCurr: '3.5', powerCool: '809', powerHeat: '880', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.00', modelIdu: 'CS-VX40FA2', modelOdu: 'CU-VX40FHA2', pipes: '2分/3分', odu: { dims: '666×860×289', weight: '37', footSpacing: '540×290' }, idu: { dims: '315×980×250', weight: '14.0' } },
+    { id: 'pana-vx-50', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 5.0, coolCap: '5.0', heatCap: '5.6', volts: '單相/220V', powerConn: '室外供電', currCool: '4.8', currHeat: '5.8', currMax: '11.5', startCurr: '4.8', powerCool: '1050', powerHeat: '1280', breaker: '20A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '7.97', modelIdu: 'CS-VX50FA2', modelOdu: 'CU-VX50FHA2', pipes: '2分/4分', odu: { dims: '666×860×289', weight: '42', footSpacing: '540×330' }, idu: { dims: '315×1080×250', weight: '16.0' } },
+    { id: 'pana-vx-63', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 6.3, coolCap: '6.3', heatCap: '7.2', volts: '單相/220V', powerConn: '室外供電', currCool: '6.8', currHeat: '7.9', currMax: '14.5', startCurr: '6.8', powerCool: '1500', powerHeat: '1750', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '7.18', modelIdu: 'CS-VX63FA2', modelOdu: 'CU-VX63FHA2', pipes: '2分/4分', odu: { dims: '795×880×340', weight: '48', footSpacing: '540×370' }, idu: { dims: '315×1080×250', weight: '16.0' } },
+    { id: 'pana-vx-71', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 7.2, coolCap: '7.2', heatCap: '8.0', volts: '單相/220V', powerConn: '室外供電', currCool: '8.5', currHeat: '9.5', currMax: '16.5', startCurr: '8.5', powerCool: '1850', powerHeat: '2100', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '7.00', modelIdu: 'CS-VX71FA2', modelOdu: 'CU-VX71FHA2', pipes: '2分/5分', odu: { dims: '795×880×340', weight: '53', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
+    { id: 'pana-vx-80', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.0, coolCap: '8.0', heatCap: '9.1', volts: '單相/220V', powerConn: '室外供電', currCool: '9.8', currHeat: '10.8', currMax: '18.0', startCurr: '9.8', powerCool: '2160', powerHeat: '2380', breaker: '30A', powerWire: '5.5mm²', signalWire: '2.0mm²×4C', cspf: '6.88', modelIdu: 'CS-VX80FA2', modelOdu: 'CU-VX80FHA2', pipes: '2分/5分', odu: { dims: '920×880×340', weight: '56', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
+    { id: 'pana-vx-90', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 8.7, coolCap: '8.7', heatCap: '9.5', volts: '單相/220V', powerConn: '室外供電', currCool: '11.5', currHeat: '12.5', currMax: '20.0', startCurr: '11.5', powerCool: '2550', powerHeat: '2750', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '6.63', modelIdu: 'CS-VX90FA2', modelOdu: 'CU-VX90FHA2', pipes: '2分/5分', odu: { dims: '920×880×340', weight: '58', footSpacing: '540×370' }, idu: { dims: '335×1280×250', weight: '18.0' } },
+    { id: 'pana-vx-110', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 11.0, coolCap: '11.0', heatCap: '13.5', volts: '單相/220V', powerConn: '室外供電', currCool: '14.0', currHeat: '15.0', currMax: '22.0', startCurr: '14.0', powerCool: '3000', powerHeat: '3300', breaker: '40A', powerWire: '8.0mm²', signalWire: '2.0mm²×4C', cspf: '6.05', modelIdu: 'CS-VX110FA2', modelOdu: 'CU-VX110FHA2', pipes: '3分/5分', odu: { dims: '955×1100×370', weight: '76', footSpacing: '570×390' }, idu: { dims: '335×1280×250', weight: '19.0' } },
+    { id: 'pana-vx-125', brandCN: '國際牌', series: 'VX極致', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 12.5, coolCap: '12.5', heatCap: '14.0', volts: '單相/220V', powerConn: '室外供電', currCool: '17.0', currHeat: '18.0', currMax: '25.0', startCurr: '17.0', powerCool: '3800', powerHeat: '4000', breaker: '50A', powerWire: '14.0mm²', signalWire: '2.0mm²×4C', cspf: '5.35', modelIdu: 'CS-VX125FA2', modelOdu: 'CU-VX125FHA2', pipes: '3分/5分', odu: { dims: '955×1100×370', weight: '76', footSpacing: '570×390' }, idu: { dims: '335×1280×250', weight: '19.0' } }
 ];
 
 // ------------------------------------------
-// 2. UX 頂級旗艦系列 (CS-UX) - R32 冷暖 (2.2~16.0kW)
+// 2. UX 頂級旗艦系列 (CS-UX) - 2.2~16.0kW
 // ------------------------------------------
 const PANASONIC_UX_SERIES = [
     { id: 'pana-ux-22', brandCN: '國際牌', series: 'UX頂級', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '1.5', currHeat: '2.0', currMax: '4.5', startCurr: '1.5', powerCool: '320', powerHeat: '420', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.30', modelIdu: 'CS-UX22FA2', modelOdu: 'CU-UX22FHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '315×820×250', weight: '10.0' } },
@@ -47,7 +42,7 @@ const PANASONIC_UX_SERIES = [
 ];
 
 // ------------------------------------------
-// 3. UX 頂級旗艦-落地改裝 (CS-UX-FDA2) - R32 冷暖
+// 3. UX 頂級旗艦-落地改裝 (CS-UX-FDA2)
 // ------------------------------------------
 const PANASONIC_UX_CONSOLE_SERIES = [
     { id: 'pana-ux-22-fd', brandCN: '國際牌', series: 'UX落地', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '1.5', currHeat: '2.0', currMax: '4.5', startCurr: '1.5', powerCool: '320', powerHeat: '420', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '8.30', modelIdu: 'CS-UX22FDA2', modelOdu: 'CU-UX22FDHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '30', footSpacing: '540×290' }, idu: { dims: '600×750×290', weight: '14.0' } },
@@ -55,7 +50,7 @@ const PANASONIC_UX_CONSOLE_SERIES = [
 ];
 
 // ------------------------------------------
-// 4. UJ 精緻系列 (CS-UJ) - R32 冷暖 (2.2~11.0kW)
+// 4. UJ 精緻系列 (CS-UJ) - 2.2~11.0kW
 // ------------------------------------------
 const PANASONIC_UJ_SERIES = [
     { id: 'pana-uj-22', brandCN: '國際牌', series: 'UJ精緻', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.0', currHeat: '2.3', currMax: '4.5', startCurr: '2.0', powerCool: '420', powerHeat: '490', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '7.20', modelIdu: 'CS-UJ22BA2', modelOdu: 'CU-UJ22BHA2', pipes: '2分/3分', odu: { dims: '582×780×289', weight: '28', footSpacing: '540×290' }, idu: { dims: '295×798×241', weight: '9.0' } },
@@ -71,7 +66,7 @@ const PANASONIC_UJ_SERIES = [
 ];
 
 // ------------------------------------------
-// 5. UK/U 標準系列 (CS-UK/CS-U) - R32 冷專/冷暖 (2.2~16.0kW)
+// 5. UK/U 標準系列 (CS-UK/CS-U) - 2.2~16.0kW
 // ------------------------------------------
 const PANASONIC_UK_SERIES = [
     { id: 'pana-uk-22', brandCN: '國際牌', series: 'UK標準', func: '冷暖', type: '壁掛式', refrigerant: 'R32', maxKw: 2.2, coolCap: '2.2', heatCap: '2.7', volts: '單相/220V', powerConn: '室外供電', currCool: '2.5', currHeat: '2.8', currMax: '4.5', startCurr: '2.5', powerCool: '480', powerHeat: '550', breaker: '15A', powerWire: '3.5mm²', signalWire: '2.0mm²×4C', cspf: '6.50', modelIdu: 'CS-UK22BA2', modelOdu: 'CU-UK22BHA2', pipes: '2分/3分', odu: { dims: '540×780×289', weight: '28', footSpacing: '540×290' }, idu: { dims: '295×798×241', weight: '8.0' } },
