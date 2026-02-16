@@ -35,7 +35,7 @@
         body { 
             background-color: #0f172a; 
             color: #f5f7fa; 
-            /* 恢復深色放射狀漸層背景，營造玻璃質感 */
+            /* 深色放射狀漸層背景 */
             background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent; 
@@ -73,25 +73,30 @@
 
     <script>
         window.AC_DATABASE = [];
-        // 嘗試讀取所有品牌變數
+        // 這裡設定所有要讀取的變數名稱
         const brands = [
-            'DATA_HITACHI', 'DATA_DAIKIN', 'DATA_MITSUBISHI', 
-            'DATA_FUJITSU', 'DATA_PANASONIC', 'DATA_HAWRIN'
+            'DATA_HITACHI', 
+            'DATA_DAIKIN', 
+            'DATA_MITSUBISHI', 'DATA_MHI', // 兼容兩種三菱變數名
+            'DATA_FUJITSU', 
+            'DATA_PANASONIC', 
+            'DATA_HAWRIN'
         ];
         
         brands.forEach(name => {
             if (window[name]) {
                 window.AC_DATABASE.push(...window[name]);
-            } else {
-                console.warn(`${name} 未載入，請確認檔案名稱與變數是否正確`);
+                console.log(`✅ ${name} 載入成功`);
             }
         });
 
-        // 全域錯誤捕捉
+        console.log(`總共載入機型數量: ${window.AC_DATABASE.length}`);
+
+        // 全域錯誤捕捉，如果還是白屏會顯示錯誤
         window.onerror = function(message, source, lineno, colno, error) {
             const el = document.getElementById('error-msg');
             el.style.display = 'block';
-            el.innerHTML = `<h3>⚠️ 系統發生錯誤</h3><p>${message}</p><p>Line: ${lineno}</p>`;
+            el.innerHTML += `<h3>⚠️ 系統發生錯誤</h3><p>${message}</p><p>Line: ${lineno}</p><hr>`;
         };
     </script>
 
