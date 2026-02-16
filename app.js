@@ -1,44 +1,32 @@
-// ================= 4. 主程式 (App) V13.56 搜尋自動收合版 =================
+// ================= 4. 主程式 (App) V13.80 穩定版 =================
 
-// 定義 React 核心功能
 const { useState, useEffect, useRef, useMemo } = React;
 
-// 確保讀取到全域資料庫
+// 安全讀取資料庫，防止白屏
 const AC_DATABASE = window.AC_DATABASE || [];
 
 const App = () => {
     const [activeTab, setActiveTab] = useState('search');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
-    // 搜尋功能狀態
-    const [searchState, setSearchState] = useState({ 
-        brand: '不拘', series: '不拘', func: '不拘', type: '不拘', 
-        keyword: '', results: [], history: [] 
-    });
-    
-    // ★★★ 新增：控制搜尋面板展開/收合 ★★★
-    const [isSearchExpanded, setIsSearchExpanded] = useState(true);
-
+    // 搜尋狀態
+    const [searchState, setSearchState] = useState({ brand: '不拘', series: '不拘', func: '不拘', type: '不拘', keyword: '', results: [], history: [] });
+    const [isSearchExpanded, setIsSearchExpanded] = useState(true); // 搜尋面板收合狀態
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSpecGroup, setSelectedSpecGroup] = useState(null);
 
-    // 用於控制搜尋結果捲動的 Ref
     const resultsRef = useRef(null);
 
-    // 當搜尋結果改變時，自動捲動到頂部
-    useEffect(() => {
-        if (resultsRef.current) {
-            resultsRef.current.scrollTop = 0;
-        }
-    }, [searchState.results]);
-
-    // 計算機狀態 (維持不變)
+    // 計算機狀態
     const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', ping: '', conditions: {}, kw: 0 }]);
     const [capacityResult, setCapacityResult] = useState(null);
     const [ductedPlans, setDuctedPlans] = useState([{ id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', outlets: 1, result: null }]);
     const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', result: null });
 
     useEffect(() => { const saved = localStorage.getItem('searchHistory'); if (saved) setSearchState(p => ({ ...p, history: JSON.parse(saved) })); }, []);
+
+    // 搜尋後自動捲動
+    useEffect(() => { if (resultsRef.current) resultsRef.current.scrollTop = 0; }, [searchState.results]);
 
     const availableSeries = useMemo(() => {
         if (searchState.brand === '不拘') return ['不拘'];
@@ -47,16 +35,13 @@ const App = () => {
 
     const typeOptions = ['不拘', '壁掛式', '吊隱式', '四方吹', '窗型', '室外機(家用)', '室外機(商用)'];
 
-    // 搜尋核心邏輯
     const getFilteredResults = (kw) => {
         const k = kw ? kw.trim().toLowerCase() : '';
-        
         return AC_DATABASE.filter(i => {
             if (searchState.brand !== '不拘' && i.brandCN !== searchState.brand) return false;
             if (searchState.series !== '不拘' && i.series !== searchState.series) return false;
             if (searchState.func !== '不拘' && i.func !== searchState.func) return false;
             if (searchState.type !== '不拘' && i.type !== searchState.type) return false;
-            
             if (k) {
                 const numStr = k.replace(/[^0-9.]/g, ''); 
                 let isCapacityMatch = false;
@@ -67,8 +52,7 @@ const App = () => {
                     else if (searchNum >= 20 && Math.abs(machineCap - (searchNum / 10)) <= 0.2) isCapacityMatch = true;
                 }
                 const targetText = `${i.brandCN} ${i.series} ${i.modelIdu} ${i.modelOdu}`.toLowerCase();
-                const isTextMatch = targetText.includes(k);
-                return isTextMatch || isCapacityMatch;
+                return targetText.includes(k) || isCapacityMatch;
             }
             return true;
         });
@@ -89,9 +73,7 @@ const App = () => {
             return { ...p, results: grouped.sort((a,b) => a.maxKw - b.maxKw), history: newHistory };
         });
         setShowHistory(false);
-        
-        // ★★★ 關鍵修改：搜尋後自動收合面板 ★★★
-        setIsSearchExpanded(false);
+        setIsSearchExpanded(false); // 搜尋後自動收合
     };
     
     const suggestions = useMemo(() => {
@@ -110,7 +92,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative bg-industrial-950 pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.56</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full dragon-logo-box flex items-center justify-center text-yellow-400"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 drop-shadow-[0_0_5px_rgba(251,191,36,0.8)]"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic dragon-title tracking-tight pr-3 whitespace-nowrap">龍神空調幫手</h1></div><span className="text-[9px] font-bold dragon-subtitle">PROFESSIONAL V13.80</span></div>
                 <div className="z-20"><div className="text-[10px] bg-slate-800 px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono">PRO</div></div><div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-full bg-blue-500/10 blur-xl pointer-events-none"></div>
             </header>
 
@@ -119,31 +101,11 @@ const App = () => {
             <main className="flex-1 max-w-md mx-auto w-full p-4 flex flex-col h-full overflow-hidden">
                 {activeTab === 'search' && (
                     <div className="animate-fade-in flex flex-col h-full">
-                        {/* ★★★ 搜尋面板 (可收合) ★★★ */}
                         <div className={`bg-industrial-800 rounded-xl border border-industrial-700 shadow-inner mb-4 transition-all duration-300 shrink-0 overflow-hidden`}>
-                            
-                            {/* 面板標題列 (點擊切換) */}
-                            <div 
-                                onClick={() => setIsSearchExpanded(!isSearchExpanded)}
-                                className="flex items-center justify-between px-4 py-3 cursor-pointer bg-industrial-800 hover:bg-industrial-750 transition-colors"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Icon name="search" className="w-4 h-4 text-industrial-accent" />
-                                    <span className="text-sm font-bold text-white tracking-wide">
-                                        {isSearchExpanded ? '搜尋條件設定' : `${searchState.brand} / ${searchState.series}`}
-                                    </span>
-                                    {!isSearchExpanded && searchState.keyword && (
-                                        <span className="text-xs bg-industrial-900 text-gray-400 px-2 py-0.5 rounded-full border border-industrial-700">
-                                            {searchState.keyword}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className={`text-gray-500 transition-transform duration-300 ${isSearchExpanded ? 'rotate-180' : ''}`}>
-                                    <Icon name="chevron" className="w-4 h-4" />
-                                </div>
+                            <div onClick={() => setIsSearchExpanded(!isSearchExpanded)} className="flex items-center justify-between px-4 py-3 cursor-pointer bg-industrial-800 hover:bg-industrial-750 transition-colors">
+                                <div className="flex items-center gap-2"><Icon name="search" className="w-4 h-4 text-industrial-accent" /><span className="text-sm font-bold text-white tracking-wide">{isSearchExpanded ? '搜尋條件設定' : `${searchState.brand} / ${searchState.series}`}</span>{!isSearchExpanded && searchState.keyword && (<span className="text-xs bg-industrial-900 text-gray-400 px-2 py-0.5 rounded-full border border-industrial-700">{searchState.keyword}</span>)}</div>
+                                <div className={`text-gray-500 transition-transform duration-300 ${isSearchExpanded ? 'rotate-180' : ''}`}><Icon name="chevron" className="w-4 h-4" /></div>
                             </div>
-
-                            {/* 折疊內容區 */}
                             <div className={`px-4 transition-all duration-300 ease-in-out ${isSearchExpanded ? 'max-h-[500px] opacity-100 pb-4' : 'max-h-0 opacity-0 pb-0'}`}>
                                 <div className="grid grid-cols-2 gap-4 mt-2"><FilterSelect label="品牌" value={searchState.brand} options={['不拘', '日立', '大金', '三菱重工', '國際牌', '富士通', '華菱']} onChange={v => setSearchState(p => ({...p, brand: v, series: '不拘'}))} /><FilterSelect label="系列" value={searchState.series} options={availableSeries} onChange={v => setSearchState(p => ({...p, series: v}))} /></div>
                                 <div className="grid grid-cols-2 gap-4 mt-4"><FilterSelect label="功能" value={searchState.func} options={['不拘', '冷暖', '冷專']} onChange={v => setSearchState(p => ({...p, func: v}))} /><FilterSelect label="型式" value={searchState.type} options={typeOptions} onChange={v => setSearchState(p => ({...p, type: v}))} /></div>
@@ -157,19 +119,12 @@ const App = () => {
                                 <button onClick={executeSearch} className="w-full mt-4 py-3 bg-industrial-accent hover:bg-yellow-500 text-white font-bold rounded-lg shadow-lg active:scale-95 text-sm flex justify-center items-center gap-2"><Icon name="search" className="w-4 h-4" /> 執行搜尋</button>
                             </div>
                         </div>
-                        
-                        {/* 搜尋結果列表 (自動填滿剩餘高度) */}
-                        <div 
-                            ref={resultsRef}
-                            className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1 pb-20" 
-                        >
+                        <div ref={resultsRef} className="flex-1 overflow-y-auto custom-scroll space-y-3 pr-1 pb-20">
                             {searchState.results.map((g, i) => <ResultCard key={i} group={g} onClick={(group, currentFunc) => setSelectedSpecGroup({ ...group, initialFunc: currentFunc })} />)}
                             {searchState.results.length === 0 && <div className="text-center text-gray-500 py-10">請選擇條件並執行搜尋</div>}
                         </div>
                     </div>
                 )}
-                
-                {/* 其他 Tab 內容 */}
                 {activeTab === 'capacity' && window.Calculators && <window.Calculators.MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
                 {activeTab === 'cooling' && window.Calculators && <window.Calculators.CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
                 {activeTab === 'ducted' && window.Calculators && <window.Calculators.DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} db={AC_DATABASE} />}
