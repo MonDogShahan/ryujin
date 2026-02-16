@@ -3,17 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神空調幫手 (2026 專業版)</title>
+    <title>龍神空調幫手 Professional</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: { industrial: { 50:'#f5f7fa',100:'#e4e7eb',800:'#323f4b',900:'#1f2933',950:'#111827', accent:'#fbbf24' }, cool:{500:'#3b82f6',900:'#1e3a8a'}, heat:{500:'#ef4444'} } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // 使用深色半透明基底
+                        glass: { 100: 'rgba(255,255,255,0.1)', 200: 'rgba(255,255,255,0.2)', 800: 'rgba(30,41,59,0.7)', 900: 'rgba(15,23,42,0.8)' },
+                        industrial: { 50:'#f5f7fa',100:'#e4e7eb',800:'#323f4b',900:'#1f2933',950:'#111827', accent:'#fbbf24' },
+                        cool: { 500:'#3b82f6', 900:'#1e3a8a' },
+                        heat: { 500:'#ef4444' }
+                    },
+                    backdropBlur: { xs: '2px' }
+                }
+            }
+        }
     </script>
-    <style>body{background:#111827;color:#f5f7fa} .custom-scroll::-webkit-scrollbar{width:6px;height:6px} .custom-scroll::-webkit-scrollbar-thumb{background:#4b5563;border-radius:3px}</style>
-    
+    <style>
+        body { background-color: #0f172a; color: #f5f7fa; background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); }
+        .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+    </style>
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
@@ -28,21 +51,9 @@
     <script>
         window.AC_DATABASE = [];
         const checkList = ['DATA_HITACHI', 'DATA_DAIKIN', 'DATA_MITSUBISHI', 'DATA_FUJITSU', 'DATA_PANASONIC', 'DATA_HAWRIN'];
-        
-        console.log("🔄 開始載入資料庫...");
-        
         checkList.forEach(name => {
-            if (window[name]) {
-                window.AC_DATABASE.push(...window[name]);
-                console.log(`✅ ${name} 載入成功`);
-            } else {
-                console.warn(`⚠️ ${name} 未找到 (可能是檔案不存在或變數名稱錯誤)`);
-            }
+            if (window[name]) window.AC_DATABASE.push(...window[name]);
         });
-
-        if (window.AC_DATABASE.length === 0) {
-            document.body.innerHTML = '<h2 style="color:red;padding:20px;">❌ 嚴重錯誤：讀取不到任何空調資料。<br>請檢查 data_*.js 檔案是否存在，或按 F12 看 Console 錯誤訊息。</h2>';
-        }
     </script>
 
     <script type="text/babel" src="components.js"></script>
