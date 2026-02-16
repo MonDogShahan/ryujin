@@ -1,4 +1,5 @@
-// ================= app.js (V13.85 穩定修復版) =================
+// ================= app.js (V13.86 去除封裝修復版) =================
+// 確保變數直接使用 window.xxx 讀取，避免作用域問題
 
 var { useState, useEffect, useRef, useMemo } = React;
 var AC_DATABASE = window.AC_DATABASE || [];
@@ -91,7 +92,7 @@ const App = () => {
         <div className="min-h-screen flex flex-col font-sans select-none relative pb-20">
             <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden glass-panel border-b-0 border-white/5 rounded-b-2xl mx-2 mt-2">
                 <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-white/10 text-white active:scale-95 transition-transform"><window.Icon name="menu" className="w-6 h-6" /></button></div>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full bg-yellow-500 text-black flex items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic tracking-tight pr-3 whitespace-nowrap text-white">龍神空調幫手</h1></div><span className="text-[9px] font-bold text-gray-400 tracking-widest">PROFESSIONAL V13.85</span></div>
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full bg-yellow-500 text-black flex items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic tracking-tight pr-3 whitespace-nowrap text-white">龍神空調幫手</h1></div><span className="text-[9px] font-bold text-gray-400 tracking-widest">PROFESSIONAL V13.86</span></div>
                 <div className="z-20"><div className="text-[10px] bg-yellow-500 text-black px-2 py-1 rounded font-bold">PRO</div></div>
             </header>
 
@@ -130,9 +131,9 @@ const App = () => {
                         </div>
                     </div>
                 )}
-                {activeTab === 'capacity' && window.MultiRoomCapacityCalculator && <window.MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
-                {activeTab === 'cooling' && window.CoolingTimeCalculator && <window.CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
-                {activeTab === 'ducted' && window.DuctedCalculator && <window.DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} />}
+                {activeTab === 'capacity' && window.Calculators && <window.Calculators.MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
+                {activeTab === 'cooling' && window.Calculators && <window.Calculators.CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
+                {activeTab === 'ducted' && window.Calculators && <window.Calculators.DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} />}
             </main>
             {selectedSpecGroup && <window.SpecModal group={selectedSpecGroup} initialFunc={selectedSpecGroup.initialFunc} onClose={() => setSelectedSpecGroup(null)} />}
         </div>
