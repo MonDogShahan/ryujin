@@ -63,32 +63,55 @@
         const AC_DATABASE = [
             ...(window.DATA_HITACHI || []),
             ...(window.DATA_DAIKIN || []),
-            ...(window.DATA_MITSUBISHI || []), // 請確認這裡是 DATA_MITSUBISHI 還是 DATA_MHI
+            ...(window.DATA_MITSUBISHI || []), 
             ...(window.DATA_FUJITSU || []),
             ...(window.DATA_PANASONIC || []),
             ...(window.DATA_HAWRIN || [])
         ];
 
-        // --- Icon 元件 ---
-        const Icon = ({ name, className = "w-6 h-6" }) => {
-            const icons = {
-                menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />,
-                x: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />,
-                search: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
-                chevron: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />,
-                trash: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
-                ruler: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />,
-                thermometer: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-                box: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />,
-                bolt: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />,
-                tool: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />,
-                check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />,
-                pdf: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            };
-            return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">{icons[name] || null}</svg>;
+        // --- PDF 工具 ---
+        const exportToPDF = (elementId, title) => {
+            const input = document.getElementById(elementId);
+            if (!input) return;
+            const btn = document.activeElement;
+            const originalText = btn.innerText;
+            btn.innerText = "生成中...";
+            
+            html2canvas(input, { backgroundColor: '#0f172a', scale: 2 }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`${title}_${new Date().toISOString().slice(0,10)}.pdf`);
+                btn.innerText = originalText;
+            }).catch(err => {
+                console.error(err);
+                alert("PDF 生成失敗");
+                btn.innerText = originalText;
+            });
         };
 
-        // --- 通用元件 ---
+        // --- UI 元件 ---
+        const Icon = ({ name, className = "w-6 h-6" }) => {
+            const icons = {
+                menu: <path d="M4 6h16M4 12h16M4 18h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                x: <path d="M6 18L18 6M6 6l12 12" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                chevron: <path d="M19 9l-7 7-7-7" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                trash: <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                ruler: <path d="M4 6h16M4 10h16M4 14h16M4 18h16" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                thermometer: <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                box: <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                bolt: <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                tool: <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                check: <path d="M5 13l4 4L19 7" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />,
+                pdf: <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" strokeWidth={2} stroke="currentColor" strokeLinecap="round" />
+            };
+            return <svg className={className} fill="none" viewBox="0 0 24 24">{icons[name]}</svg>;
+        };
+
         const FilterSelect = ({ label, value, options, onChange }) => (
             <div className="flex flex-col gap-1.5 relative">
                 <label className="text-[10px] uppercase tracking-wider text-gray-400 font-bold ml-1">{label}</label>
@@ -102,35 +125,26 @@
         );
 
         const Badge = ({ text, type }) => {
-            let styleClass = "bg-gray-700/50 text-gray-300 border-gray-600/50";
-            if (text === '冷暖') styleClass = "bg-orange-500/20 text-orange-400 border-orange-500/30";
-            else if (text === '冷專') styleClass = "bg-blue-500/20 text-blue-400 border-blue-500/30";
-            else if (type === 'type') styleClass = "bg-teal-500/20 text-teal-400 border-teal-500/30";
-            return <span className={`text-[10px] px-2 py-0.5 rounded border ${styleClass} font-bold tracking-wider whitespace-nowrap backdrop-blur-md`}>{text}</span>;
+            let style = "bg-gray-700/50 text-gray-300 border-gray-600/50";
+            if (text === '冷暖') style = "bg-orange-500/20 text-orange-400 border-orange-500/30";
+            else if (text === '冷專') style = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+            else if (type === 'type') style = "bg-teal-500/20 text-teal-400 border-teal-500/30";
+            return <span className={`text-[10px] px-2 py-0.5 rounded border ${style} font-bold tracking-wider whitespace-nowrap backdrop-blur-md`}>{text}</span>;
         };
 
         const ResultCard = ({ group, onClick }) => {
-            if (!group || !group.variants || group.variants.length === 0) return null;
+            if (!group || !group.variants.length) return null;
             const main = group.variants[0];
             const isMulti = main.type.includes('室外機');
             const displayCurrent = main.currCool ? `${main.currCool} A` : (main.current ? `${main.current} A` : '-');
-
             return (
                 <div onClick={() => onClick(group, main.func)} className="glass-panel p-4 rounded-xl shadow-lg hover:border-yellow-500/50 hover:bg-slate-800/60 transition-all cursor-pointer group active:scale-[0.98] backdrop-blur-md">
                     <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg font-black shadow-inner ${main.func === '冷專' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30'}`}>
-                                {main.maxKw}
-                            </div>
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-lg font-black shadow-inner ${main.func === '冷專' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'}`}>{main.maxKw}</div>
                             <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-bold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded">{main.brandCN}</span>
-                                    <span className="text-sm font-bold text-white tracking-wide">{main.series}</span>
-                                </div>
-                                <div className="flex gap-1 mb-1">
-                                    <Badge text={main.func} />
-                                    <Badge text={main.type} type="type" />
-                                </div>
+                                <div className="flex items-center gap-2 mb-1"><span className="text-xs font-bold text-gray-300 bg-white/10 px-1.5 py-0.5 rounded">{main.brandCN}</span><span className="text-sm font-bold text-white tracking-wide">{main.series}</span></div>
+                                <div className="flex gap-1 mb-1"><Badge text={main.func} /><Badge text={main.type} type="type" /></div>
                                 <div className="text-xs text-gray-400 font-mono">{isMulti ? main.modelOdu : main.modelIdu}</div>
                             </div>
                         </div>
@@ -146,26 +160,26 @@
             );
         };
 
+        const SpecRow = ({ label, value, highlight }) => (
+            <div className={`flex justify-between py-2 px-3 rounded ${highlight ? 'bg-yellow-500/10 border border-yellow-500/20' : 'hover:bg-white/5'}`}>
+                <span className="text-xs text-gray-400">{label}</span>
+                <span className={`text-xs font-mono font-bold ${highlight ? 'text-yellow-400' : 'text-gray-200'}`}>{value}</span>
+            </div>
+        );
+
+        const MiniSpecBox = ({ label, value }) => (
+            <div className="bg-black/20 border border-white/10 rounded p-2 flex flex-col items-center">
+                <span className="text-[9px] text-gray-500 mb-0.5">{label}</span>
+                <span className="text-xs font-mono text-gray-300">{value}</span>
+            </div>
+        );
+
         const SpecModal = ({ group, initialFunc, onClose }) => {
             const [currentFunc, setCurrentFunc] = useState(initialFunc);
             const activeData = group.variants.find(v => v.func === currentFunc) || group.variants[0];
             const isMulti = activeData.type.includes('室外機');
             const isDucted = activeData.type.includes('吊隱');
             const val = (v) => v || '-';
-
-            const SpecRow = ({ label, value, highlight }) => (
-                <div className={`flex justify-between py-2 px-3 rounded ${highlight ? 'bg-yellow-500/10 border border-yellow-500/20' : 'hover:bg-white/5'}`}>
-                    <span className="text-xs text-gray-400">{label}</span>
-                    <span className={`text-xs font-mono font-bold ${highlight ? 'text-yellow-400' : 'text-gray-200'}`}>{value}</span>
-                </div>
-            );
-
-            const MiniSpecBox = ({ label, value }) => (
-                <div className="bg-black/20 border border-white/10 rounded p-2 flex flex-col items-center">
-                    <span className="text-[9px] text-gray-500 mb-0.5">{label}</span>
-                    <span className="text-xs font-mono text-gray-300">{value}</span>
-                </div>
-            );
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -200,7 +214,7 @@
                                 <SpecRow label="室外機型號" value={val(activeData.modelOdu)} />
                                 <SpecRow label="CSPF 能效" value={val(activeData.cspf)} />
                                 <SpecRow label="銅管管徑" value={val(activeData.pipes)} />
-                                <SpecRow label="消耗功率" value={activeData.powerCool ? `${activeData.powerCool}W` : `${val(activeData.power)}W`} />
+                                <SpecRow label="消耗功率" value={activeData.powerCool ? `${activeData.powerCool}W (冷)` : `${val(activeData.power)}W`} />
                             </div>
                             <div className="space-y-0.5 mb-6 bg-white/5 p-3 rounded-xl border border-white/10">
                                 <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/10"><Icon name="bolt" className="w-4 h-4 text-yellow-400" /><span className="text-[10px] text-yellow-400 font-bold tracking-wider">機電配置</span></div>
@@ -208,6 +222,7 @@
                                 <SpecRow label="供電位置" value={val(activeData.powerConn)} highlight />
                                 <SpecRow label="無熔絲開關" value={val(activeData.breaker)} />
                                 <SpecRow label="電源線徑" value={val(activeData.powerWire)} />
+                                <SpecRow label="訊號線" value={val(activeData.signalWire)} />
                                 <div className="h-2"></div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <MiniSpecBox label="運轉電流(冷)" value={activeData.currCool ? `${activeData.currCool} A` : '-'} />
@@ -224,8 +239,8 @@
                             )}
                             <div className="space-y-2">
                                 <div className="text-[10px] text-yellow-500 font-bold mb-1 pl-1 tracking-wider uppercase">外觀尺寸 (mm)</div>
-                                {!isMulti && !isDucted && <div className="bg-white/5 rounded-lg p-3 border border-white/10"><div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室內機</span><span className="text-xs text-white font-mono">{val(activeData.idu?.dims)}</span></div></div>}
-                                <div className="bg-white/5 rounded-lg p-3 border border-white/10"><div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室外機</span><span className="text-xs text-white font-mono">{val(activeData.odu?.dims)}</span></div><div className="flex justify-between mt-2 pt-2 border-t border-white/10"><span className="text-xs text-yellow-500">腳座孔距</span><span className="text-xs text-yellow-500 font-mono font-bold">{val(activeData.odu?.footSpacing)}</span></div></div>
+                                {!isMulti && !isDucted && <div className="bg-white/5 rounded-lg p-3 border border-white/10"><div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室內機</span><span className="text-xs text-white font-mono">{val(activeData.idu?.dims)}</span></div><div className="flex justify-between"><span className="text-xs text-gray-500">重量</span><span className="text-xs text-white font-mono">{val(activeData.idu?.weight)} kg</span></div></div>}
+                                <div className="bg-white/5 rounded-lg p-3 border border-white/10"><div className="flex justify-between mb-1"><span className="text-xs text-gray-400">室外機</span><span className="text-xs text-white font-mono">{val(activeData.odu?.dims)}</span></div><div className="flex justify-between mb-1"><span className="text-xs text-gray-500">重量</span><span className="text-xs text-white font-mono">{val(activeData.odu?.weight)} kg</span></div><div className="flex justify-between mt-2 pt-2 border-t border-white/10"><span className="text-xs text-yellow-500">腳座孔距</span><span className="text-xs text-yellow-500 font-mono font-bold">{val(activeData.odu?.footSpacing)}</span></div></div>
                             </div>
                         </div>
                         <div className="p-4 border-t border-white/10 text-center bg-black/20"><button onClick={onClose} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold transition-colors">關閉視窗</button></div>
@@ -234,57 +249,19 @@
             );
         };
 
-        // --- PDF 匯出函數 ---
-        const exportToPDF = (elementId, title) => {
-            const input = document.getElementById(elementId);
-            if (!input) return;
-            
-            // 使用 html2canvas + jspdf
-            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-                alert("PDF 元件載入中，請稍後再試...");
-                return;
-            }
-
-            html2canvas(input, { backgroundColor: '#1e293b', scale: 2 }).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`${title}_${new Date().toISOString().slice(0,10)}.pdf`);
-            }).catch(err => {
-                console.error(err);
-                alert("PDF 生成失敗");
-            });
-        };
-
-        // --- 計算機 1: 負載計算 (舊版邏輯) ---
+        // --- 1. 負載計算 (還原 2/15) ---
         const MultiRoomCapacityCalculator = ({ rooms, setRooms, result, setResult, db }) => {
-            const addRoom = () => setRooms([...rooms, { id: Date.now(), name: `房間 ${rooms.length + 1}`, w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
-            
-            const resetAll = () => {
-                if (confirm("確定重置所有資料？")) {
-                    setRooms([{ id: Date.now(), name: '客廳', w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
-                    setResult(null);
-                }
-            };
-
-            const removeRoom = (id) => {
-                if (rooms.length > 1 && confirm("確定刪除此房間？")) setRooms(rooms.filter(r => r.id !== id));
-            };
-            
+            const addRoom = () => setRooms([...rooms, { id: Date.now(), name: `空間 ${rooms.length + 1}`, w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
+            const resetAll = () => { if (confirm("⚠️ 確定要重置所有資料嗎？")) { setRooms([{ id: Date.now(), name: '客廳', w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]); setResult(null); } };
+            const removeRoom = (id) => { if (rooms.length > 1 && confirm("確定刪除此空間？")) setRooms(rooms.filter(r => r.id !== id)); };
             const updateRoom = (id, field, val) => {
                 setRooms(rooms.map(r => {
                     if (r.id !== id) return r;
                     const newR = { ...r, [field]: val };
-                    if ((field === 'w' || field === 'd') && newR.w && newR.d) {
-                        newR.ping = (parseFloat(newR.w) * parseFloat(newR.d) / 32400).toFixed(1);
-                    }
+                    if ((field === 'w' || field === 'd') && newR.w && newR.d) newR.ping = (parseFloat(newR.w) * parseFloat(newR.d) / 32400).toFixed(1);
                     return newR;
                 }));
             };
-
             const toggleCondition = (roomId, cond) => {
                 setRooms(rooms.map(r => {
                     if (r.id !== roomId) return r;
@@ -295,7 +272,6 @@
                     return { ...r, conditions: newConds };
                 }));
             };
-
             const calculate = () => {
                 let totalKw = 0;
                 const calculatedRooms = rooms.map(r => {
@@ -304,82 +280,72 @@
                     if (r.conditions.west) baseKcal += 80;
                     if (r.conditions.fullSun) baseKcal += 150;
                     if (r.conditions.iron) baseKcal += 200;
-                    if (r.conditions.blackIron) baseKcal += 300;
-
+                    if (r.conditions.blackIron) baseKcal += 350;
                     const height = parseFloat(r.h) || 3.0;
                     const hFactor = height > 3.0 ? height / 3.0 : 1;
-
                     const reqKcal = parseFloat(r.ping) * baseKcal * hFactor;
                     const reqKw = reqKcal / 860;
                     totalKw += reqKw;
-
-                    const suitable = db.filter(m => !m.type.includes('室外') && parseFloat(m.maxKw) >= reqKw)
-                                       .sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
-
-                    return { ...r, reqKw: reqKw.toFixed(2), match: suitable ? `${suitable.brandCN} ${suitable.modelIdu} (${suitable.maxKw}kW)` : '無合適機型' };
+                    const suitable = db.filter(m => !m.type.includes('室外') && parseFloat(m.maxKw) >= reqKw).sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
+                    return { ...r, reqKw: reqKw.toFixed(2), match: suitable ? `${suitable.brandCN} ${suitable.modelIdu} (${suitable.maxKw}kW)` : '需多台組合' };
                 });
-                
-                const suitableOdu = db.filter(m => m.type.includes('室外') && parseFloat(m.maxKw) >= totalKw)
-                                      .sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
+                const suitableOdu = db.filter(m => m.type.includes('室外') && parseFloat(m.maxKw) >= totalKw).sort((a,b) => parseFloat(a.maxKw) - parseFloat(b.maxKw))[0];
                 setResult({ totalKw: totalKw.toFixed(2), rooms: calculatedRooms, odu: suitableOdu });
             };
 
             return (
                 <div id="capacity-calculator" className="space-y-4 animate-fade-in pb-20">
                     <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="ruler" /> 空間負載計算</h3>
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="ruler" /> 負載與機型規劃</h3>
                         <div className="flex gap-2">
-                            <button onClick={resetAll} className="text-xs bg-red-900/50 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded border border-red-700/50 transition-colors">重置</button>
-                            <button onClick={addRoom} className="text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-1.5 rounded transition-colors">+ 房間</button>
+                            <button onClick={resetAll} className="text-xs bg-red-900/60 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded border border-red-500/30">重置</button>
+                            <button onClick={addRoom} className="text-xs bg-industrial-accent hover:bg-yellow-500 text-black font-bold px-3 py-1.5 rounded">+ 空間</button>
                         </div>
                     </div>
-                    
                     <div className="space-y-4">
                         {rooms.map((room, idx) => (
                             <div key={room.id} className="glass-panel p-4 rounded-xl relative transition-all">
-                                <div className="flex justify-between mb-2 border-b border-white/10 pb-2">
-                                    <input type="text" value={room.name} onChange={(e) => updateRoom(room.id, 'name', e.target.value)} className="bg-transparent text-yellow-500 font-bold text-sm w-24 focus:outline-none" />
+                                <div className="flex justify-between mb-3 border-b border-white/10 pb-2">
+                                    <input type="text" value={room.name} onChange={(e) => updateRoom(room.id, 'name', e.target.value)} className="bg-transparent text-industrial-accent font-bold text-sm w-24 focus:outline-none" />
                                     {rooms.length > 1 && <button onClick={() => removeRoom(room.id)} className="text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4" /></button>}
                                 </div>
                                 <div className="grid grid-cols-4 gap-2 mb-3">
-                                    <div><label className="text-[10px] text-gray-400 block mb-1">長(cm)</label><input type="number" value={room.d} onChange={e => updateRoom(room.id, 'd', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" /></div>
-                                    <div><label className="text-[10px] text-gray-400 block mb-1">寬(cm)</label><input type="number" value={room.w} onChange={e => updateRoom(room.id, 'w', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" /></div>
-                                    <div><label className="text-[10px] text-gray-400 block mb-1">高(m)</label><input type="number" value={room.h} onChange={e => updateRoom(room.id, 'h', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" placeholder="3.0" /></div>
-                                    <div><label className="text-[10px] text-gray-400 block mb-1">坪數</label><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-full bg-black/40 border border-yellow-500/50 rounded px-2 py-1 text-xs text-yellow-500 font-bold" /></div>
+                                    <div><label className="text-[10px] text-gray-400 block mb-1">長 (cm)</label><input type="number" value={room.d} onChange={e => updateRoom(room.id, 'd', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" /></div>
+                                    <div><label className="text-[10px] text-gray-400 block mb-1">寬 (cm)</label><input type="number" value={room.w} onChange={e => updateRoom(room.id, 'w', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" /></div>
+                                    <div><label className="text-[10px] text-gray-400 block mb-1">高 (m)</label><input type="number" value={room.h} onChange={e => updateRoom(room.id, 'h', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white" placeholder="3.0" /></div>
+                                    <div><label className="text-[10px] text-gray-400 block mb-1">坪數</label><input type="number" value={room.ping} onChange={e => updateRoom(room.id, 'ping', e.target.value)} className="w-full bg-black/40 border border-industrial-accent/50 rounded px-2 py-1 text-xs text-industrial-accent font-bold outline-none" /></div>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    {[{k:'top',l:'頂樓'},{k:'west',l:'西曬'},{k:'fullSun',l:'全日曬'},{k:'iron',l:'鐵皮'},{k:'blackIron',l:'黑鐵皮'}].map(c => (
-                                        <button key={c.k} onClick={() => toggleCondition(room.id, c.k)} className={`text-[10px] px-2 py-1 rounded border transition-colors ${room.conditions[c.k] ? 'bg-yellow-500 text-black border-yellow-500 font-bold' : 'bg-white/5 border-white/10 text-gray-400'}`}>{c.l}</button>
+                                    {[{k:'top', l:'頂樓'}, {k:'west', l:'西曬'}, {k:'fullSun', l:'全日曬'}, {k:'iron', l:'鐵皮屋'}, {k:'blackIron', l:'黑鐵皮'}].map(opt => (
+                                        <button key={opt.k} onClick={() => toggleCondition(room.id, opt.k)} className={`text-[10px] px-2 py-1 rounded border transition-all ${room.conditions[opt.k] ? 'bg-industrial-accent text-black border-industrial-accent font-bold' : 'bg-black/30 border-white/10 text-gray-400'}`}>{opt.l}</button>
                                     ))}
                                 </div>
                             </div>
                         ))}
                     </div>
-
                     <div className="flex gap-3 mt-6">
-                        <button onClick={calculate} className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-xl shadow-lg flex justify-center items-center gap-2"><Icon name="check" /> 開始計算</button>
-                        {result && <button onClick={() => exportToPDF('capacity-calculator', '負載計算表')} className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl flex items-center gap-1"><Icon name="pdf" className="w-5 h-5"/> PDF</button>}
+                        <button onClick={calculate} className="flex-1 py-3 bg-industrial-accent hover:bg-yellow-500 text-black font-black rounded-xl shadow-lg flex justify-center items-center gap-2"><Icon name="check" /> 開始計算</button>
+                        {result && <button onClick={() => exportToPDF('capacity-calculator', '負載計算表')} className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1"><Icon name="pdf" className="w-5 h-5"/> PDF</button>}
                     </div>
-
                     {result && (
-                        <div className="glass-panel p-5 rounded-xl mt-6 animate-slide-up border border-yellow-500/30">
-                            <div className="text-center mb-4"><span className="text-xs text-gray-400 uppercase tracking-widest">Total Load</span><div className="text-4xl font-black text-white mt-1">{result.totalKw} <span className="text-sm font-normal text-gray-500">kW</span></div></div>
+                        <div className="glass-panel p-5 rounded-xl mt-6 animate-slide-up border border-industrial-accent/30">
+                            <div className="text-center mb-6"><span className="text-xs text-gray-400 uppercase tracking-widest">Total Requirement</span><div className="text-4xl font-black text-white mt-1 drop-shadow-lg">{result.totalKw} <span className="text-lg font-normal text-gray-400">kW</span></div></div>
                             <div className="space-y-3 mb-5">
                                 {result.rooms.map((r, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs border-b border-white/10 pb-2">
-                                        <div><span className="text-gray-300 font-bold">{r.name}</span><span className="text-gray-500 text-[10px]"> {r.ping}坪/高{r.h}m</span></div>
-                                        <div className="text-right"><div className="text-yellow-500 font-bold">{r.reqKw} kW</div><div className="text-[10px] text-gray-400">{r.match}</div></div>
+                                        <div><span className="text-gray-300 font-bold text-sm block">{r.name}</span><span className="text-gray-500">{r.ping} 坪 / 高 {r.h}m</span></div>
+                                        <div className="text-right"><div className="text-industrial-accent font-bold text-sm">{r.reqKw} kW</div><div className="text-[10px] text-gray-400 mt-0.5">{r.match}</div></div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="bg-black/30 p-3 rounded-lg border border-white/10"><span className="text-[10px] text-gray-400 block mb-1">建議室外機</span>{result.odu ? (<div className="flex justify-between items-center"><span className="text-sm font-bold text-white">{result.odu.brandCN} {result.odu.modelOdu}</span><span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded font-bold">{result.odu.maxKw} kW</span></div>) : <span className="text-xs text-red-400">無單一主機可滿足</span>}</div>
+                            <div className="bg-black/40 p-3 rounded-lg border border-white/10"><span className="text-[10px] text-gray-400 block mb-1">建議室外機配置</span>{result.odu ? (<div className="flex justify-between items-center"><span className="text-sm font-bold text-white">{result.odu.brandCN} {result.odu.modelOdu}</span><span className="text-xs bg-industrial-accent text-black px-2 py-0.5 rounded font-bold">{result.odu.maxKw} kW</span></div>) : <span className="text-xs text-red-400">需拆分系統</span>}</div>
                         </div>
                     )}
                 </div>
             );
         };
 
-        // --- 計算機 2: 降溫模擬 ---
+        // --- 2. 物理降溫 (維持) ---
         const CoolingTimeCalculator = ({ state, setState }) => {
             const calculate = () => {
                 if (!state.ping || !state.acKw) return;
@@ -390,7 +356,6 @@
                 const minutes = Math.ceil(energyNeeded / power / 60);
                 setState(p => ({ ...p, result: minutes }));
             };
-
             return (
                 <div className="space-y-4 animate-fade-in glass-panel p-5 rounded-xl">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="thermometer" /> 降溫時間模擬</h3>
@@ -399,98 +364,104 @@
                         <div><label className="text-[10px] text-gray-400">天花板高(m)</label><input type="number" value={state.height} onChange={e => setState({...state, height: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
                         <div><label className="text-[10px] text-gray-400">目前室溫</label><input type="number" value={state.currentTemp} onChange={e => setState({...state, currentTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
                         <div><label className="text-[10px] text-gray-400">目標溫度</label><input type="number" value={state.targetTemp} onChange={e => setState({...state, targetTemp: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded text-white p-2 text-sm" /></div>
-                        <div className="col-span-2"><label className="text-[10px] text-gray-400">冷氣能力 (kW)</label><input type="number" value={state.acKw} onChange={e => setState({...state, acKw: e.target.value})} className="w-full bg-black/40 border border-yellow-500/50 rounded text-yellow-500 font-bold p-2 text-sm" /></div>
+                        <div className="col-span-2"><label className="text-[10px] text-gray-400">冷氣能力 (kW)</label><input type="number" value={state.acKw} onChange={e => setState({...state, acKw: e.target.value})} className="w-full bg-black/40 border border-industrial-accent/50 rounded text-industrial-accent font-bold p-2 text-sm" /></div>
                     </div>
                     <button onClick={calculate} className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl shadow transition-colors">計算預估時間</button>
-                    {state.result && (<div className="text-center p-4 bg-black/30 rounded-xl border border-white/10 mt-4"><span className="text-gray-400 text-xs">預計降溫時間</span><div className="text-4xl font-black text-yellow-500 my-2">{state.result} <span className="text-sm">分鐘</span></div></div>)}
+                    {state.result && (<div className="text-center p-4 bg-black/30 rounded-xl border border-white/10 mt-4"><span className="text-gray-400 text-xs">預計降溫時間</span><div className="text-4xl font-black text-industrial-accent my-2">{state.result} <span className="text-sm">分鐘</span></div></div>)}
                 </div>
             );
         };
 
-        // --- 計算機 3: 吊隱式規劃 (舊版邏輯) ---
-        const DuctedCalculator = ({ plans, setPlans }) => {
-            const addPlan = () => setPlans([...plans, { id: Date.now(), name: '機台', cmh: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '', result: null }]);
-            
-            const resetAll = () => {
-                if (confirm("確定重置規劃？")) setPlans([{ id: Date.now(), name: '機台', cmh: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '', result: null }]);
+        // --- 3. 吊隱式規劃 (還原至 2/16：無CMH、無風速，純尺寸紀錄) ---
+        const DuctedCalculator = ({ plans, setPlans, db }) => {
+            const [searchKw, setSearchKw] = useState('');
+            const [searchResults, setSearchResults] = useState([]);
+            const [activePlanId, setActivePlanId] = useState(null);
+
+            const addPlan = () => setPlans([...plans, { id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '' }]);
+            const resetAll = () => { if (confirm('⚠️ 確定要重置所有規劃嗎？')) setPlans([{ id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '' }]); };
+            const removePlan = (id) => { if (plans.length > 1 && confirm('確定刪除此機台規劃？')) setPlans(plans.filter(p => p.id !== id)); };
+
+            const handleSearch = (keyword, planId) => {
+                setSearchKw(keyword); setActivePlanId(planId);
+                if (!keyword) { setSearchResults([]); return; }
+                const res = db.filter(item => item.type.includes('吊隱') && (item.modelIdu.toLowerCase().includes(keyword.toLowerCase()) || item.series.includes(keyword) || item.brandCN.includes(keyword))).slice(0, 5);
+                setSearchResults(res);
             };
 
-            const removePlan = (id) => {
-                if (plans.length > 1 && confirm("確定刪除此機台？")) setPlans(plans.filter(p => p.id !== id));
+            const selectModel = (machine) => {
+                const newPlans = plans.map(p => {
+                    if (p.id !== activePlanId) return p;
+                    let fw = '', fh = '';
+                    if (machine.idu && machine.idu.flangeDims) {
+                        const dims = machine.idu.flangeDims.match(/(\d+)\s*[x×X*]\s*(\d+)/);
+                        if (dims) { fw = dims[1]; fh = dims[2]; }
+                    }
+                    return { ...p, brand: machine.brandCN, model: machine.modelIdu, kw: machine.maxKw, flangeW: fw, flangeH: fh };
+                });
+                setPlans(newPlans); setSearchKw(''); setSearchResults([]);
             };
 
             const updatePlan = (id, field, val) => setPlans(plans.map(p => p.id === id ? { ...p, [field]: val } : p));
 
-            const calculate = (id) => {
-                setPlans(plans.map(p => {
-                    if (p.id !== id) return p;
-                    const cmh = parseFloat(p.cmh);
-                    const boxArea = (parseFloat(p.boxW) * parseFloat(p.boxH)) / 1000000; 
-                    const boxV = cmh / 3600 / boxArea;
-                    const outletArea = (parseFloat(p.outletW) * parseFloat(p.outletH)) / 1000000;
-                    const totalOutletArea = outletArea * parseInt(p.outlets);
-                    const outletV = cmh / 3600 / totalOutletArea;
-                    return { ...p, result: { boxV: boxV.toFixed(1), outletV: outletV.toFixed(1) } };
-                }));
-            };
-
             return (
                 <div id="ducted-calculator" className="space-y-6 animate-fade-in pb-20">
-                    <div className="flex justify-between items-center mb-2">
+                     <div className="flex justify-between items-center mb-2">
                         <h3 className="text-lg font-bold text-white flex items-center gap-2"><Icon name="box" /> 吊隱式風管規劃</h3>
                         <div className="flex gap-2">
-                            <button onClick={resetAll} className="text-xs bg-red-900/50 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded border border-red-700/50 transition-colors">重置</button>
+                            <button onClick={resetAll} className="text-xs bg-red-900/60 hover:bg-red-800 text-red-200 px-3 py-1.5 rounded border border-red-500/30 transition-colors">重置</button>
                             <button onClick={() => exportToPDF('ducted-calculator', '風管規劃表')} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded flex items-center gap-1"><Icon name="pdf" className="w-3 h-3"/> PDF</button>
-                            <button onClick={addPlan} className="text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-1.5 rounded">+ 機台</button>
+                            <button onClick={addPlan} className="text-xs bg-industrial-accent hover:bg-yellow-500 text-black font-bold px-3 py-1.5 rounded transition-colors">+ 機台</button>
                         </div>
                     </div>
 
                     {plans.map((p, idx) => (
                         <div key={p.id} className="glass-panel p-5 rounded-xl relative">
-                            <div className="flex justify-between mb-4 border-b border-white/10 pb-2">
-                                <span className="text-yellow-500 font-bold text-lg">#{idx+1}</span>
-                                {plans.length > 1 && <button onClick={() => removePlan(p.id)} className="text-gray-500 hover:text-red-400"><Icon name="x" className="w-4 h-4" /></button>}
-                            </div>
+                             <div className="absolute top-3 right-3 text-white/10 font-black text-5xl pointer-events-none">{idx+1}</div>
                             
-                            <div className="mb-4">
-                                <label className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 block">總風量 (CMH)</label>
-                                <input type="number" value={p.cmh} onChange={e => updatePlan(p.id, 'cmh', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono focus:border-yellow-500 outline-none" placeholder="例如: 800" />
+                            {/* 機型搜尋區 (2/16 版保留了搜尋功能以便帶入法蘭，但移除了風速計算) */}
+                            <div className="mb-4 relative">
+                                 <label className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 block">機型 (自動帶入法蘭)</label>
+                                 <input type="text" placeholder={p.model || "輸入型號搜尋..."} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-industrial-accent outline-none" onChange={(e) => handleSearch(e.target.value, p.id)} value={activePlanId === p.id ? searchKw : p.model} onFocus={() => { setActivePlanId(p.id); setSearchKw(p.model || ''); }} />
+                                 {activePlanId === p.id && searchResults.length > 0 && (
+                                     <div className="absolute top-full left-0 w-full bg-slate-900 border border-slate-600 rounded-lg shadow-2xl z-20 mt-1 max-h-48 overflow-y-auto">
+                                         {searchResults.map(m => (
+                                             <div key={m.id} onClick={() => selectModel(m)} className="p-2 hover:bg-slate-800 cursor-pointer border-b border-slate-700 last:border-0">
+                                                 <div className="text-xs font-bold text-white">{m.brandCN} {m.modelIdu}</div>
+                                                 <div className="text-[10px] text-gray-400 flex justify-between"><span>{m.series}</span><span className="text-yellow-500">{m.maxKw} kW</span></div>
+                                                 {m.idu?.flangeDims && <div className="text-[9px] text-blue-300">法蘭: {m.idu.flangeDims}</div>}
+                                             </div>
+                                         ))}
+                                     </div>
+                                 )}
+                            </div>
+
+                            {/* 尺寸輸入區 (僅紀錄，不計算) */}
+                            <div className="grid grid-cols-2 gap-4 mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
+                                <div className="col-span-2 flex items-center gap-2 text-[10px] text-yellow-500 font-bold uppercase tracking-wider"><Icon name="box" className="w-3 h-3"/> 內機法蘭尺寸 (mm)</div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">寬度 (W)</label><input type="number" value={p.flangeW} onChange={e => updatePlan(p.id, 'flangeW', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">高度 (H)</label><input type="number" value={p.flangeH} onChange={e => updatePlan(p.id, 'flangeH', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
-                                <div className="col-span-2 text-[10px] text-yellow-500 font-bold uppercase tracking-wider">集風箱尺寸 (mm)</div>
-                                <div><input type="number" value={p.boxW} onChange={e => updatePlan(p.id, 'boxW', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" placeholder="寬 W" /></div>
-                                <div><input type="number" value={p.boxH} onChange={e => updatePlan(p.id, 'boxH', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" placeholder="高 H" /></div>
+                                <div className="col-span-2 flex items-center gap-2 text-[10px] text-green-400 font-bold uppercase tracking-wider"><Icon name="box" className="w-3 h-3"/> 集風箱製作尺寸 (mm)</div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">寬度 (W)</label><input type="number" value={p.boxW} onChange={e => updatePlan(p.id, 'boxW', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">高度 (H)</label><input type="number" value={p.boxH} onChange={e => updatePlan(p.id, 'boxH', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-2 mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
-                                <div className="col-span-3 text-[10px] text-blue-400 font-bold uppercase tracking-wider">出風口配置 (mm)</div>
-                                <div><label className="text-[9px] text-gray-500 block">數量</label><select value={p.outlets} onChange={e => updatePlan(p.id, 'outlets', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-                                <div><label className="text-[9px] text-gray-500 block">寬 W</label><input type="number" value={p.outletW} onChange={e => updatePlan(p.id, 'outletW', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
-                                <div><label className="text-[9px] text-gray-500 block">高 H</label><input type="number" value={p.outletH} onChange={e => updatePlan(p.id, 'outletH', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
+                                <div className="col-span-3 flex items-center gap-2 text-[10px] text-blue-400 font-bold uppercase tracking-wider"><Icon name="tool" className="w-3 h-3"/> 出風口配置 (mm)</div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">數量</label><select value={p.outlets} onChange={e => updatePlan(p.id, 'outlets', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">寬 (W)</label><input type="number" value={p.outletW} onChange={e => updatePlan(p.id, 'outletW', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
+                                <div><label className="text-[9px] text-gray-500 block mb-1">高 (H)</label><input type="number" value={p.outletH} onChange={e => updatePlan(p.id, 'outletH', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" /></div>
                             </div>
-
-                            <button onClick={() => calculate(p.id)} className="w-full py-2 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 text-xs font-bold rounded mb-4 transition-colors">計算風速</button>
-
-                            {p.result && (
-                                <div className="grid grid-cols-2 gap-4 text-center">
-                                    <div className="bg-black/40 rounded p-2 border border-white/10">
-                                        <span className="text-[10px] text-gray-400 block">集風箱風速</span>
-                                        <span className={`text-lg font-bold font-mono ${parseFloat(p.result.boxV) > 6 ? 'text-red-400' : 'text-green-400'}`}>{p.result.boxV} <span className="text-xs">m/s</span></span>
-                                    </div>
-                                    <div className="bg-black/40 rounded p-2 border border-white/10">
-                                        <span className="text-[10px] text-gray-400 block">出風口風速</span>
-                                        <span className={`text-lg font-bold font-mono ${parseFloat(p.result.outletV) > 3 ? 'text-red-400' : 'text-green-400'}`}>{p.result.outletV} <span className="text-xs">m/s</span></span>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
             );
         };
 
-        // --- 主程式 ---
+        // --- 主程式 (App) ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('search');
             const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -503,7 +474,7 @@
             // Calculator States
             const [rooms, setRooms] = useState([{ id: Date.now(), name: '客廳', w: '', d: '', h: '3.0', ping: '', conditions: {}, kw: 0 }]);
             const [capacityResult, setCapacityResult] = useState(null);
-            const [ductedPlans, setDuctedPlans] = useState([{ id: Date.now(), name: '機台', cmh: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '', result: null }]);
+            const [ductedPlans, setDuctedPlans] = useState([{ id: Date.now(), brand: '', model: '', kw: '', flangeW: '', flangeH: '', boxW: '', boxH: '', outlets: 1, outletW: '', outletH: '' }]);
             const [coolingState, setCoolingState] = useState({ ping: '', height: 3.0, currentTemp: 32, targetTemp: 26, acKw: '', result: null });
 
             useEffect(() => { const saved = localStorage.getItem('searchHistory'); if (saved) setSearchState(p => ({ ...p, history: JSON.parse(saved) })); }, []);
@@ -576,7 +547,7 @@
                 <div className="min-h-screen flex flex-col font-sans select-none relative pb-20">
                     <header className="dragon-header sticky top-0 z-40 px-4 py-3 flex items-center justify-between overflow-hidden glass-panel border-b-0 border-white/5 rounded-b-2xl mx-2 mt-2">
                         <div className="z-20"><button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-white/10 text-white active:scale-95 transition-transform"><Icon name="menu" className="w-6 h-6" /></button></div>
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full bg-yellow-500 text-black flex items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic tracking-tight pr-3 whitespace-nowrap text-white">龍神空調幫手</h1></div><span className="text-[9px] font-bold text-gray-400 tracking-widest">PROFESSIONAL V13.90</span></div>
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 pointer-events-none"><div className="flex items-center gap-2 mb-0.5"><div className="w-8 h-8 rounded-full bg-yellow-500 text-black flex items-center justify-center"><svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg></div><h1 className="text-xl font-black italic tracking-tight pr-3 whitespace-nowrap text-white">龍神空調幫手</h1></div><span className="text-[9px] font-bold text-gray-400 tracking-widest">PROFESSIONAL V14.00</span></div>
                         <div className="z-20"><div className="text-[10px] bg-yellow-500 text-black px-2 py-1 rounded font-bold">PRO</div></div>
                     </header>
 
@@ -617,7 +588,7 @@
                         )}
                         {activeTab === 'capacity' && <MultiRoomCapacityCalculator rooms={rooms} setRooms={setRooms} result={capacityResult} setResult={setCapacityResult} db={AC_DATABASE} />}
                         {activeTab === 'cooling' && <CoolingTimeCalculator state={coolingState} setState={setCoolingState} />}
-                        {activeTab === 'ducted' && <DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} />}
+                        {activeTab === 'ducted' && <DuctedCalculator plans={ductedPlans} setPlans={setDuctedPlans} db={AC_DATABASE} />}
                     </main>
                     {selectedSpecGroup && <SpecModal group={selectedSpecGroup} initialFunc={selectedSpecGroup.initialFunc} onClose={() => setSelectedSpecGroup(null)} />}
                 </div>
