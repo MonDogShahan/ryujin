@@ -19,7 +19,7 @@
             color: #f0f0f0;
         }
         
-        /* ★ 頂部導航與分頁 (全新排版，避免換行) */
+        /* 頂部導航與分頁 */
         header {
             background: linear-gradient(145deg, #2a2a2a, #151515);
             padding: 15px 20px 0 20px;
@@ -53,11 +53,11 @@
             display: flex;
             width: 100%;
             overflow-x: auto;
-            -ms-overflow-style: none; /* 隱藏 IE 捲軸 */
-            scrollbar-width: none; /* 隱藏 Firefox 捲軸 */
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
         }
         .header-tabs::-webkit-scrollbar {
-            display: none; /* 隱藏 Chrome 捲軸 */
+            display: none; 
         }
         .tab-btn {
             background: transparent;
@@ -68,7 +68,7 @@
             cursor: pointer;
             border-bottom: 2px solid transparent;
             transition: 0.3s;
-            white-space: nowrap; /* ★ 強制文字不換行 */
+            white-space: nowrap; 
         }
         .tab-btn.active {
             color: #ffd700;
@@ -131,10 +131,9 @@
             color: white;
         }
 
-        /* ★ 表單與選項網格 (優化響應式，手機自動變單排) */
+        /* 表單與選項網格 */
         .input-grid {
             display: grid;
-            /* 將 minmax 從 120px 加大到 200px，確保窄螢幕下自動堆疊成單欄 */
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 15px;
@@ -144,12 +143,12 @@
             font-size: 0.9em;
             color: #aaa;
             margin-bottom: 5px;
-            white-space: nowrap; /* 確保標籤文字不換行 */
+            white-space: nowrap; 
         }
         .input-group input[type="number"] {
             width: 100%;
             box-sizing: border-box;
-            padding: 10px; /* 稍微加大輸入框的點擊範圍 */
+            padding: 10px; 
             border-radius: 5px;
             border: 1px solid #444;
             background: #1a1a1a;
@@ -278,16 +277,7 @@
                     建議配置：請輸入尺寸
                 </div>
             </div>
-
-            <div class="space-card" style="background: #1e1e1e; border: none; padding: 15px;">
-                <p style="color: #888; font-size: 0.9em; line-height: 1.6; margin: 0;">
-                    💡 <strong>龍神運算邏輯：</strong><br>
-                    • 系統內建 8英吋(314cm²)、10英吋(490cm²)、12英吋(706cm²) 圓面積標準。<br>
-                    • 輸入目標數量時，會自動嘗試由大到小匹配合適管徑；若無符合該數量的管徑，系統會自動遞減尋找最佳解。<br>
-                    • 目標數量為 1 時，會強制由最大管徑 (12英吋) 開始往下除，確保風量無損。
-                </p>
             </div>
-        </div>
     </div>
 
     <script>
@@ -338,6 +328,7 @@
             calculateFlange();
         }
 
+        // ★ 使用真實圓面積公式重新計算
         function calculateFlange() {
             let w = parseFloat(appState.flange.w) || 0;
             let h = parseFloat(appState.flange.h) || 0;
@@ -354,19 +345,27 @@
             }
 
             let area = w * h;
-            areaText.innerText = area;
+            areaText.innerText = area.toFixed(2).replace(/\.00$/, ''); // 若為整數就不顯示小數點
 
-            if (area < 314) {
-                resBox.innerText = "建議配置：截面積過小，無法開 8 英吋孔";
-                resBox.style.color = "#ff4c4c";
-                return;
+            // 圓面積公式: π * r^2 (1英吋 = 2.54公分)
+            const inchToCm = 2.54;
+            function getCircleArea(inches) {
+                let r = (inches * inchToCm) / 2;
+                return Math.PI * Math.pow(r, 2);
             }
 
             let sizes = [
-                { name: "12英吋", area: 706 },
-                { name: "10英吋", area: 490 },
-                { name: "8英吋", area: 314 }
+                { name: "12英吋", area: getCircleArea(12) }, // 約 729.66 cm²
+                { name: "10英吋", area: getCircleArea(10) }, // 約 506.71 cm²
+                { name: "8英吋", area: getCircleArea(8) }    // 約 324.29 cm²
             ];
+
+            // 判斷是否連最小的8吋都裝不下
+            if (area < sizes[2].area) {
+                resBox.innerText = `建議配置：截面積過小，無法開 8 英吋孔`;
+                resBox.style.color = "#ff4c4c";
+                return;
+            }
 
             let bestMatch = null;
 
