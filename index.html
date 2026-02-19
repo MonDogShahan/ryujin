@@ -192,7 +192,6 @@
         /* 結果顯示 */
         .result-box {
             text-align: right;
-            /* 將字體稍微縮小，避免手機版折行 */
             font-size: 1.15em; 
             color: #ffd700;
             font-weight: bold;
@@ -255,21 +254,11 @@
                 <button class="btn btn-pdf" id="btn-export-flange" onclick="exportFlangePDF()">匯出 PDF 表單</button>
                 <button class="btn btn-reset" onclick="resetFlanges()">重置資料</button>
             </div>
-
-            <div class="space-card" style="background: #1e1e1e; border: none; padding: 15px;">
-                <p style="color: #888; font-size: 0.9em; line-height: 1.6; margin: 0;">
-                    💡 <strong>龍神運算邏輯：</strong><br>
-                    • 系統採用真實圓面積公式計算截面積 (1英吋=2.54公分)。<br>
-                    • 系統內建 8英吋、10英吋、12英吋 圓面積標準來判斷。<br>
-                    • 若有目標數量，將智慧匹配合適管徑；若無符合，系統會自動遞減數量。<br>
-                    • 數量為 1 時，強制由最大管徑開始評估，以確保風量。
-                </p>
-            </div>
         </div>
     </div>
 
     <script>
-        // 資料狀態管理 (加入 flanges 陣列)
+        // 資料狀態管理 
         let appState = {
             spaces: [],
             spaceCounter: 1,
@@ -281,7 +270,6 @@
             const savedData = localStorage.getItem('dragonGodSpaces');
             if (savedData) {
                 let parsed = JSON.parse(savedData);
-                // 相容舊資料格式
                 if (Array.isArray(parsed)) {
                     appState.spaces = parsed;
                     appState.spaceCounter = parsed.length + 1;
@@ -293,7 +281,6 @@
                 }
             }
 
-            // 初始化負載計算
             if (appState.spaces.length === 0) {
                 appState.spaceCounter = 1;
                 addSpace(); 
@@ -301,7 +288,6 @@
                 renderSpaces(); 
             }
 
-            // 初始化法蘭計算
             if (appState.flanges.length === 0) {
                 appState.flangeCounter = 1;
                 addFlange();
@@ -484,7 +470,7 @@
                 id: newId,
                 name: '配置' + appState.flangeCounter,
                 w: '', h: '', t: '', area: 0, 
-                resultHtml: '建議配置：請輸入尺寸' // 縮短預設文字
+                resultHtml: '建議配置：請輸入尺寸' 
             });
             appState.flangeCounter++;
             saveDataSilently();
@@ -520,7 +506,7 @@
 
             if (w <= 0 || h <= 0) {
                 flange.area = 0;
-                flange.resultHtml = "建議配置：請輸入尺寸"; // 縮短預設文字
+                flange.resultHtml = "建議配置：請輸入尺寸"; 
                 document.getElementById(areaTextId).innerText = "0";
                 document.getElementById(resBoxId).innerHTML = flange.resultHtml;
                 document.getElementById(resBoxId).style.color = "#ffd700";
@@ -658,7 +644,6 @@
                 let areaText = f.area > 0 ? `${f.area.toFixed(2).replace(/\.00$/, '')} cm²` : '0 cm²';
                 let targetText = f.t ? `${f.t} 個` : '未指定';
                 
-                // 去除 resultHtml 中的 HTML 標籤讓 PDF 顯示乾淨純文字
                 let pureResult = f.resultHtml.replace(/<br>/g, " ").replace(/<[^>]+>/g, '');
 
                 textBlocks += `
@@ -678,7 +663,7 @@
         }
 
         /* ================================
-           共用工具函數 (分頁與 PDF 匯出)
+           ★ 共用工具函數 (新分頁預覽匯出)
            ================================ */
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -719,19 +704,47 @@
         }
 
         function executePdfExport(printArea, btnElement, filename) {
-            html2pdf().set({
+            let pdfWindow;
+            // 先嘗試開啟新分頁，避開瀏覽器的彈出視窗阻擋
+            try {
+                pdfWindow = window.open('', '_blank');
+                if (pdfWindow) {
+                    pdfWindow.document.write('<div style="text-align:center; margin-top:50px; font-family:sans-serif; font-size: 1.2em; color: #333;">PDF 產生中，請稍候...</div>');
+                }
+            } catch (e) {
+                console.warn("無法開啟新分頁", e);
+            }
+
+            let opt = {
                 margin: 0.5, filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-            }).from(printArea).save().then(() => {
+            };
+
+            // 改用 output('bloburl') 產生瀏覽器可預覽的網址
+            html2pdf().set(opt).from(printArea).output('bloburl').then(function(pdfUrl) {
+                // 清理截圖用的白底畫面，恢復深色介面
                 document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
-                btnElement.innerText = "匯出 PDF 表單"; btnElement.disabled = false;
+                btnElement.innerText = "匯出 PDF 表單"; 
+                btnElement.disabled = false;
+
+                if (pdfWindow) {
+                    // 若新分頁成功開啟，直接載入 PDF 讓你看
+                    pdfWindow.location.href = pdfUrl;
+                } else {
+                    // 若被瀏覽器擋住彈出視窗，自動退回「直接下載檔案」的模式
+                    let a = document.createElement('a');
+                    a.href = pdfUrl;
+                    a.download = filename;
+                    a.click();
+                }
             }).catch((err) => {
                 if(document.getElementById('print-area')) document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
                 btnElement.innerText = "匯出 PDF 表單"; btnElement.disabled = false;
+                if(pdfWindow) pdfWindow.close();
                 alert("匯出失敗，請重試。");
             });
         }
