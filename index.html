@@ -145,7 +145,7 @@
             margin-bottom: 5px;
             white-space: nowrap; 
         }
-        .input-group input[type="number"] {
+        .input-group input[type="number"], .input-group input[type="password"] {
             width: 100%;
             box-sizing: border-box;
             padding: 10px; 
@@ -156,7 +156,7 @@
             outline: none;
             font-size: 1em;
         }
-        .input-group input[type="number"]:focus {
+        .input-group input:focus {
             border-color: #ffd700;
         }
         
@@ -247,6 +247,13 @@
         </div>
 
         <div id="flange" class="tab-content">
+            <div class="space-card" style="border: 1px solid #ffd700; background: linear-gradient(145deg, #1a1a1a, #2a2a2a);">
+                <div class="input-group">
+                    <label style="color: #ffd700; font-size: 1em;">🔑 系統核心解鎖密碼 (必填)</label>
+                    <input type="password" id="flange-master-pwd" placeholder="請輸入運算權限密碼" style="border-color: #ffd700; font-size: 1.2em; letter-spacing: 2px;" oninput="recalculateAllFlanges()">
+                </div>
+            </div>
+
             <div id="flanges-container"></div>
             
             <div class="action-bar">
@@ -301,7 +308,7 @@
         }
 
         /* ================================
-           分頁 1: 負載計算相關邏輯
+           分頁 1: 負載計算相關邏輯 (保留不變)
            ================================ */
         function addSpace() {
             const newId = Date.now().toString();
@@ -462,8 +469,10 @@
 
 
         /* ================================
-           分頁 2: 吊隱式風管規劃相關邏輯
+           ★ 分頁 2: 吊隱式風管規劃 (呼叫雲端 API)
            ================================ */
+        let flangeTimers = {}; // 紀錄每個區塊的延遲輸入計時器
+
         function addFlange() {
             const newId = Date.now().toString();
             appState.flanges.push({
@@ -492,15 +501,29 @@
             const flange = appState.flanges.find(f => f.id === id);
             if (!flange) return;
             flange[field] = value;
-            calculateFlangeObj(flange);
             saveDataSilently();
+
+            // 防抖機制：使用者停止打字 0.6 秒後，才向雲端發送計算請求
+            if (flangeTimers[id]) clearTimeout(flangeTimers[id]);
+            flangeTimers[id] = setTimeout(() => {
+                fetchCloudflareAPI(flange);
+            }, 600);
         }
 
-        function calculateFlangeObj(flange) {
+        // 當使用者輸入或修改密碼時，觸發畫面上所有已填尺寸的配置進行重新計算
+        function recalculateAllFlanges() {
+            appState.flanges.forEach(f => {
+                if (f.w && f.h) fetchCloudflareAPI(f);
+            });
+        }
+
+        // 核心連線功能：呼叫你的 Cloudflare 專屬網址
+        async function fetchCloudflareAPI(flange) {
             let w = parseFloat(flange.w) || 0;
             let h = parseFloat(flange.h) || 0;
             let t = parseInt(flange.t) || 0;
-            
+            let pwd = document.getElementById('flange-master-pwd').value;
+
             let areaTextId = 'flange_area_' + flange.id;
             let resBoxId = 'flange_res_' + flange.id;
 
@@ -513,66 +536,44 @@
                 return;
             }
 
-            let area = w * h;
-            flange.area = area;
-            document.getElementById(areaTextId).innerText = area.toFixed(2).replace(/\.00$/, '');
-
-            const inchToCm = 2.54;
-            function getCircleArea(inches) {
-                let r = (inches * inchToCm) / 2;
-                return Math.PI * Math.pow(r, 2);
-            }
-
-            let sizes = [
-                { name: "12英吋", area: getCircleArea(12) },
-                { name: "10英吋", area: getCircleArea(10) },
-                { name: "8英吋", area: getCircleArea(8) }
-            ];
-
-            if (area < sizes[2].area) {
-                flange.resultHtml = "建議配置：截面積過小，無法開孔";
+            if (!pwd) {
+                flange.resultHtml = "⚠️ 請先在上方輸入系統解鎖密碼";
                 document.getElementById(resBoxId).innerHTML = flange.resultHtml;
                 document.getElementById(resBoxId).style.color = "#ff4c4c";
                 return;
             }
 
-            let bestMatch = null;
-            if (t > 0) {
-                let currentTarget = t;
-                while (currentTarget > 0) {
-                    for (let i = 0; i < sizes.length; i++) {
-                        if (Math.floor(area / sizes[i].area) === currentTarget) {
-                            bestMatch = { size: sizes[i].name, count: currentTarget };
-                            break; 
-                        }
-                    }
-                    if (bestMatch) break; 
-                    currentTarget--; 
-                }
-            } else {
-                for (let i = 0; i < sizes.length; i++) {
-                    let maxCount = Math.floor(area / sizes[i].area);
-                    if (maxCount >= 1) {
-                        bestMatch = { size: sizes[i].name, count: maxCount };
-                        break;
-                    }
-                }
-            }
+            // 顯示連線中狀態
+            document.getElementById(resBoxId).innerHTML = "連線至雲端大腦運算中 <span style='font-size:0.8em'>⏳</span>";
+            document.getElementById(resBoxId).style.color = "#aaaaaa";
 
-            let resHtml = "";
-            if (bestMatch) {
-                if (t > 0 && bestMatch.count !== t) {
-                    resHtml = `建議配置：<span style="color:#fff">${bestMatch.size} × ${bestMatch.count}個</span><br><span style="font-size: 0.7em; color: #ff4c4c; display:block; margin-top:5px;">(空間不足 ${t} 個，已自動遞減)</span>`;
+            try {
+                // 將資料發送至你的專屬後端 API
+                const response = await fetch('https://ryujin-god-api.mondogshahan.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ w: w, h: h, t: t, password: pwd })
+                });
+                
+                const data = await response.json();
+
+                if (data.error) {
+                    flange.resultHtml = "⚠️ " + data.error;
+                    document.getElementById(resBoxId).innerHTML = flange.resultHtml;
+                    document.getElementById(resBoxId).style.color = "#ff4c4c";
                 } else {
-                    resHtml = `建議配置：<span style="color:#fff">${bestMatch.size} × ${bestMatch.count}個</span>`;
+                    flange.area = data.area;
+                    flange.resultHtml = data.resultHtml;
+                    document.getElementById(areaTextId).innerText = data.area > 0 ? data.area.toFixed(2).replace(/\.00$/, '') : '0';
+                    document.getElementById(resBoxId).innerHTML = flange.resultHtml;
+                    document.getElementById(resBoxId).style.color = "#ffd700";
                 }
-            } else {
-                resHtml = "建議配置：無法匹配適合的管徑";
+            } catch (err) {
+                flange.resultHtml = "❌ 雲端連線失敗，請檢查網路狀態";
+                document.getElementById(resBoxId).innerHTML = flange.resultHtml;
+                document.getElementById(resBoxId).style.color = "#ff4c4c";
             }
-            
-            flange.resultHtml = resHtml;
-            document.getElementById(resBoxId).innerHTML = flange.resultHtml;
-            document.getElementById(resBoxId).style.color = "#ffd700";
+            saveDataSilently();
         }
 
         function renderFlanges() {
@@ -602,7 +603,7 @@
                         </div>
                         <div class="input-group">
                             <label>目標出風口數量</label>
-                            <input type="number" placeholder="例如: 4" value="${flange.t}" 
+                            <input type="number" placeholder="可選" value="${flange.t}" 
                                    oninput="updateFlangeField('${flange.id}', 't', this.value)">
                         </div>
                     </div>
@@ -644,7 +645,8 @@
                 let areaText = f.area > 0 ? `${f.area.toFixed(2).replace(/\.00$/, '')} cm²` : '0 cm²';
                 let targetText = f.t ? `${f.t} 個` : '未指定';
                 
-                let pureResult = f.resultHtml.replace(/<br>/g, " ").replace(/<[^>]+>/g, '');
+                // 去除 resultHtml 中的 HTML 標籤及錯誤提示，讓 PDF 顯示乾淨純文字
+                let pureResult = f.resultHtml.replace(/<br>/g, " ").replace(/<[^>]+>/g, '').replace(/⚠️|❌/g, '');
 
                 textBlocks += `
                     <div style="border-bottom: 1px dashed #ccc; padding: 15px 0; page-break-inside: avoid;">
@@ -658,12 +660,12 @@
                 `;
             });
 
-            printArea.innerHTML += textBlocks + getPdfFooter("開孔建議以系統內建圓面積換算，實際施作請依現場集風箱結構為準。");
+            printArea.innerHTML += textBlocks + getPdfFooter("開孔建議由系統雲端智能計算，實際施作請依現場集風箱結構為準。");
             executePdfExport(printArea, btn, '吊隱式集風箱開孔建議表.pdf');
         }
 
         /* ================================
-           ★ 共用工具函數 (新分頁預覽匯出)
+           共用工具函數
            ================================ */
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -705,7 +707,6 @@
 
         function executePdfExport(printArea, btnElement, filename) {
             let pdfWindow;
-            // 先嘗試開啟新分頁，避開瀏覽器的彈出視窗阻擋
             try {
                 pdfWindow = window.open('', '_blank');
                 if (pdfWindow) {
@@ -722,19 +723,15 @@
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // 改用 output('bloburl') 產生瀏覽器可預覽的網址
             html2pdf().set(opt).from(printArea).output('bloburl').then(function(pdfUrl) {
-                // 清理截圖用的白底畫面，恢復深色介面
                 document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
                 btnElement.innerText = "匯出 PDF 表單"; 
                 btnElement.disabled = false;
 
                 if (pdfWindow) {
-                    // 若新分頁成功開啟，直接載入 PDF 讓你看
                     pdfWindow.location.href = pdfUrl;
                 } else {
-                    // 若被瀏覽器擋住彈出視窗，自動退回「直接下載檔案」的模式
                     let a = document.createElement('a');
                     a.href = pdfUrl;
                     a.download = filename;
