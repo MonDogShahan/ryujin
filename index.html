@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神助手 - 空調負載計算</title>
+    <title>龍神助手 - 專業空調運算</title>
     <link rel="icon" href="icon.png" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#1a1a1a">
@@ -209,13 +209,11 @@
             <img src="icon.png" alt="龍神" class="header-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2ZmZDcwMCIvPjwvc3ZnPg=='">
             <h1>龍神助手</h1>
             <button class="tab-btn active" onclick="switchTab('calc')">負載計算</button>
-            <button class="tab-btn" onclick="switchTab('settings')">其他設定</button>
+            <button class="tab-btn" onclick="switchTab('flange')">吊隱式風管規劃</button>
         </header>
 
         <div id="calc" class="tab-content active">
-            <div id="spaces-container">
-                </div>
-
+            <div id="spaces-container"></div>
             <div class="action-bar">
                 <button class="btn btn-add" onclick="addSpace()">+ 新增空間</button>
                 <button class="btn btn-pdf" id="btn-export" onclick="exportPDF()">匯出 PDF 表單</button>
@@ -223,15 +221,54 @@
             </div>
         </div>
 
-        <div id="settings" class="tab-content">
-            <p>這裡是其他分頁，切換過來再切回去，負載計算的資料依然會保留著。</p>
+        <div id="flange" class="tab-content">
+            <div class="space-card">
+                <div class="space-header">
+                    <div style="color: #ffd700; font-size: 1.3em; font-weight: bold;">吊隱式集風箱開孔運算</div>
+                </div>
+                
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>吹出口法蘭寬度 (cm)</label>
+                        <input type="number" id="flange-w" placeholder="輸入寬度" oninput="updateFlange()">
+                    </div>
+                    <div class="input-group">
+                        <label>吹出口法蘭高度 (cm)</label>
+                        <input type="number" id="flange-h" placeholder="輸入高度" oninput="updateFlange()">
+                    </div>
+                    <div class="input-group">
+                        <label>目標出風口數量 (可選)</label>
+                        <input type="number" id="flange-t" placeholder="例如: 4" oninput="updateFlange()">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+                    <span style="font-size: 1em; color: #aaa;">法蘭截面積：</span>
+                    <span id="flange-area-text" style="color: #fff; font-size: 1.3em; font-weight: bold;">0</span>
+                    <span style="color: #aaa;"> cm²</span>
+                </div>
+
+                <div class="result-box" id="flange-result-box" style="margin-top: 15px; font-size: 1.4em;">
+                    建議配置：請輸入尺寸
+                </div>
+            </div>
+
+            <div class="space-card" style="background: #1e1e1e; border: none; padding: 15px;">
+                <p style="color: #888; font-size: 0.9em; line-height: 1.6; margin: 0;">
+                    💡 <strong>龍神運算邏輯：</strong><br>
+                    • 系統內建 8英吋(314cm²)、10英吋(490cm²)、12英吋(706cm²) 圓面積標準。<br>
+                    • 輸入目標數量時，會自動嘗試由大到小匹配合適管徑；若無符合該數量的管徑，系統會自動遞減尋找最佳解。<br>
+                    • 目標數量為 1 時，會強制由最大管徑 (12英吋) 開始往下除，確保風量無損。
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
         let appState = {
             spaces: [],
-            spaceCounter: 1
+            spaceCounter: 1,
+            flange: { w: '', h: '', t: '' }
         };
 
         function loadData() {
@@ -245,16 +282,100 @@
                     appState = parsed;
                 }
             }
+            
+            if (!appState.flange) {
+                appState.flange = { w: '', h: '', t: '' };
+            }
+
             if (appState.spaces.length === 0) {
                 appState.spaceCounter = 1;
                 addSpace(); 
             } else {
                 renderSpaces(); 
             }
+
+            document.getElementById('flange-w').value = appState.flange.w;
+            document.getElementById('flange-h').value = appState.flange.h;
+            document.getElementById('flange-t').value = appState.flange.t;
+            calculateFlange(); 
         }
 
         function saveDataSilently() {
             localStorage.setItem('dragonGodSpaces', JSON.stringify(appState));
+        }
+
+        function updateFlange() {
+            appState.flange.w = document.getElementById('flange-w').value;
+            appState.flange.h = document.getElementById('flange-h').value;
+            appState.flange.t = document.getElementById('flange-t').value;
+            saveDataSilently();
+            calculateFlange();
+        }
+
+        function calculateFlange() {
+            let w = parseFloat(appState.flange.w) || 0;
+            let h = parseFloat(appState.flange.h) || 0;
+            let t = parseInt(appState.flange.t) || 0;
+            
+            let areaText = document.getElementById('flange-area-text');
+            let resBox = document.getElementById('flange-result-box');
+
+            if (w <= 0 || h <= 0) {
+                areaText.innerText = "0";
+                resBox.innerText = "建議配置：請輸入法蘭寬度與高度";
+                resBox.style.color = "#ffd700";
+                return;
+            }
+
+            let area = w * h;
+            areaText.innerText = area;
+
+            if (area < 314) {
+                resBox.innerText = "建議配置：截面積過小，無法開 8 英吋孔";
+                resBox.style.color = "#ff4c4c";
+                return;
+            }
+
+            let sizes = [
+                { name: "12英吋", area: 706 },
+                { name: "10英吋", area: 490 },
+                { name: "8英吋", area: 314 }
+            ];
+
+            let bestMatch = null;
+
+            if (t > 0) {
+                let currentTarget = t;
+                while (currentTarget > 0) {
+                    for (let i = 0; i < sizes.length; i++) {
+                        if (Math.floor(area / sizes[i].area) === currentTarget) {
+                            bestMatch = { size: sizes[i].name, count: currentTarget };
+                            break; 
+                        }
+                    }
+                    if (bestMatch) break; 
+                    currentTarget--; 
+                }
+            } else {
+                for (let i = 0; i < sizes.length; i++) {
+                    let maxCount = Math.floor(area / sizes[i].area);
+                    if (maxCount >= 1) {
+                        bestMatch = { size: sizes[i].name, count: maxCount };
+                        break;
+                    }
+                }
+            }
+
+            resBox.style.color = "#ffd700";
+            if (bestMatch) {
+                if (t > 0 && bestMatch.count !== t) {
+                    resBox.innerHTML = `建議配置：<span style="color:#fff">${bestMatch.size} × ${bestMatch.count} 個</span><br><span style="font-size: 0.6em; color: #ff4c4c; display:block; margin-top:5px;">(空間不足 ${t} 個，已自動遞減)</span>`;
+                } else {
+                    resBox.innerHTML = `建議配置：<span style="color:#fff">${bestMatch.size} × ${bestMatch.count} 個</span>`;
+                }
+            } else {
+                resBox.innerText = "建議配置：無法匹配適合的管徑";
+            }
         }
 
         function addSpace() {
@@ -262,14 +383,8 @@
             appState.spaces.push({
                 id: newId,
                 name: '空間' + appState.spaceCounter, 
-                length: '',
-                width: '',
-                ping: '',
-                sun: 'none', 
-                roof: 'none', 
-                topFloor: false, 
-                highCeiling: false, 
-                kw: 0
+                length: '', width: '', ping: '',
+                sun: 'none', roof: 'none', topFloor: false, highCeiling: false, kw: 0
             });
             appState.spaceCounter++; 
             saveDataSilently();
@@ -321,7 +436,6 @@
             space.kw = kwVal.toFixed(2);
             
             document.getElementById('result_' + id).innerText = '建議能力：約 ' + space.kw + ' kW';
-
             saveDataSilently();
         }
 
@@ -352,93 +466,56 @@
                         </div>
                         <div class="input-group">
                             <label>坪數</label>
-                            <input type="number" id="ping_${space.id}" class="ping-input" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
+                            <input type="number" id="ping_${space.id}" class="ping-input" step="0.01" placeholder="可手動" value="${space.ping}" 
                                    oninput="updateField('${space.id}', 'ping', this.value)">
                         </div>
                     </div>
 
                     <div class="options-section">
                         <div class="options-row">
-                            <label class="option-label">
-                                <input type="radio" name="sun_${space.id}" value="none" 
-                                       ${space.sun === 'none' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'sun', this.value)"> 無西曬
-                            </label>
-                            <label class="option-label">
-                                <input type="radio" name="sun_${space.id}" value="west" 
-                                       ${space.sun === 'west' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'sun', this.value)"> 西曬
-                            </label>
-                            <label class="option-label">
-                                <input type="radio" name="sun_${space.id}" value="all" 
-                                       ${space.sun === 'all' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'sun', this.value)"> 全日曬
-                            </label>
+                            <label class="option-label"><input type="radio" name="sun_${space.id}" value="none" ${space.sun === 'none' ? 'checked' : ''} onchange="updateField('${space.id}', 'sun', this.value)"> 無西曬</label>
+                            <label class="option-label"><input type="radio" name="sun_${space.id}" value="west" ${space.sun === 'west' ? 'checked' : ''} onchange="updateField('${space.id}', 'sun', this.value)"> 西曬</label>
+                            <label class="option-label"><input type="radio" name="sun_${space.id}" value="all" ${space.sun === 'all' ? 'checked' : ''} onchange="updateField('${space.id}', 'sun', this.value)"> 全日曬</label>
                         </div>
-                        
                         <div class="options-row">
-                            <label class="option-label">
-                                <input type="checkbox" ${space.topFloor ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'topFloor', this.checked)"> 頂樓
-                            </label>
-                            <label class="option-label">
-                                <input type="checkbox" ${space.highCeiling ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'highCeiling', this.checked)"> 挑高
-                            </label>
+                            <label class="option-label"><input type="checkbox" ${space.topFloor ? 'checked' : ''} onchange="updateField('${space.id}', 'topFloor', this.checked)"> 頂樓</label>
+                            <label class="option-label"><input type="checkbox" ${space.highCeiling ? 'checked' : ''} onchange="updateField('${space.id}', 'highCeiling', this.checked)"> 挑高</label>
                         </div>
-
                         <div class="options-row">
-                            <label class="option-label">
-                                <input type="radio" name="roof_${space.id}" value="none" 
-                                       ${space.roof === 'none' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'roof', this.value)"> 一般屋頂
-                            </label>
-                            <label class="option-label">
-                                <input type="radio" name="roof_${space.id}" value="tin" 
-                                       ${space.roof === 'tin' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'roof', this.value)"> 鐵皮
-                            </label>
-                            <label class="option-label">
-                                <input type="radio" name="roof_${space.id}" value="black_tin" 
-                                       ${space.roof === 'black_tin' ? 'checked' : ''} 
-                                       onchange="updateField('${space.id}', 'roof', this.value)"> 黑鐵皮
-                            </label>
+                            <label class="option-label"><input type="radio" name="roof_${space.id}" value="none" ${space.roof === 'none' ? 'checked' : ''} onchange="updateField('${space.id}', 'roof', this.value)"> 一般屋頂</label>
+                            <label class="option-label"><input type="radio" name="roof_${space.id}" value="tin" ${space.roof === 'tin' ? 'checked' : ''} onchange="updateField('${space.id}', 'roof', this.value)"> 鐵皮</label>
+                            <label class="option-label"><input type="radio" name="roof_${space.id}" value="black_tin" ${space.roof === 'black_tin' ? 'checked' : ''} onchange="updateField('${space.id}', 'roof', this.value)"> 黑鐵皮</label>
                         </div>
                     </div>
-
-                    <div class="result-box" id="result_${space.id}">
-                        建議能力：約 ${space.kw} kW
-                    </div>
+                    <div class="result-box" id="result_${space.id}">建議能力：約 ${space.kw} kW</div>
                 `;
                 container.appendChild(card);
             });
         }
 
         function resetAll() {
-            if (confirm("警告：您確定要清除所有測量資料與空間嗎？此動作無法復原！")) {
+            if (confirm("警告：確定要清除所有測量資料嗎？")) {
                 localStorage.removeItem('dragonGodSpaces');
-                appState.spaces = [];
-                appState.spaceCounter = 1; 
-                addSpace(); 
+                appState = { spaces: [], spaceCounter: 1, flange: { w: '', h: '', t: '' } };
+                addSpace();
+                document.getElementById('flange-w').value = '';
+                document.getElementById('flange-h').value = '';
+                document.getElementById('flange-t').value = '';
+                calculateFlange();
             }
         }
 
-        // ★ 暴力解法：隱藏原本介面，直接把純文字報表印在畫面上截圖 ★
         function exportPDF() {
             const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
             if (!hasData) {
-                alert("目前沒有任何測量資料！\n請至少在一個空間輸入「長寬」或「坪數」後再匯出表單。");
-                return;
+                alert("目前沒有任何測量資料！"); return;
             }
 
             const btn = document.getElementById('btn-export');
-            btn.innerText = "生成表單中...";
-            btn.disabled = true;
+            btn.innerText = "生成表單中..."; btn.disabled = true;
 
-            // 1. 瞬間隱藏所有操作介面
             document.getElementById('main-ui').style.display = 'none';
 
-            // 2. 建立一個佔滿畫面的純白列印區塊
             const printArea = document.createElement('div');
             printArea.id = 'print-area';
             printArea.style.backgroundColor = '#ffffff';
@@ -465,7 +542,6 @@
                 let pingText = space.ping ? `${space.ping} 坪` : '未填寫坪數';
                 let kwText = space.kw > 0 ? `${space.kw} kW` : '尚未計算';
 
-                // 完全照你說的，新增一個空間就是多印一段文字下來，不搞表格
                 textBlocks += `
                     <div style="border-bottom: 1px dashed #ccc; padding: 15px 0; page-break-inside: avoid;">
                         <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">🔸 ${space.name || '未命名空間'}</div>
@@ -478,7 +554,6 @@
                 `;
             });
 
-            // 把文字組合進列印畫面
             printArea.innerHTML = `
                 <div style="border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center;">
                     <h1 style="margin: 0; font-size: 26px; flex-grow: 1;">龍神助手 - 空間負載報表</h1>
@@ -490,31 +565,22 @@
                 </div>
             `;
 
-            // 把這個畫面正式加進網頁 (這時候你的手機螢幕會短暫變白，顯示這份報表)
             document.body.appendChild(printArea);
             window.scrollTo(0, 0);
 
-            // 3. 讓套件去截這個 100% 真實存在的畫面
-            const opt = {
-                margin:       0.5,
-                filename:     '空調空間負載計算表.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-
-            // 4. 印完之後把畫面變回去
-            html2pdf().set(opt).from(printArea).save().then(() => {
-                document.body.removeChild(printArea); // 刪掉白底報表
-                document.getElementById('main-ui').style.display = 'block'; // 把暗色介面叫回來
-                btn.innerText = "匯出 PDF 表單";
-                btn.disabled = false;
+            html2pdf().set({
+                margin: 0.5, filename: '空調空間負載計算表.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            }).from(printArea).save().then(() => {
+                document.body.removeChild(printArea);
+                document.getElementById('main-ui').style.display = 'block';
+                btn.innerText = "匯出 PDF 表單"; btn.disabled = false;
             }).catch((err) => {
-                console.error(err);
                 if(document.getElementById('print-area')) document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
-                btn.innerText = "匯出 PDF 表單";
-                btn.disabled = false;
+                btn.innerText = "匯出 PDF 表單"; btn.disabled = false;
                 alert("匯出失敗，請重試。");
             });
         }
@@ -522,7 +588,6 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
         }
