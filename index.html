@@ -421,23 +421,30 @@
             }
         }
 
-        // ★ 全新的 PDF 報表生成邏輯 ★
         function exportPDF() {
+            // ★ 防呆機制：檢查是否至少有一個空間有算出 kW 或填寫坪數
+            const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
+            if (!hasData) {
+                alert("目前沒有任何測量資料！\n請至少在一個空間輸入「長寬」或「坪數」後再匯出表單。");
+                return;
+            }
+
             const btn = document.getElementById('btn-export');
             btn.innerText = "生成表單中...";
             btn.disabled = true;
 
-            // 建立一個隱藏的 div 來排版正式的報價表單
+            // ★ 修復空白 PDF：利用 height 0 與 overflow hidden 將區塊藏在一般文件流中，而不是拔出畫面
+            const wrapper = document.createElement('div');
+            wrapper.style.height = '0';
+            wrapper.style.overflow = 'hidden';
+
             const pdfContainer = document.createElement('div');
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.left = '-9999px'; // 藏在畫面外
-            pdfContainer.style.top = '0';
-            
-            // 抓取今天的日期
+            pdfContainer.style.width = '800px';
+            pdfContainer.style.backgroundColor = '#ffffff';
+
             const today = new Date();
             const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
 
-            // 組合表格內容 (HTML/CSS 行內樣式確保匯出格式穩定)
             let tableRows = '';
             appState.spaces.forEach((space) => {
                 let conditions = [];
@@ -464,9 +471,8 @@
                 `;
             });
 
-            // 報表外觀 HTML 結構
             pdfContainer.innerHTML = `
-                <div style="padding: 40px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; background: #fff; width: 800px;">
+                <div style="padding: 40px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; background: #fff; width: 800px; box-sizing: border-box;">
                     <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 30px;">
                         <img src="icon.png" style="width: 70px; height: 70px; border-radius: 20%; margin-right: 20px; object-fit: cover;" onerror="this.style.display='none'">
                         <div style="flex-grow: 1;">
@@ -499,22 +505,27 @@
                 </div>
             `;
 
-            document.body.appendChild(pdfContainer);
+            wrapper.appendChild(pdfContainer);
+            document.body.appendChild(wrapper);
 
-            // 設定匯出參數 (強制設定為 A4 大小)
             const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5], // 上, 右, 下, 左 的邊界
+                margin:       [0.5, 0.5, 0.5, 0.5],
                 filename:     '空調空間負載計算表.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // 執行匯出並在完成後清理殘留的 DOM
             html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                document.body.removeChild(pdfContainer);
+                document.body.removeChild(wrapper);
                 btn.innerText = "匯出 PDF 表單";
                 btn.disabled = false;
+            }).catch((err) => {
+                console.error("PDF 匯出錯誤: ", err);
+                document.body.removeChild(wrapper);
+                btn.innerText = "匯出 PDF 表單";
+                btn.disabled = false;
+                alert("匯出失敗，請確保圖片已正確載入。");
             });
         }
 
