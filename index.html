@@ -94,18 +94,10 @@
             color: #ffd700;
             font-size: 1.3em;
             font-weight: bold;
-            width: 70%;
+            width: 100%;
             outline: none;
         }
         .space-title-input::placeholder { color: #888; }
-        .delete-btn {
-            background: #ff4c4c;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
 
         /* 表單與選項網格 */
         .input-grid {
@@ -128,6 +120,10 @@
             border: 1px solid #444;
             background: #1a1a1a;
             color: #fff;
+            outline: none;
+        }
+        .input-group input[type="number"]:focus {
+            border-color: #ffd700;
         }
         
         /* 環境選項區塊 */
@@ -220,31 +216,27 @@
     </div>
 
     <script>
-        // 初始化應用程式狀態
         let appState = {
             spaces: []
         };
 
-        // 載入 localStorage 資料 (達成關閉網頁/切換分頁保留資料)
         function loadData() {
             const savedData = localStorage.getItem('dragonGodSpaces');
             if (savedData) {
                 appState.spaces = JSON.parse(savedData);
             }
             if (appState.spaces.length === 0) {
-                addSpace(); // 如果完全沒資料，預設開啟一個新空間
+                addSpace(); 
             } else {
-                renderSpaces();
+                renderSpaces(); 
             }
         }
 
-        // 儲存資料到 localStorage
-        function saveData() {
+        // 僅儲存資料，不重新繪製畫面 (解決輸入框失焦問題)
+        function saveDataSilently() {
             localStorage.setItem('dragonGodSpaces', JSON.stringify(appState.spaces));
-            renderSpaces();
         }
 
-        // 新增一個空間
         function addSpace() {
             const newId = Date.now().toString();
             appState.spaces.push({
@@ -253,44 +245,38 @@
                 length: '',
                 width: '',
                 ping: '',
-                sun: 'none',   // none, west(西曬), all(全日曬)
-                roof: 'none',  // none, tin(鐵皮), black_tin(黑鐵皮)
-                topFloor: false, // 頂樓
-                highCeiling: false, // 挑高
+                sun: 'none', 
+                roof: 'none', 
+                topFloor: false, 
+                highCeiling: false, 
                 kw: 0
             });
-            saveData();
+            saveDataSilently();
+            renderSpaces(); // 只有新增空間時才重新繪製整個列表
         }
 
-        // 刪除特定空間
-        function removeSpace(id) {
-            appState.spaces = appState.spaces.filter(space => space.id !== id);
-            saveData();
-        }
-
-        // 更新資料與計算邏輯
+        // 更新單一欄位與計算邏輯
         function updateField(id, field, value) {
             const space = appState.spaces.find(s => s.id === id);
             if (!space) return;
 
             space[field] = value;
 
-            // 長寬變動時，即時自動換算坪數
+            // 長寬變動時，自動換算坪數並更新畫面上的特定輸入框
             if (field === 'length' || field === 'width') {
                 const l = parseFloat(space.length) || 0;
                 const w = parseFloat(space.width) || 0;
                 if (l > 0 && w > 0) {
-                    // 平方公尺 = (公分/100) * (公分/100)
-                    // 坪數 = 平方公尺 * 0.3025
                     const ping = ((l / 100) * (w / 100)) * 0.3025;
-                    space.ping = ping.toFixed(2); // 取小數點後兩位
+                    space.ping = ping.toFixed(2);
+                    document.getElementById('ping_' + id).value = space.ping;
                 } else {
                     space.ping = '';
+                    document.getElementById('ping_' + id).value = '';
                 }
             }
 
-            // 計算 KW 估算值 (基準: 1坪 = 0.6 kW)
-            // 可依據現場實際經驗調整倍率
+            // 計算 KW 估算值
             const pingVal = parseFloat(space.ping) || 0;
             let kwVal = pingVal * 0.6; 
             
@@ -303,43 +289,42 @@
                 if (space.roof === 'black_tin') kwVal *= 1.30;
             }
             space.kw = kwVal.toFixed(2);
+            
+            // 直接更新畫面上的結果文字，不影響正在輸入的框
+            document.getElementById('result_' + id).innerText = '建議能力：約 ' + space.kw + ' kW';
 
-            saveData();
+            saveDataSilently();
         }
 
-        // 渲染所有空間到畫面上
         function renderSpaces() {
             const container = document.getElementById('spaces-container');
             container.innerHTML = '';
 
-            appState.spaces.forEach((space, index) => {
+            appState.spaces.forEach((space) => {
                 const card = document.createElement('div');
                 card.className = 'space-card';
+                // 使用 oninput 取代 onchange/onkeyup，輸入體驗更順暢
                 card.innerHTML = `
                     <div class="space-header">
                         <input type="text" class="space-title-input" placeholder="空間名稱 (如: 客廳、主臥)" 
-                               value="${space.name}" onchange="updateField('${space.id}', 'name', this.value)">
-                        <button class="delete-btn" onclick="removeSpace('${space.id}')">刪除</button>
+                               value="${space.name}" oninput="updateField('${space.id}', 'name', this.value)">
                     </div>
                     
                     <div class="input-grid">
                         <div class="input-group">
                             <label>長度 (cm)</label>
                             <input type="number" placeholder="公分" value="${space.length}" 
-                                   onkeyup="updateField('${space.id}', 'length', this.value)"
-                                   onchange="updateField('${space.id}', 'length', this.value)">
+                                   oninput="updateField('${space.id}', 'length', this.value)">
                         </div>
                         <div class="input-group">
                             <label>寬度 (cm)</label>
                             <input type="number" placeholder="公分" value="${space.width}" 
-                                   onkeyup="updateField('${space.id}', 'width', this.value)"
-                                   onchange="updateField('${space.id}', 'width', this.value)">
+                                   oninput="updateField('${space.id}', 'width', this.value)">
                         </div>
                         <div class="input-group">
                             <label>坪數</label>
-                            <input type="number" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
-                                   onkeyup="updateField('${space.id}', 'ping', this.value)"
-                                   onchange="updateField('${space.id}', 'ping', this.value)">
+                            <input type="number" id="ping_${space.id}" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
+                                   oninput="updateField('${space.id}', 'ping', this.value)">
                         </div>
                     </div>
 
@@ -392,7 +377,7 @@
                         </div>
                     </div>
 
-                    <div class="result-box">
+                    <div class="result-box" id="result_${space.id}">
                         建議能力：約 ${space.kw} kW
                     </div>
                 `;
@@ -400,19 +385,16 @@
             });
         }
 
-        // 重置所有資料 (二次確認)
         function resetAll() {
             if (confirm("警告：您確定要清除所有測量資料與空間嗎？此動作無法復原！")) {
                 localStorage.removeItem('dragonGodSpaces');
                 appState.spaces = [];
-                addSpace(); // 重新給予一個空白空間
+                addSpace(); 
             }
         }
 
-        // 匯出成 PDF 檔
         function exportPDF() {
             const element = document.getElementById('calc');
-            // 暫時隱藏按鈕區塊避免印出來
             const actionBar = document.querySelector('.action-bar');
             actionBar.style.display = 'none';
 
@@ -420,17 +402,15 @@
                 margin:       0.5,
                 filename:     '空調負載評估表.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1a1a1a' }, // 保持暗色調匯出
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1a1a1a' },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // 生成 PDF，完成後將按鈕顯示回來
             html2pdf().set(opt).from(element).save().then(() => {
                 actionBar.style.display = 'flex';
             });
         }
 
-        // 分頁切換邏輯
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -439,9 +419,7 @@
             event.currentTarget.classList.add('active');
         }
 
-        // 啟動時自動載入資料
         window.onload = loadData;
-
     </script>
 </body>
 </html>
