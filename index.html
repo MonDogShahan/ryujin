@@ -126,6 +126,12 @@
             border-color: #ffd700;
         }
         
+        /* ★ 針對坪數輸入框的黃色文字設定 ★ */
+        .ping-input {
+            color: #ffd700 !important;
+            font-weight: bold;
+        }
+        
         /* 環境選項區塊 */
         .options-section {
             background: #1e1e1e;
@@ -188,6 +194,7 @@
             .space-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
             .space-title-input { color: black; }
             .result-box { color: black; }
+            .ping-input { color: black !important; } /* 列印時坪數改回黑色避免看不清楚 */
         }
     </style>
 </head>
@@ -232,7 +239,6 @@
             }
         }
 
-        // 僅儲存資料，不重新繪製畫面 (解決輸入框失焦問題)
         function saveDataSilently() {
             localStorage.setItem('dragonGodSpaces', JSON.stringify(appState.spaces));
         }
@@ -241,7 +247,7 @@
             const newId = Date.now().toString();
             appState.spaces.push({
                 id: newId,
-                name: '',
+                name: '客廳', // ★ 將預設名稱改為「客廳」
                 length: '',
                 width: '',
                 ping: '',
@@ -252,17 +258,15 @@
                 kw: 0
             });
             saveDataSilently();
-            renderSpaces(); // 只有新增空間時才重新繪製整個列表
+            renderSpaces(); 
         }
 
-        // 更新單一欄位與計算邏輯
         function updateField(id, field, value) {
             const space = appState.spaces.find(s => s.id === id);
             if (!space) return;
 
             space[field] = value;
 
-            // 長寬變動時，自動換算坪數並更新畫面上的特定輸入框
             if (field === 'length' || field === 'width') {
                 const l = parseFloat(space.length) || 0;
                 const w = parseFloat(space.width) || 0;
@@ -276,7 +280,6 @@
                 }
             }
 
-            // 計算 KW 估算值
             const pingVal = parseFloat(space.ping) || 0;
             let kwVal = pingVal * 0.6; 
             
@@ -290,7 +293,6 @@
             }
             space.kw = kwVal.toFixed(2);
             
-            // 直接更新畫面上的結果文字，不影響正在輸入的框
             document.getElementById('result_' + id).innerText = '建議能力：約 ' + space.kw + ' kW';
 
             saveDataSilently();
@@ -303,7 +305,6 @@
             appState.spaces.forEach((space) => {
                 const card = document.createElement('div');
                 card.className = 'space-card';
-                // 使用 oninput 取代 onchange/onkeyup，輸入體驗更順暢
                 card.innerHTML = `
                     <div class="space-header">
                         <input type="text" class="space-title-input" placeholder="空間名稱 (如: 客廳、主臥)" 
@@ -323,7 +324,7 @@
                         </div>
                         <div class="input-group">
                             <label>坪數</label>
-                            <input type="number" id="ping_${space.id}" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
+                            <input type="number" id="ping_${space.id}" class="ping-input" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
                                    oninput="updateField('${space.id}', 'ping', this.value)">
                         </div>
                     </div>
