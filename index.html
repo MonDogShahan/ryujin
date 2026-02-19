@@ -99,7 +99,6 @@
         }
         .space-title-input::placeholder { color: #888; }
 
-        /* 單獨刪除按鈕 */
         .delete-btn {
             background: transparent;
             color: #ff4c4c;
@@ -201,16 +200,6 @@
         .btn-pdf { background: #4a90e2; color: white; }
         .btn-reset { background: transparent; border: 2px solid #ff4c4c; color: #ff4c4c; }
         .btn:active { transform: scale(0.95); }
-
-        /* 隱藏列印時不需要的元素 */
-        @media print {
-            .action-bar, header, .delete-btn { display: none; }
-            body { background: white; color: black; }
-            .space-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
-            .space-title-input { color: black; width: 100%; }
-            .result-box { color: black; }
-            .ping-input { color: black !important; } 
-        }
     </style>
 </head>
 <body>
@@ -228,7 +217,7 @@
 
         <div class="action-bar">
             <button class="btn btn-add" onclick="addSpace()">+ 新增空間</button>
-            <button class="btn btn-pdf" onclick="exportPDF()">匯出 PDF</button>
+            <button class="btn btn-pdf" id="btn-export" onclick="exportPDF()">匯出 PDF 表單</button>
             <button class="btn btn-reset" onclick="resetAll()">重置資料</button>
         </div>
     </div>
@@ -238,7 +227,6 @@
     </div>
 
     <script>
-        // 加入 spaceCounter 來紀錄已經編號到第幾號
         let appState = {
             spaces: [],
             spaceCounter: 1
@@ -248,7 +236,6 @@
             const savedData = localStorage.getItem('dragonGodSpaces');
             if (savedData) {
                 let parsed = JSON.parse(savedData);
-                // 為了相容你之前的舊版資料（之前是存陣列），做一下格式轉換
                 if (Array.isArray(parsed)) {
                     appState.spaces = parsed;
                     appState.spaceCounter = parsed.length + 1;
@@ -272,7 +259,7 @@
             const newId = Date.now().toString();
             appState.spaces.push({
                 id: newId,
-                name: '空間' + appState.spaceCounter, // 自動命名為 空間1, 空間2...
+                name: '空間' + appState.spaceCounter, 
                 length: '',
                 width: '',
                 ping: '',
@@ -282,20 +269,16 @@
                 highCeiling: false, 
                 kw: 0
             });
-            appState.spaceCounter++; // 編號自動遞增
+            appState.spaceCounter++; 
             saveDataSilently();
             renderSpaces(); 
         }
 
-        // 單獨刪除空間的邏輯
         function removeSpace(id) {
-            // 防呆：不能刪到一個都不剩
             if (appState.spaces.length <= 1) {
                 alert("無法刪除！表單中至少需要保留一個空間進行計算。");
                 return;
             }
-
-            // 二次確認
             if (confirm("確定要刪除這個空間的資料嗎？")) {
                 appState.spaces = appState.spaces.filter(space => space.id !== id);
                 saveDataSilently();
@@ -433,26 +416,105 @@
             if (confirm("警告：您確定要清除所有測量資料與空間嗎？此動作無法復原！")) {
                 localStorage.removeItem('dragonGodSpaces');
                 appState.spaces = [];
-                appState.spaceCounter = 1; // 重置時計數器歸 1
+                appState.spaceCounter = 1; 
                 addSpace(); 
             }
         }
 
+        // ★ 全新的 PDF 報表生成邏輯 ★
         function exportPDF() {
-            const element = document.getElementById('calc');
-            const actionBar = document.querySelector('.action-bar');
-            actionBar.style.display = 'none';
+            const btn = document.getElementById('btn-export');
+            btn.innerText = "生成表單中...";
+            btn.disabled = true;
 
+            // 建立一個隱藏的 div 來排版正式的報價表單
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.left = '-9999px'; // 藏在畫面外
+            pdfContainer.style.top = '0';
+            
+            // 抓取今天的日期
+            const today = new Date();
+            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+
+            // 組合表格內容 (HTML/CSS 行內樣式確保匯出格式穩定)
+            let tableRows = '';
+            appState.spaces.forEach((space) => {
+                let conditions = [];
+                if (space.sun === 'west') conditions.push('西曬');
+                if (space.sun === 'all') conditions.push('全日曬');
+                if (space.topFloor) conditions.push('頂樓');
+                if (space.highCeiling) conditions.push('挑高');
+                if (space.roof === 'tin') conditions.push('鐵皮');
+                if (space.roof === 'black_tin') conditions.push('黑鐵皮');
+                
+                let condText = conditions.length > 0 ? conditions.join('、') : '無特殊條件';
+                let dimText = (space.length && space.width) ? `${space.length} × ${space.width}` : '-';
+                let pingText = space.ping ? space.ping : '-';
+                let kwText = space.kw > 0 ? space.kw : '-';
+
+                tableRows += `
+                    <tr>
+                        <td style="border: 1px solid #333; padding: 12px 8px; font-weight: bold;">${space.name || '未命名'}</td>
+                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: center;">${dimText}</td>
+                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: center;">${pingText}</td>
+                        <td style="border: 1px solid #333; padding: 12px 8px; color: #555;">${condText}</td>
+                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: right; font-weight: bold; color: #d32f2f; font-size: 1.1em;">${kwText}</td>
+                    </tr>
+                `;
+            });
+
+            // 報表外觀 HTML 結構
+            pdfContainer.innerHTML = `
+                <div style="padding: 40px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; background: #fff; width: 800px;">
+                    <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 30px;">
+                        <img src="icon.png" style="width: 70px; height: 70px; border-radius: 20%; margin-right: 20px; object-fit: cover;" onerror="this.style.display='none'">
+                        <div style="flex-grow: 1;">
+                            <h1 style="margin: 0; font-size: 28px; color: #1a1a1a; letter-spacing: 2px;">龍神助手</h1>
+                            <h2 style="margin: 5px 0 0 0; font-size: 20px; color: #666; font-weight: normal;">空調空間負載計算表</h2>
+                        </div>
+                        <div style="text-align: right; font-size: 14px; color: #444;">
+                            列印日期：${dateString}
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                        <thead>
+                            <tr style="background-color: #f0f0f0;">
+                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: left; width: 20%;">空間名稱</th>
+                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: center; width: 20%;">尺寸 (長×寬 cm)</th>
+                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: center; width: 15%;">坪數</th>
+                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: left; width: 25%;">環境條件</th>
+                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: right; width: 20%;">建議能力 (kW)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 40px; font-size: 13px; color: #888; border-top: 1px solid #ddd; padding-top: 10px;">
+                        * 備註：此表單之能力建議為初步評估，實際機型選擇需視現場管線配置與客戶需求而定。
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(pdfContainer);
+
+            // 設定匯出參數 (強制設定為 A4 大小)
             const opt = {
-                margin:       0.5,
-                filename:     '空調負載評估表.pdf',
+                margin:       [0.5, 0.5, 0.5, 0.5], // 上, 右, 下, 左 的邊界
+                filename:     '空調空間負載計算表.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1a1a1a' },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                actionBar.style.display = 'flex';
+            // 執行匯出並在完成後清理殘留的 DOM
+            html2pdf().set(opt).from(pdfContainer).save().then(() => {
+                document.body.removeChild(pdfContainer);
+                btn.innerText = "匯出 PDF 表單";
+                btn.disabled = false;
             });
         }
 
