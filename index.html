@@ -421,8 +421,8 @@
             }
         }
 
+        // ★ 徹底解決空白與切邊問題：直接將 HTML 字串餵給套件，不放入 DOM ★
         function exportPDF() {
-            // 防呆機制：只要有一項資料不是空白/0 就能匯出
             const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
             if (!hasData) {
                 alert("目前沒有任何測量資料！\n請至少在一個空間輸入「長寬」或「坪數」後再匯出表單。");
@@ -432,15 +432,6 @@
             const btn = document.getElementById('btn-export');
             btn.innerText = "生成表單中...";
             btn.disabled = true;
-
-            // ★ 修改 1：解決空白 PDF。改用 fixed 將表單推到畫面外，確保繪圖引擎抓得到實體長寬
-            // ★ 修改 2：解決右側切邊。強制寬度設為 700px (符合 A4 紙張列印範圍)
-            const pdfContainer = document.createElement('div');
-            pdfContainer.style.position = 'fixed';
-            pdfContainer.style.left = '-9999px';
-            pdfContainer.style.top = '0';
-            pdfContainer.style.width = '700px'; 
-            pdfContainer.style.backgroundColor = '#ffffff';
 
             const today = new Date();
             const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
@@ -471,8 +462,9 @@
                 `;
             });
 
-            pdfContainer.innerHTML = `
-                <div style="padding: 30px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; box-sizing: border-box;">
+            // 直接組合成一個純字串
+            const htmlContent = `
+                <div style="padding: 30px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; background: #fff; width: 700px; box-sizing: border-box;">
                     <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 20px;">
                         <img src="icon.png" style="width: 60px; height: 60px; border-radius: 20%; margin-right: 15px; object-fit: cover;" onerror="this.style.display='none'">
                         <div style="flex-grow: 1;">
@@ -505,23 +497,20 @@
                 </div>
             `;
 
-            document.body.appendChild(pdfContainer);
-
             const opt = {
-                margin:       0.4, // 將邊距縮小，留出更多表格空間
+                margin:       0.4, 
                 filename:     '空調空間負載計算表.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                document.body.removeChild(pdfContainer);
+            // 直接將字串餵給 html2pdf()，完全避開 DOM 渲染機制
+            html2pdf().set(opt).from(htmlContent).save().then(() => {
                 btn.innerText = "匯出 PDF 表單";
                 btn.disabled = false;
             }).catch((err) => {
                 console.error("PDF 匯出錯誤: ", err);
-                if(document.body.contains(pdfContainer)) document.body.removeChild(pdfContainer);
                 btn.innerText = "匯出 PDF 表單";
                 btn.disabled = false;
                 alert("匯出失敗，請重試。");
