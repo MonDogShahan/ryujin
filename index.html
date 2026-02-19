@@ -94,10 +94,26 @@
             color: #ffd700;
             font-size: 1.3em;
             font-weight: bold;
-            width: 100%;
+            width: 70%;
             outline: none;
         }
         .space-title-input::placeholder { color: #888; }
+
+        /* 單獨刪除按鈕 */
+        .delete-btn {
+            background: transparent;
+            color: #ff4c4c;
+            border: 1px solid #ff4c4c;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: 0.2s;
+        }
+        .delete-btn:hover {
+            background: #ff4c4c;
+            color: white;
+        }
 
         /* 表單與選項網格 */
         .input-grid {
@@ -126,7 +142,6 @@
             border-color: #ffd700;
         }
         
-        /* ★ 針對坪數輸入框的黃色文字設定 ★ */
         .ping-input {
             color: #ffd700 !important;
             font-weight: bold;
@@ -189,12 +204,12 @@
 
         /* 隱藏列印時不需要的元素 */
         @media print {
-            .action-bar, header { display: none; }
+            .action-bar, header, .delete-btn { display: none; }
             body { background: white; color: black; }
             .space-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
-            .space-title-input { color: black; }
+            .space-title-input { color: black; width: 100%; }
             .result-box { color: black; }
-            .ping-input { color: black !important; } /* 列印時坪數改回黑色避免看不清楚 */
+            .ping-input { color: black !important; } 
         }
     </style>
 </head>
@@ -223,16 +238,26 @@
     </div>
 
     <script>
+        // 加入 spaceCounter 來紀錄已經編號到第幾號
         let appState = {
-            spaces: []
+            spaces: [],
+            spaceCounter: 1
         };
 
         function loadData() {
             const savedData = localStorage.getItem('dragonGodSpaces');
             if (savedData) {
-                appState.spaces = JSON.parse(savedData);
+                let parsed = JSON.parse(savedData);
+                // 為了相容你之前的舊版資料（之前是存陣列），做一下格式轉換
+                if (Array.isArray(parsed)) {
+                    appState.spaces = parsed;
+                    appState.spaceCounter = parsed.length + 1;
+                } else {
+                    appState = parsed;
+                }
             }
             if (appState.spaces.length === 0) {
+                appState.spaceCounter = 1;
                 addSpace(); 
             } else {
                 renderSpaces(); 
@@ -240,14 +265,14 @@
         }
 
         function saveDataSilently() {
-            localStorage.setItem('dragonGodSpaces', JSON.stringify(appState.spaces));
+            localStorage.setItem('dragonGodSpaces', JSON.stringify(appState));
         }
 
         function addSpace() {
             const newId = Date.now().toString();
             appState.spaces.push({
                 id: newId,
-                name: '客廳', // ★ 將預設名稱改為「客廳」
+                name: '空間' + appState.spaceCounter, // 自動命名為 空間1, 空間2...
                 length: '',
                 width: '',
                 ping: '',
@@ -257,8 +282,25 @@
                 highCeiling: false, 
                 kw: 0
             });
+            appState.spaceCounter++; // 編號自動遞增
             saveDataSilently();
             renderSpaces(); 
+        }
+
+        // 單獨刪除空間的邏輯
+        function removeSpace(id) {
+            // 防呆：不能刪到一個都不剩
+            if (appState.spaces.length <= 1) {
+                alert("無法刪除！表單中至少需要保留一個空間進行計算。");
+                return;
+            }
+
+            // 二次確認
+            if (confirm("確定要刪除這個空間的資料嗎？")) {
+                appState.spaces = appState.spaces.filter(space => space.id !== id);
+                saveDataSilently();
+                renderSpaces();
+            }
         }
 
         function updateField(id, field, value) {
@@ -307,8 +349,9 @@
                 card.className = 'space-card';
                 card.innerHTML = `
                     <div class="space-header">
-                        <input type="text" class="space-title-input" placeholder="空間名稱 (如: 客廳、主臥)" 
+                        <input type="text" class="space-title-input" placeholder="空間名稱" 
                                value="${space.name}" oninput="updateField('${space.id}', 'name', this.value)">
+                        <button class="delete-btn" onclick="removeSpace('${space.id}')">刪除</button>
                     </div>
                     
                     <div class="input-grid">
@@ -390,6 +433,7 @@
             if (confirm("警告：您確定要清除所有測量資料與空間嗎？此動作無法復原！")) {
                 localStorage.removeItem('dragonGodSpaces');
                 appState.spaces = [];
+                appState.spaceCounter = 1; // 重置時計數器歸 1
                 addSpace(); 
             }
         }
