@@ -3,82 +3,445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>龍神助手</title>
-
+    <title>龍神助手 - 空調負載計算</title>
     <link rel="icon" href="icon.png" type="image/png" sizes="512x512">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#1a1a1a">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* 基礎重置與排版 */
+        /* 基礎排版與龍神暗金色系 */
         body {
             margin: 0;
-            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a; /* 深色背景 */
+            background-color: #1a1a1a;
             color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
         }
-        /* 主視覺容器 */
-        .container {
-            text-align: center;
-            padding: 30px 20px;
-            border-radius: 15px;
+        
+        /* 頂部導航與分頁 */
+        header {
             background: linear-gradient(145deg, #2a2a2a, #151515);
-            box-shadow: 10px 10px 20px #0a0a0a, -10px -10px 20px #2a2a2a;
-            width: 85%;
-            max-width: 400px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        /* 中間大圖示設定 */
-        .logo {
-            width: 150px;
-            height: 150px;
-            border-radius: 20%;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
             object-fit: cover;
         }
-        /* 標題設定 */
         h1 {
-            margin: 0 0 10px 0;
-            color: #ffd700; /* 金色字體 */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            letter-spacing: 2px;
+            margin: 0;
+            color: #ffd700;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            margin-right: auto;
         }
-        p {
-            font-size: 1.1em;
+        .tab-btn {
+            background: transparent;
             color: #aaaaaa;
-            margin-bottom: 25px;
+            border: none;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: 0.3s;
         }
-        /* 按鈕設定 */
+        .tab-btn.active {
+            color: #ffd700;
+            border-bottom: 2px solid #ffd700;
+        }
+
+        /* 內容區塊 */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 空間卡片設計 */
+        .space-card {
+            background: #242424;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .space-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        .space-title-input {
+            background: transparent;
+            border: none;
+            color: #ffd700;
+            font-size: 1.3em;
+            font-weight: bold;
+            width: 70%;
+            outline: none;
+        }
+        .space-title-input::placeholder { color: #888; }
+        .delete-btn {
+            background: #ff4c4c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* 表單與選項網格 */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .input-group input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        
+        /* 環境選項區塊 */
+        .options-section {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .options-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .options-row:last-child { margin-bottom: 0; }
+        .option-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.95em;
+            color: #ddd;
+        }
+        .option-label input { margin-right: 5px; }
+
+        /* 結果顯示 */
+        .result-box {
+            text-align: right;
+            font-size: 1.2em;
+            color: #ffd700;
+            font-weight: bold;
+            padding-top: 10px;
+        }
+
+        /* 底部操作按鈕 */
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
         .btn {
-            display: inline-block;
-            padding: 12px 30px;
+            padding: 12px 25px;
             border: none;
             border-radius: 8px;
-            background: linear-gradient(145deg, #ffd700, #d4af37);
-            color: #1a1a1a;
             font-weight: bold;
             font-size: 1.1em;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: 0.2s;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        .btn-add { background: linear-gradient(145deg, #ffd700, #d4af37); color: #1a1a1a; }
+        .btn-pdf { background: #4a90e2; color: white; }
+        .btn-reset { background: transparent; border: 2px solid #ff4c4c; color: #ff4c4c; }
+        .btn:active { transform: scale(0.95); }
+
+        /* 隱藏列印時不需要的元素 */
+        @media print {
+            .action-bar, header { display: none; }
+            body { background: white; color: black; }
+            .space-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            .space-title-input { color: black; }
+            .result-box { color: black; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="icon.png" alt="龍神助手" class="logo">
+
+    <header>
+        <img src="icon.png" alt="龍神" class="header-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2ZmZDcwMCIvPjwvc3ZnPg=='">
         <h1>龍神助手</h1>
-        <p>系統已就緒，隨時為您服務</p>
-        <button class="btn">啟動系統</button>
+        <button class="tab-btn active" onclick="switchTab('calc')">負載計算</button>
+        <button class="tab-btn" onclick="switchTab('settings')">其他設定</button>
+    </header>
+
+    <div id="calc" class="tab-content active">
+        <div id="spaces-container">
+            </div>
+
+        <div class="action-bar">
+            <button class="btn btn-add" onclick="addSpace()">+ 新增空間</button>
+            <button class="btn btn-pdf" onclick="exportPDF()">匯出 PDF</button>
+            <button class="btn btn-reset" onclick="resetAll()">重置資料</button>
+        </div>
     </div>
+
+    <div id="settings" class="tab-content">
+        <p>這裡是其他分頁，切換過來再切回去，負載計算的資料依然會保留著。</p>
+    </div>
+
+    <script>
+        // 初始化應用程式狀態
+        let appState = {
+            spaces: []
+        };
+
+        // 載入 localStorage 資料 (達成關閉網頁/切換分頁保留資料)
+        function loadData() {
+            const savedData = localStorage.getItem('dragonGodSpaces');
+            if (savedData) {
+                appState.spaces = JSON.parse(savedData);
+            }
+            if (appState.spaces.length === 0) {
+                addSpace(); // 如果完全沒資料，預設開啟一個新空間
+            } else {
+                renderSpaces();
+            }
+        }
+
+        // 儲存資料到 localStorage
+        function saveData() {
+            localStorage.setItem('dragonGodSpaces', JSON.stringify(appState.spaces));
+            renderSpaces();
+        }
+
+        // 新增一個空間
+        function addSpace() {
+            const newId = Date.now().toString();
+            appState.spaces.push({
+                id: newId,
+                name: '',
+                length: '',
+                width: '',
+                ping: '',
+                sun: 'none',   // none, west(西曬), all(全日曬)
+                roof: 'none',  // none, tin(鐵皮), black_tin(黑鐵皮)
+                topFloor: false, // 頂樓
+                highCeiling: false, // 挑高
+                kw: 0
+            });
+            saveData();
+        }
+
+        // 刪除特定空間
+        function removeSpace(id) {
+            appState.spaces = appState.spaces.filter(space => space.id !== id);
+            saveData();
+        }
+
+        // 更新資料與計算邏輯
+        function updateField(id, field, value) {
+            const space = appState.spaces.find(s => s.id === id);
+            if (!space) return;
+
+            space[field] = value;
+
+            // 長寬變動時，即時自動換算坪數
+            if (field === 'length' || field === 'width') {
+                const l = parseFloat(space.length) || 0;
+                const w = parseFloat(space.width) || 0;
+                if (l > 0 && w > 0) {
+                    // 平方公尺 = (公分/100) * (公分/100)
+                    // 坪數 = 平方公尺 * 0.3025
+                    const ping = ((l / 100) * (w / 100)) * 0.3025;
+                    space.ping = ping.toFixed(2); // 取小數點後兩位
+                } else {
+                    space.ping = '';
+                }
+            }
+
+            // 計算 KW 估算值 (基準: 1坪 = 0.6 kW)
+            // 可依據現場實際經驗調整倍率
+            const pingVal = parseFloat(space.ping) || 0;
+            let kwVal = pingVal * 0.6; 
+            
+            if (kwVal > 0) {
+                if (space.sun === 'west') kwVal *= 1.15;
+                if (space.sun === 'all') kwVal *= 1.25;
+                if (space.topFloor) kwVal *= 1.15;
+                if (space.highCeiling) kwVal *= 1.10;
+                if (space.roof === 'tin') kwVal *= 1.20;
+                if (space.roof === 'black_tin') kwVal *= 1.30;
+            }
+            space.kw = kwVal.toFixed(2);
+
+            saveData();
+        }
+
+        // 渲染所有空間到畫面上
+        function renderSpaces() {
+            const container = document.getElementById('spaces-container');
+            container.innerHTML = '';
+
+            appState.spaces.forEach((space, index) => {
+                const card = document.createElement('div');
+                card.className = 'space-card';
+                card.innerHTML = `
+                    <div class="space-header">
+                        <input type="text" class="space-title-input" placeholder="空間名稱 (如: 客廳、主臥)" 
+                               value="${space.name}" onchange="updateField('${space.id}', 'name', this.value)">
+                        <button class="delete-btn" onclick="removeSpace('${space.id}')">刪除</button>
+                    </div>
+                    
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>長度 (cm)</label>
+                            <input type="number" placeholder="公分" value="${space.length}" 
+                                   onkeyup="updateField('${space.id}', 'length', this.value)"
+                                   onchange="updateField('${space.id}', 'length', this.value)">
+                        </div>
+                        <div class="input-group">
+                            <label>寬度 (cm)</label>
+                            <input type="number" placeholder="公分" value="${space.width}" 
+                                   onkeyup="updateField('${space.id}', 'width', this.value)"
+                                   onchange="updateField('${space.id}', 'width', this.value)">
+                        </div>
+                        <div class="input-group">
+                            <label>坪數</label>
+                            <input type="number" step="0.01" placeholder="可自動換算或手動" value="${space.ping}" 
+                                   onkeyup="updateField('${space.id}', 'ping', this.value)"
+                                   onchange="updateField('${space.id}', 'ping', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="options-section">
+                        <div class="options-row">
+                            <label class="option-label">
+                                <input type="radio" name="sun_${space.id}" value="none" 
+                                       ${space.sun === 'none' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'sun', this.value)"> 無西曬
+                            </label>
+                            <label class="option-label">
+                                <input type="radio" name="sun_${space.id}" value="west" 
+                                       ${space.sun === 'west' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'sun', this.value)"> 西曬
+                            </label>
+                            <label class="option-label">
+                                <input type="radio" name="sun_${space.id}" value="all" 
+                                       ${space.sun === 'all' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'sun', this.value)"> 全日曬
+                            </label>
+                        </div>
+                        
+                        <div class="options-row">
+                            <label class="option-label">
+                                <input type="checkbox" ${space.topFloor ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'topFloor', this.checked)"> 頂樓
+                            </label>
+                            <label class="option-label">
+                                <input type="checkbox" ${space.highCeiling ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'highCeiling', this.checked)"> 挑高
+                            </label>
+                        </div>
+
+                        <div class="options-row">
+                            <label class="option-label">
+                                <input type="radio" name="roof_${space.id}" value="none" 
+                                       ${space.roof === 'none' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'roof', this.value)"> 一般屋頂
+                            </label>
+                            <label class="option-label">
+                                <input type="radio" name="roof_${space.id}" value="tin" 
+                                       ${space.roof === 'tin' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'roof', this.value)"> 鐵皮
+                            </label>
+                            <label class="option-label">
+                                <input type="radio" name="roof_${space.id}" value="black_tin" 
+                                       ${space.roof === 'black_tin' ? 'checked' : ''} 
+                                       onchange="updateField('${space.id}', 'roof', this.value)"> 黑鐵皮
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="result-box">
+                        建議能力：約 ${space.kw} kW
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 重置所有資料 (二次確認)
+        function resetAll() {
+            if (confirm("警告：您確定要清除所有測量資料與空間嗎？此動作無法復原！")) {
+                localStorage.removeItem('dragonGodSpaces');
+                appState.spaces = [];
+                addSpace(); // 重新給予一個空白空間
+            }
+        }
+
+        // 匯出成 PDF 檔
+        function exportPDF() {
+            const element = document.getElementById('calc');
+            // 暫時隱藏按鈕區塊避免印出來
+            const actionBar = document.querySelector('.action-bar');
+            actionBar.style.display = 'none';
+
+            const opt = {
+                margin:       0.5,
+                filename:     '空調負載評估表.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#1a1a1a' }, // 保持暗色調匯出
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 生成 PDF，完成後將按鈕顯示回來
+            html2pdf().set(opt).from(element).save().then(() => {
+                actionBar.style.display = 'flex';
+            });
+        }
+
+        // 分頁切換邏輯
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // 啟動時自動載入資料
+        window.onload = loadData;
+
+    </script>
 </body>
 </html>
