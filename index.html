@@ -422,7 +422,7 @@
         }
 
         function exportPDF() {
-            // ★ 防呆機制：檢查是否至少有一個空間有算出 kW 或填寫坪數
+            // 防呆機制：只要有一項資料不是空白/0 就能匯出
             const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
             if (!hasData) {
                 alert("目前沒有任何測量資料！\n請至少在一個空間輸入「長寬」或「坪數」後再匯出表單。");
@@ -433,13 +433,13 @@
             btn.innerText = "生成表單中...";
             btn.disabled = true;
 
-            // ★ 修復空白 PDF：利用 height 0 與 overflow hidden 將區塊藏在一般文件流中，而不是拔出畫面
-            const wrapper = document.createElement('div');
-            wrapper.style.height = '0';
-            wrapper.style.overflow = 'hidden';
-
+            // ★ 修改 1：解決空白 PDF。改用 fixed 將表單推到畫面外，確保繪圖引擎抓得到實體長寬
+            // ★ 修改 2：解決右側切邊。強制寬度設為 700px (符合 A4 紙張列印範圍)
             const pdfContainer = document.createElement('div');
-            pdfContainer.style.width = '800px';
+            pdfContainer.style.position = 'fixed';
+            pdfContainer.style.left = '-9999px';
+            pdfContainer.style.top = '0';
+            pdfContainer.style.width = '700px'; 
             pdfContainer.style.backgroundColor = '#ffffff';
 
             const today = new Date();
@@ -462,36 +462,36 @@
 
                 tableRows += `
                     <tr>
-                        <td style="border: 1px solid #333; padding: 12px 8px; font-weight: bold;">${space.name || '未命名'}</td>
-                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: center;">${dimText}</td>
-                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: center;">${pingText}</td>
-                        <td style="border: 1px solid #333; padding: 12px 8px; color: #555;">${condText}</td>
-                        <td style="border: 1px solid #333; padding: 12px 8px; text-align: right; font-weight: bold; color: #d32f2f; font-size: 1.1em;">${kwText}</td>
+                        <td style="border: 1px solid #333; padding: 10px 8px; font-weight: bold;">${space.name || '未命名'}</td>
+                        <td style="border: 1px solid #333; padding: 10px 8px; text-align: center;">${dimText}</td>
+                        <td style="border: 1px solid #333; padding: 10px 8px; text-align: center;">${pingText}</td>
+                        <td style="border: 1px solid #333; padding: 10px 8px; color: #555;">${condText}</td>
+                        <td style="border: 1px solid #333; padding: 10px 8px; text-align: right; font-weight: bold; color: #d32f2f; font-size: 1.1em;">${kwText}</td>
                     </tr>
                 `;
             });
 
             pdfContainer.innerHTML = `
-                <div style="padding: 40px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; background: #fff; width: 800px; box-sizing: border-box;">
-                    <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 30px;">
-                        <img src="icon.png" style="width: 70px; height: 70px; border-radius: 20%; margin-right: 20px; object-fit: cover;" onerror="this.style.display='none'">
+                <div style="padding: 30px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; box-sizing: border-box;">
+                    <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 20px;">
+                        <img src="icon.png" style="width: 60px; height: 60px; border-radius: 20%; margin-right: 15px; object-fit: cover;" onerror="this.style.display='none'">
                         <div style="flex-grow: 1;">
-                            <h1 style="margin: 0; font-size: 28px; color: #1a1a1a; letter-spacing: 2px;">龍神助手</h1>
-                            <h2 style="margin: 5px 0 0 0; font-size: 20px; color: #666; font-weight: normal;">空調空間負載計算表</h2>
+                            <h1 style="margin: 0; font-size: 24px; color: #1a1a1a; letter-spacing: 2px;">龍神助手</h1>
+                            <h2 style="margin: 5px 0 0 0; font-size: 18px; color: #666; font-weight: normal;">空調空間負載計算表</h2>
                         </div>
-                        <div style="text-align: right; font-size: 14px; color: #444;">
+                        <div style="text-align: right; font-size: 13px; color: #444;">
                             列印日期：${dateString}
                         </div>
                     </div>
                     
-                    <table style="width: 100%; border-collapse: collapse; font-size: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                         <thead>
                             <tr style="background-color: #f0f0f0;">
-                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: left; width: 20%;">空間名稱</th>
-                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: center; width: 20%;">尺寸 (長×寬 cm)</th>
-                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: center; width: 15%;">坪數</th>
-                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: left; width: 25%;">環境條件</th>
-                                <th style="border: 1px solid #333; padding: 12px 8px; text-align: right; width: 20%;">建議能力 (kW)</th>
+                                <th style="border: 1px solid #333; padding: 10px 8px; text-align: left; width: 22%;">空間名稱</th>
+                                <th style="border: 1px solid #333; padding: 10px 8px; text-align: center; width: 22%;">尺寸 (長×寬 cm)</th>
+                                <th style="border: 1px solid #333; padding: 10px 8px; text-align: center; width: 12%;">坪數</th>
+                                <th style="border: 1px solid #333; padding: 10px 8px; text-align: left; width: 24%;">環境條件</th>
+                                <th style="border: 1px solid #333; padding: 10px 8px; text-align: right; width: 20%;">建議能力 (kW)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -499,17 +499,16 @@
                         </tbody>
                     </table>
                     
-                    <div style="margin-top: 40px; font-size: 13px; color: #888; border-top: 1px solid #ddd; padding-top: 10px;">
+                    <div style="margin-top: 30px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 10px;">
                         * 備註：此表單之能力建議為初步評估，實際機型選擇需視現場管線配置與客戶需求而定。
                     </div>
                 </div>
             `;
 
-            wrapper.appendChild(pdfContainer);
-            document.body.appendChild(wrapper);
+            document.body.appendChild(pdfContainer);
 
             const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
+                margin:       0.4, // 將邊距縮小，留出更多表格空間
                 filename:     '空調空間負載計算表.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, logging: false },
@@ -517,15 +516,15 @@
             };
 
             html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                document.body.removeChild(wrapper);
+                document.body.removeChild(pdfContainer);
                 btn.innerText = "匯出 PDF 表單";
                 btn.disabled = false;
             }).catch((err) => {
                 console.error("PDF 匯出錯誤: ", err);
-                document.body.removeChild(wrapper);
+                if(document.body.contains(pdfContainer)) document.body.removeChild(pdfContainer);
                 btn.innerText = "匯出 PDF 表單";
                 btn.disabled = false;
-                alert("匯出失敗，請確保圖片已正確載入。");
+                alert("匯出失敗，請重試。");
             });
         }
 
