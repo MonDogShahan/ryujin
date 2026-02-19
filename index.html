@@ -200,51 +200,32 @@
         .btn-pdf { background: #4a90e2; color: white; }
         .btn-reset { background: transparent; border: 2px solid #ff4c4c; color: #ff4c4c; }
         .btn:active { transform: scale(0.95); }
-
-        /* 全螢幕載入遮罩 */
-        #loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(26, 26, 26, 0.98);
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #ffd700;
-            font-size: 1.5em;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">
-        龍神助手正在為您生成 PDF...<br>
-        <span style="font-size: 0.6em; color: #aaa; margin-top: 10px;">請稍候片刻</span>
-    </div>
+    <div id="main-ui">
+        <header>
+            <img src="icon.png" alt="龍神" class="header-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2ZmZDcwMCIvPjwvc3ZnPg=='">
+            <h1>龍神助手</h1>
+            <button class="tab-btn active" onclick="switchTab('calc')">負載計算</button>
+            <button class="tab-btn" onclick="switchTab('settings')">其他設定</button>
+        </header>
 
-    <header>
-        <img src="icon.png" alt="龍神" class="header-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2ZmZDcwMCIvPjwvc3ZnPg=='">
-        <h1>龍神助手</h1>
-        <button class="tab-btn active" onclick="switchTab('calc')">負載計算</button>
-        <button class="tab-btn" onclick="switchTab('settings')">其他設定</button>
-    </header>
+        <div id="calc" class="tab-content active">
+            <div id="spaces-container">
+                </div>
 
-    <div id="calc" class="tab-content active">
-        <div id="spaces-container">
+            <div class="action-bar">
+                <button class="btn btn-add" onclick="addSpace()">+ 新增空間</button>
+                <button class="btn btn-pdf" id="btn-export" onclick="exportPDF()">匯出 PDF 表單</button>
+                <button class="btn btn-reset" onclick="resetAll()">重置資料</button>
             </div>
-
-        <div class="action-bar">
-            <button class="btn btn-add" onclick="addSpace()">+ 新增空間</button>
-            <button class="btn btn-pdf" id="btn-export" onclick="exportPDF()">匯出 PDF 表單</button>
-            <button class="btn btn-reset" onclick="resetAll()">重置資料</button>
         </div>
-    </div>
 
-    <div id="settings" class="tab-content">
-        <p>這裡是其他分頁，切換過來再切回去，負載計算的資料依然會保留著。</p>
+        <div id="settings" class="tab-content">
+            <p>這裡是其他分頁，切換過來再切回去，負載計算的資料依然會保留著。</p>
+        </div>
     </div>
 
     <script>
@@ -442,7 +423,7 @@
             }
         }
 
-        // ★ 終極防護：使用真實 DOM + 遮罩覆蓋 + 自動回滾視窗位置 ★
+        // ★ 暴力解法：隱藏原本介面，直接把純文字報表印在畫面上截圖 ★
         function exportPDF() {
             const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
             if (!hasData) {
@@ -450,122 +431,92 @@
                 return;
             }
 
-            // 打開全螢幕遮罩
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex';
+            const btn = document.getElementById('btn-export');
+            btn.innerText = "生成表單中...";
+            btn.disabled = true;
 
-            // 記住使用者目前捲動到的位置
-            const originalScrollY = window.scrollY;
+            // 1. 瞬間隱藏所有操作介面
+            document.getElementById('main-ui').style.display = 'none';
 
-            // 等待 300 毫秒讓遮罩動畫完全顯示出來，再開始背後的高耗能作業
-            setTimeout(() => {
-                // 強制將視窗捲到最上方，避免截圖套件裁切到畫面外
-                window.scrollTo(0, 0);
+            // 2. 建立一個佔滿畫面的純白列印區塊
+            const printArea = document.createElement('div');
+            printArea.id = 'print-area';
+            printArea.style.backgroundColor = '#ffffff';
+            printArea.style.color = '#000000';
+            printArea.style.padding = '30px';
+            printArea.style.minHeight = '100vh';
+            printArea.style.fontFamily = "'Microsoft JhengHei', sans-serif";
 
-                const today = new Date();
-                const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
+            const today = new Date();
+            const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
 
-                let tableRows = '';
-                appState.spaces.forEach((space) => {
-                    let conditions = [];
-                    if (space.sun === 'west') conditions.push('西曬');
-                    if (space.sun === 'all') conditions.push('全日曬');
-                    if (space.topFloor) conditions.push('頂樓');
-                    if (space.highCeiling) conditions.push('挑高');
-                    if (space.roof === 'tin') conditions.push('鐵皮');
-                    if (space.roof === 'black_tin') conditions.push('黑鐵皮');
-                    
-                    let condText = conditions.length > 0 ? conditions.join('、') : '無';
-                    let dimText = (space.length && space.width) ? `${space.length} × ${space.width}` : '-';
-                    let pingText = space.ping ? space.ping : '-';
-                    let kwText = space.kw > 0 ? space.kw : '-';
+            let textBlocks = '';
+            appState.spaces.forEach((space) => {
+                let conditions = [];
+                if (space.sun === 'west') conditions.push('西曬');
+                if (space.sun === 'all') conditions.push('全日曬');
+                if (space.topFloor) conditions.push('頂樓');
+                if (space.highCeiling) conditions.push('挑高');
+                if (space.roof === 'tin') conditions.push('鐵皮');
+                if (space.roof === 'black_tin') conditions.push('黑鐵皮');
+                
+                let condText = conditions.length > 0 ? conditions.join('、') : '無特殊環境';
+                let dimText = (space.length && space.width) ? `${space.length} × ${space.width} cm` : '未填寫尺寸';
+                let pingText = space.ping ? `${space.ping} 坪` : '未填寫坪數';
+                let kwText = space.kw > 0 ? `${space.kw} kW` : '尚未計算';
 
-                    // 加入 page-break-inside: avoid 確保多筆資料時，同一行不會被切到兩頁
-                    tableRows += `
-                        <tr style="page-break-inside: avoid;">
-                            <td style="border: 1px solid #333; padding: 10px 8px; font-weight: bold;">${space.name || '未命名'}</td>
-                            <td style="border: 1px solid #333; padding: 10px 8px; text-align: center;">${dimText}</td>
-                            <td style="border: 1px solid #333; padding: 10px 8px; text-align: center;">${pingText}</td>
-                            <td style="border: 1px solid #333; padding: 10px 8px; color: #555;">${condText}</td>
-                            <td style="border: 1px solid #333; padding: 10px 8px; text-align: right; font-weight: bold; color: #d32f2f; font-size: 1.1em;">${kwText}</td>
-                        </tr>
-                    `;
-                });
-
-                // 建立真實存在的 PDF 容器，放在網頁最左上角，但是被遮罩擋住
-                const pdfContainer = document.createElement('div');
-                pdfContainer.id = 'temp-pdf-container';
-                pdfContainer.style.position = 'absolute';
-                pdfContainer.style.top = '0';
-                pdfContainer.style.left = '0';
-                pdfContainer.style.width = '700px'; 
-                pdfContainer.style.backgroundColor = '#ffffff';
-                pdfContainer.style.zIndex = '9998'; // 放在遮罩 (9999) 之下
-
-                pdfContainer.innerHTML = `
-                    <div style="padding: 30px; font-family: 'Microsoft JhengHei', sans-serif; color: #000; box-sizing: border-box;">
-                        <div style="display: flex; align-items: center; border-bottom: 3px solid #1a1a1a; padding-bottom: 15px; margin-bottom: 20px;">
-                            <img src="icon.png" style="width: 60px; height: 60px; border-radius: 20%; margin-right: 15px; object-fit: cover;" onerror="this.style.display='none'">
-                            <div style="flex-grow: 1;">
-                                <h1 style="margin: 0; font-size: 24px; color: #1a1a1a; letter-spacing: 2px;">龍神助手</h1>
-                                <h2 style="margin: 5px 0 0 0; font-size: 18px; color: #666; font-weight: normal;">空調空間負載計算表</h2>
-                            </div>
-                            <div style="text-align: right; font-size: 13px; color: #444;">
-                                列印日期：${dateString}
-                            </div>
-                        </div>
-                        
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                            <thead>
-                                <tr style="background-color: #f0f0f0;">
-                                    <th style="border: 1px solid #333; padding: 10px 8px; text-align: left; width: 22%;">空間名稱</th>
-                                    <th style="border: 1px solid #333; padding: 10px 8px; text-align: center; width: 22%;">尺寸 (長×寬 cm)</th>
-                                    <th style="border: 1px solid #333; padding: 10px 8px; text-align: center; width: 12%;">坪數</th>
-                                    <th style="border: 1px solid #333; padding: 10px 8px; text-align: left; width: 24%;">環境條件</th>
-                                    <th style="border: 1px solid #333; padding: 10px 8px; text-align: right; width: 20%;">建議能力 (kW)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableRows}
-                            </tbody>
-                        </table>
-                        
-                        <div style="margin-top: 30px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 10px;">
-                            * 備註：此表單之能力建議為初步評估，實際機型選擇需視現場管線配置與客戶需求而定。
+                // 完全照你說的，新增一個空間就是多印一段文字下來，不搞表格
+                textBlocks += `
+                    <div style="border-bottom: 1px dashed #ccc; padding: 15px 0; page-break-inside: avoid;">
+                        <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">🔸 ${space.name || '未命名空間'}</div>
+                        <div style="font-size: 16px; color: #333; line-height: 1.8;">
+                            • 測量尺寸：${dimText} ｜ 換算坪數：${pingText}<br>
+                            • 環境條件：${condText}<br>
+                            <span style="color: #d32f2f; font-weight: bold; font-size: 18px;">👉 建議能力：約 ${kwText}</span>
                         </div>
                     </div>
                 `;
+            });
 
-                // 將容器正式加入畫面
-                document.body.appendChild(pdfContainer);
+            // 把文字組合進列印畫面
+            printArea.innerHTML = `
+                <div style="border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center;">
+                    <h1 style="margin: 0; font-size: 26px; flex-grow: 1;">龍神助手 - 空間負載報表</h1>
+                    <div style="font-size: 14px; color: #666;">列印日期：${dateString}</div>
+                </div>
+                ${textBlocks}
+                <div style="margin-top: 30px; font-size: 13px; color: #888;">
+                    * 備註：此表單能力建議僅供初步評估，實際以現場管線配置與客戶需求為準。
+                </div>
+            `;
 
-                // 設定 html2pdf 參數，加上 html2canvas 的特定優化
-                const opt = {
-                    margin:       0.4, 
-                    filename:     '空調空間負載計算表.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, windowWidth: 700, scrollY: 0 },
-                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
+            // 把這個畫面正式加進網頁 (這時候你的手機螢幕會短暫變白，顯示這份報表)
+            document.body.appendChild(printArea);
+            window.scrollTo(0, 0);
 
-                // 開始匯出
-                html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                    // 成功：清理現場
-                    document.body.removeChild(pdfContainer);
-                    window.scrollTo(0, originalScrollY); // 回到使用者原本滑到的位置
-                    overlay.style.display = 'none'; // 關閉遮罩
-                }).catch((err) => {
-                    // 失敗：報錯並清理現場
-                    console.error("PDF 匯出錯誤: ", err);
-                    if(document.getElementById('temp-pdf-container')) {
-                        document.body.removeChild(pdfContainer);
-                    }
-                    window.scrollTo(0, originalScrollY);
-                    overlay.style.display = 'none';
-                    alert("匯出失敗，請重試。");
-                });
+            // 3. 讓套件去截這個 100% 真實存在的畫面
+            const opt = {
+                margin:       0.5,
+                filename:     '空調空間負載計算表.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
 
-            }, 300);
+            // 4. 印完之後把畫面變回去
+            html2pdf().set(opt).from(printArea).save().then(() => {
+                document.body.removeChild(printArea); // 刪掉白底報表
+                document.getElementById('main-ui').style.display = 'block'; // 把暗色介面叫回來
+                btn.innerText = "匯出 PDF 表單";
+                btn.disabled = false;
+            }).catch((err) => {
+                console.error(err);
+                if(document.getElementById('print-area')) document.body.removeChild(printArea);
+                document.getElementById('main-ui').style.display = 'block';
+                btn.innerText = "匯出 PDF 表單";
+                btn.disabled = false;
+                alert("匯出失敗，請重試。");
+            });
         }
 
         function switchTab(tabId) {
