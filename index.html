@@ -220,7 +220,8 @@
         .btn-add { background: linear-gradient(145deg, #ffd700, #d4af37); color: #1a1a1a; }
         .btn-pdf { background: #4a90e2; color: white; }
         .btn-reset { background: transparent; border: 2px solid #ff4c4c; color: #ff4c4c; }
-        .btn:active { transform: scale(0.95); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:active:not(:disabled) { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -248,32 +249,48 @@
 
         <div id="flange" class="tab-content">
             <div class="space-card" style="border: 1px solid #ffd700; background: linear-gradient(145deg, #1a1a1a, #2a2a2a);">
-                <div class="input-group">
-                    <label style="color: #ffd700; font-size: 1em;">🔑 系統授權碼 (必填)</label>
-                    <input type="password" id="flange-master-pwd" placeholder="請輸入授權碼" style="border-color: #ffd700; font-size: 1.2em; letter-spacing: 2px;" oninput="recalculateAllFlanges()">
+                <div id="login-form">
+                    <div class="input-group">
+                        <label style="color: #ffd700; font-size: 1em;">🔑 系統授權碼 (必填)</label>
+                        <input type="password" id="flange-master-pwd" placeholder="請輸入授權碼解鎖運算" style="border-color: #ffd700; font-size: 1.2em; letter-spacing: 2px;">
+                    </div>
+                    <button class="btn btn-add" style="margin-top: 15px; width: 100%;" id="btn-verify" onclick="verifyPassword()">確認解鎖</button>
+                    <div id="login-msg" style="color: #ff4c4c; margin-top: 10px; font-size: 0.9em; text-align: center; font-weight: bold;"></div>
+                </div>
+                
+                <div id="logout-form" style="display: none; text-align: center;">
+                    <span style="color: #ffd700; font-size: 1.2em; display: block; margin-bottom: 15px; font-weight: bold;">✅ 系統已解鎖</span>
+                    <button class="btn btn-reset" onclick="logout()" style="width: 100%;">登出系統</button>
                 </div>
             </div>
 
-            <div id="flanges-container"></div>
-            
-            <div class="action-bar">
-                <button class="btn btn-add" onclick="addFlange()">+ 新增配置</button>
-                <button class="btn btn-pdf" id="btn-export-flange" onclick="exportFlangePDF()">匯出 PDF 表單</button>
-                <button class="btn btn-reset" onclick="resetFlanges()">重置資料</button>
+            <div id="flange-main-content" style="display: none;">
+                <div id="flanges-container"></div>
+                
+                <div class="action-bar">
+                    <button class="btn btn-add" onclick="addFlange()">+ 新增配置</button>
+                    <button class="btn btn-pdf" id="btn-export-flange" onclick="exportFlangePDF()">匯出 PDF 表單</button>
+                    <button class="btn btn-reset" onclick="resetFlanges()">重置資料</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 資料狀態管理 
         let appState = {
-            spaces: [],
-            spaceCounter: 1,
-            flanges: [],
-            flangeCounter: 1
+            spaces: [], spaceCounter: 1,
+            flanges: [], flangeCounter: 1
         };
 
+        // 登入狀態與防暴破鎖定資料
+        let isLoggedIn = false;
+        let currentAuthToken = "";
+        let lockoutData = { attempts: 0, lockUntil: 0 };
+        let lockoutTimer = null;
+        let flangeTimers = {};
+
         function loadData() {
+            // 讀取所有資料
             const savedData = localStorage.getItem('dragonGodSpaces');
             if (savedData) {
                 let parsed = JSON.parse(savedData);
@@ -288,19 +305,17 @@
                 }
             }
 
-            if (appState.spaces.length === 0) {
-                appState.spaceCounter = 1;
-                addSpace(); 
-            } else {
-                renderSpaces(); 
-            }
+            // 初始化：每次重整網頁都強制清除舊的計算結果，進入登出狀態
+            appState.flanges.forEach(f => {
+                f.area = 0;
+                f.resultHtml = "建議配置：無顯示結果";
+            });
 
-            if (appState.flanges.length === 0) {
-                appState.flangeCounter = 1;
-                addFlange();
-            } else {
-                renderFlanges();
-            }
+            if (appState.spaces.length === 0) { addSpace(); } else { renderSpaces(); }
+            if (appState.flanges.length === 0) { addFlange(); } else { renderFlanges(); }
+
+            // 載入鎖定狀態
+            loadLockout();
         }
 
         function saveDataSilently() {
@@ -308,54 +323,178 @@
         }
 
         /* ================================
-           分頁 1: 負載計算相關邏輯
+           ★ 登入驗證與防暴破機制
+           ================================ */
+        function loadLockout() {
+            let saved = localStorage.getItem('dragonGodLockout');
+            if (saved) {
+                lockoutData = JSON.parse(saved);
+            }
+            checkLockoutStatus();
+        }
+
+        function saveLockout() {
+            localStorage.setItem('dragonGodLockout', JSON.stringify(lockoutData));
+        }
+
+        function checkLockoutStatus() {
+            let now = Date.now();
+            let btn = document.getElementById('btn-verify');
+            let input = document.getElementById('flange-master-pwd');
+            let msg = document.getElementById('login-msg');
+
+            if (lockoutData.lockUntil > now) {
+                // 鎖定中
+                btn.disabled = true;
+                input.disabled = true;
+                if (!lockoutTimer) {
+                    lockoutTimer = setInterval(checkLockoutStatus, 1000);
+                }
+                let remainSec = Math.ceil((lockoutData.lockUntil - now) / 1000);
+                let m = Math.floor(remainSec / 60);
+                let s = remainSec % 60;
+                msg.innerText = `⚠️ 錯誤次數過多，系統已鎖定！請等待 ${m} 分 ${s} 秒後重試`;
+            } else {
+                // 解除鎖定
+                if (lockoutData.lockUntil > 0) {
+                    lockoutData.attempts = 0;
+                    lockoutData.lockUntil = 0;
+                    saveLockout();
+                }
+                if (lockoutTimer) {
+                    clearInterval(lockoutTimer);
+                    lockoutTimer = null;
+                }
+                if (!isLoggedIn) {
+                    btn.disabled = false;
+                    input.disabled = false;
+                    if (msg.innerText.includes("請等待")) msg.innerText = "";
+                }
+            }
+        }
+
+        function handleFailedAttempt() {
+            lockoutData.attempts++;
+            if (lockoutData.attempts >= 10) {
+                // 鎖定 30 分鐘 (30 * 60 * 1000 毫秒)
+                lockoutData.lockUntil = Date.now() + 30 * 60 * 1000;
+                document.getElementById('login-msg').innerText = "連續錯誤 10 次，已鎖定 30 分鐘！";
+            } else {
+                let left = 10 - lockoutData.attempts;
+                document.getElementById('login-msg').innerText = `❌ 授權碼無效，剩餘嘗試次數：${left} 次`;
+            }
+            saveLockout();
+            checkLockoutStatus();
+        }
+
+        async function verifyPassword() {
+            let pwd = document.getElementById('flange-master-pwd').value;
+            let msg = document.getElementById('login-msg');
+            if (!pwd) {
+                msg.innerText = "請輸入授權碼！";
+                return;
+            }
+
+            let btn = document.getElementById('btn-verify');
+            btn.innerText = "驗證中...";
+            btn.disabled = true;
+            msg.innerText = "";
+
+            try {
+                // 發送 w:0, h:0 作為純驗證測試
+                const response = await fetch('https://ryujin-god-api.mondogshahan.workers.dev', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ w: 0, h: 0, t: 0, password: pwd })
+                });
+                const data = await response.json();
+
+                // 檢查後端回傳的錯誤。如果包含密碼錯誤相關字眼，代表失敗
+                if (data.error && (data.error.includes("密碼") || data.error.includes("拒絕"))) {
+                    handleFailedAttempt();
+                    btn.innerText = "確認解鎖";
+                    if(lockoutData.lockUntil <= Date.now()) btn.disabled = false;
+                } else {
+                    // 驗證成功 (會回傳 "請輸入有效的法蘭寬度" 之類的非密碼錯誤)
+                    loginSuccess(pwd);
+                }
+            } catch (e) {
+                msg.innerText = "連線失敗，請檢查網路狀態";
+                btn.innerText = "確認解鎖";
+                btn.disabled = false;
+            }
+        }
+
+        function loginSuccess(pwd) {
+            currentAuthToken = pwd;
+            isLoggedIn = true;
+            
+            // 登入成功，清除錯誤紀錄
+            lockoutData.attempts = 0;
+            lockoutData.lockUntil = 0;
+            saveLockout();
+
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('logout-form').style.display = 'block';
+            document.getElementById('flange-main-content').style.display = 'block';
+
+            // 自動觸發所有已填資料的配置進行雲端運算
+            appState.flanges.forEach(f => {
+                if (f.w && f.h) {
+                    fetchCloudflareAPI(f);
+                } else {
+                    f.resultHtml = "建議配置：請輸入尺寸";
+                }
+            });
+            renderFlanges();
+        }
+
+        function logout() {
+            currentAuthToken = "";
+            isLoggedIn = false;
+            document.getElementById('flange-master-pwd').value = '';
+            document.getElementById('login-msg').innerText = "✅ 已成功登出，結果已遮蔽";
+
+            // 隱藏計算區塊，顯示登入區塊
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('logout-form').style.display = 'none';
+            document.getElementById('flange-main-content').style.display = 'none';
+            document.getElementById('btn-verify').innerText = "確認解鎖";
+
+            // 遮蔽所有計算結果 (保留輸入尺寸)
+            appState.flanges.forEach(f => {
+                f.area = 0;
+                f.resultHtml = "建議配置：無顯示結果";
+            });
+            saveDataSilently();
+            renderFlanges();
+        }
+
+        /* ================================
+           分頁 1: 負載計算區塊 (不變)
            ================================ */
         function addSpace() {
             const newId = Date.now().toString();
-            appState.spaces.push({
-                id: newId,
-                name: '空間' + appState.spaceCounter, 
-                length: '', width: '', ping: '',
-                sun: 'none', roof: 'none', topFloor: false, highCeiling: false, kw: 0
-            });
-            appState.spaceCounter++; 
-            saveDataSilently();
-            renderSpaces(); 
+            appState.spaces.push({ id: newId, name: '空間' + appState.spaceCounter, length: '', width: '', ping: '', sun: 'none', roof: 'none', topFloor: false, highCeiling: false, kw: 0 });
+            appState.spaceCounter++; saveDataSilently(); renderSpaces(); 
         }
-
         function removeSpace(id) {
-            if (appState.spaces.length <= 1) {
-                alert("無法刪除！表單中至少需要保留一個空間。"); return;
-            }
-            if (confirm("確定要刪除這個空間的資料嗎？")) {
-                appState.spaces = appState.spaces.filter(space => space.id !== id);
-                saveDataSilently();
-                renderSpaces();
-            }
+            if (appState.spaces.length <= 1) { alert("無法刪除！表單中至少需要保留一個空間。"); return; }
+            if (confirm("確定要刪除這個空間的資料嗎？")) { appState.spaces = appState.spaces.filter(s => s.id !== id); saveDataSilently(); renderSpaces(); }
         }
-
         function updateField(id, field, value) {
             const space = appState.spaces.find(s => s.id === id);
             if (!space) return;
-
             space[field] = value;
-
             if (field === 'length' || field === 'width') {
-                const l = parseFloat(space.length) || 0;
-                const w = parseFloat(space.width) || 0;
+                const l = parseFloat(space.length) || 0; const w = parseFloat(space.width) || 0;
                 if (l > 0 && w > 0) {
-                    const ping = ((l / 100) * (w / 100)) * 0.3025;
-                    space.ping = ping.toFixed(2);
+                    space.ping = (((l / 100) * (w / 100)) * 0.3025).toFixed(2);
                     document.getElementById('ping_' + id).value = space.ping;
-                } else {
-                    space.ping = '';
-                    document.getElementById('ping_' + id).value = '';
-                }
+                } else { space.ping = ''; document.getElementById('ping_' + id).value = ''; }
             }
-
             const pingVal = parseFloat(space.ping) || 0;
             let kwVal = pingVal * 0.6; 
-            
             if (kwVal > 0) {
                 if (space.sun === 'west') kwVal *= 1.15;
                 if (space.sun === 'all') kwVal *= 1.25;
@@ -365,37 +504,24 @@
                 if (space.roof === 'black_tin') kwVal *= 1.30;
             }
             space.kw = kwVal.toFixed(2);
-            
             document.getElementById('result_' + id).innerText = '建議能力：約 ' + space.kw + ' kW';
             saveDataSilently();
         }
-
         function renderSpaces() {
             const container = document.getElementById('spaces-container');
             container.innerHTML = '';
-
             appState.spaces.forEach((space) => {
                 const card = document.createElement('div');
                 card.className = 'space-card';
                 card.innerHTML = `
                     <div class="space-header">
-                        <input type="text" class="space-title-input" placeholder="空間名稱" 
-                               value="${space.name}" oninput="updateField('${space.id}', 'name', this.value)">
+                        <input type="text" class="space-title-input" placeholder="空間名稱" value="${space.name}" oninput="updateField('${space.id}', 'name', this.value)">
                         <button class="delete-btn" onclick="removeSpace('${space.id}')">刪除</button>
                     </div>
                     <div class="input-grid">
-                        <div class="input-group">
-                            <label>長度 (cm)</label>
-                            <input type="number" placeholder="公分" value="${space.length}" oninput="updateField('${space.id}', 'length', this.value)">
-                        </div>
-                        <div class="input-group">
-                            <label>寬度 (cm)</label>
-                            <input type="number" placeholder="公分" value="${space.width}" oninput="updateField('${space.id}', 'width', this.value)">
-                        </div>
-                        <div class="input-group">
-                            <label>坪數</label>
-                            <input type="number" id="ping_${space.id}" class="ping-input" step="0.01" placeholder="可手動" value="${space.ping}" oninput="updateField('${space.id}', 'ping', this.value)">
-                        </div>
+                        <div class="input-group"><label>長度 (cm)</label><input type="number" placeholder="公分" value="${space.length}" oninput="updateField('${space.id}', 'length', this.value)"></div>
+                        <div class="input-group"><label>寬度 (cm)</label><input type="number" placeholder="公分" value="${space.width}" oninput="updateField('${space.id}', 'width', this.value)"></div>
+                        <div class="input-group"><label>坪數</label><input type="number" id="ping_${space.id}" class="ping-input" step="0.01" placeholder="可手動" value="${space.ping}" oninput="updateField('${space.id}', 'ping', this.value)"></div>
                     </div>
                     <div class="options-section">
                         <div class="options-row">
@@ -418,39 +544,28 @@
                 container.appendChild(card);
             });
         }
-
         function resetAll() {
             if (confirm("警告：確定要清除所有負載測量資料嗎？")) {
-                appState.spaces = [];
-                appState.spaceCounter = 1;
-                addSpace();
+                appState.spaces = []; appState.spaceCounter = 1; addSpace();
             }
         }
-
         function exportPDF() {
             const hasData = appState.spaces.some(space => parseFloat(space.kw) > 0 || parseFloat(space.ping) > 0);
             if (!hasData) { alert("目前沒有任何測量資料！"); return; }
             const btn = document.getElementById('btn-export');
             btn.innerText = "生成表單中..."; btn.disabled = true;
-
             document.getElementById('main-ui').style.display = 'none';
             const printArea = createPrintArea('龍神助手 - 空間負載報表');
-            
             let textBlocks = '';
             appState.spaces.forEach((space) => {
                 let conds = [];
-                if (space.sun === 'west') conds.push('西曬');
-                if (space.sun === 'all') conds.push('全日曬');
-                if (space.topFloor) conds.push('頂樓');
-                if (space.highCeiling) conds.push('挑高');
-                if (space.roof === 'tin') conds.push('鐵皮');
-                if (space.roof === 'black_tin') conds.push('黑鐵皮');
-                
+                if (space.sun === 'west') conds.push('西曬'); if (space.sun === 'all') conds.push('全日曬');
+                if (space.topFloor) conds.push('頂樓'); if (space.highCeiling) conds.push('挑高');
+                if (space.roof === 'tin') conds.push('鐵皮'); if (space.roof === 'black_tin') conds.push('黑鐵皮');
                 let condText = conds.length > 0 ? conds.join('、') : '無特殊環境';
                 let dimText = (space.length && space.width) ? `${space.length} × ${space.width} cm` : '未填寫尺寸';
                 let pingText = space.ping ? `${space.ping} 坪` : '未填寫坪數';
                 let kwText = space.kw > 0 ? `${space.kw} kW` : '尚未計算';
-
                 textBlocks += `
                     <div style="border-bottom: 1px dashed #ccc; padding: 15px 0; page-break-inside: avoid;">
                         <div style="font-size: 20px; font-weight: bold; margin-bottom: 8px;">🔸 ${space.name || '未命名空間'}</div>
@@ -459,57 +574,33 @@
                             • 環境條件：${condText}<br>
                             <span style="color: #d32f2f; font-weight: bold; font-size: 18px;">👉 建議能力：約 ${kwText}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-
             printArea.innerHTML += textBlocks + getPdfFooter("能力建議僅供初步評估，實際以現場配置為準。");
             executePdfExport(printArea, btn, '空調空間負載計算表.pdf');
         }
 
-
         /* ================================
-           ★ 分頁 2: 吊隱式風管規劃 (呼叫雲端 API)
+           ★ 分頁 2: 吊隱式風管規劃 (連線與計算)
            ================================ */
-        let flangeTimers = {}; 
-
         function addFlange() {
-            let pwd = document.getElementById('flange-master-pwd').value;
-            // 檢查目前是否還有任何配置顯示錯誤或未授權的訊息
-            let hasError = appState.flanges.some(f => f.resultHtml.includes("授權") || f.resultHtml.includes("異常"));
-            
-            // 防呆：如果已經有卡片，但密碼是空的，或是目前的卡片處於無效狀態，就擋下來
-            if (appState.flanges.length > 0) {
-                if (!pwd || hasError) {
-                    alert("請先輸入正確的授權碼並完成目前配置的運算，解鎖後才能新增！");
-                    return;
-                }
-            }
-
+            if (!isLoggedIn) return; // 防呆
             const newId = Date.now().toString();
-            appState.flanges.push({
-                id: newId,
-                name: '配置' + appState.flangeCounter,
-                w: '', h: '', t: '', area: 0, 
-                resultHtml: '建議配置：請輸入尺寸' 
-            });
+            appState.flanges.push({ id: newId, name: '配置' + appState.flangeCounter, w: '', h: '', t: '', area: 0, resultHtml: '建議配置：請輸入尺寸' });
             appState.flangeCounter++;
-            saveDataSilently();
-            renderFlanges();
+            saveDataSilently(); renderFlanges();
         }
 
         function removeFlange(id) {
-            if (appState.flanges.length <= 1) {
-                alert("無法刪除！表單中至少需要保留一個配置。"); return;
-            }
+            if (appState.flanges.length <= 1) { alert("無法刪除！表單中至少需要保留一個配置。"); return; }
             if (confirm("確定要刪除這個配置的資料嗎？")) {
                 appState.flanges = appState.flanges.filter(f => f.id !== id);
-                saveDataSilently();
-                renderFlanges();
+                saveDataSilently(); renderFlanges();
             }
         }
 
         function updateFlangeField(id, field, value) {
+            if (!isLoggedIn) return;
             const flange = appState.flanges.find(f => f.id === id);
             if (!flange) return;
             flange[field] = value;
@@ -521,17 +612,12 @@
             }, 600);
         }
 
-        function recalculateAllFlanges() {
-            appState.flanges.forEach(f => {
-                if (f.w && f.h) fetchCloudflareAPI(f);
-            });
-        }
-
         async function fetchCloudflareAPI(flange) {
+            if (!isLoggedIn) return;
+
             let w = parseFloat(flange.w) || 0;
             let h = parseFloat(flange.h) || 0;
             let t = parseInt(flange.t) || 0;
-            let pwd = document.getElementById('flange-master-pwd').value;
 
             let areaTextId = 'flange_area_' + flange.id;
             let resBoxId = 'flange_res_' + flange.id;
@@ -545,14 +631,6 @@
                 return;
             }
 
-            // ★ 攔截空密碼，並使用專業修辭
-            if (!pwd) {
-                flange.resultHtml = "請輸入系統授權碼";
-                document.getElementById(resBoxId).innerHTML = `<span style="color:#ff4c4c;">${flange.resultHtml}</span>`;
-                saveDataSilently();
-                return;
-            }
-
             document.getElementById(resBoxId).innerHTML = "連線運算中 <span style='font-size:0.8em'>⏳</span>";
             document.getElementById(resBoxId).style.color = "#aaaaaa";
 
@@ -560,13 +638,11 @@
                 const response = await fetch('https://ryujin-god-api.mondogshahan.workers.dev', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ w: w, h: h, t: t, password: pwd })
+                    body: JSON.stringify({ w: w, h: h, t: t, password: currentAuthToken })
                 });
-                
                 const data = await response.json();
 
                 if (data.error) {
-                    // ★ 覆蓋後端傳來的錯誤訊息，防止暴露「機密」字眼
                     flange.resultHtml = "授權碼無效，無法執行運算";
                     document.getElementById(resBoxId).innerHTML = `<span style="color:#ff4c4c;">${flange.resultHtml}</span>`;
                 } else {
@@ -577,7 +653,6 @@
                     document.getElementById(resBoxId).style.color = "#ffd700";
                 }
             } catch (err) {
-                // ★ 專業的網路異常提示
                 flange.resultHtml = "連線異常，請檢查網路";
                 document.getElementById(resBoxId).innerHTML = `<span style="color:#ff4c4c;">${flange.resultHtml}</span>`;
             }
@@ -587,41 +662,33 @@
         function renderFlanges() {
             const container = document.getElementById('flanges-container');
             container.innerHTML = '';
-
             appState.flanges.forEach((flange) => {
                 const card = document.createElement('div');
                 card.className = 'space-card';
                 card.innerHTML = `
                     <div class="space-header">
-                        <input type="text" class="space-title-input" placeholder="配置名稱" 
-                               value="${flange.name}" oninput="updateFlangeField('${flange.id}', 'name', this.value)">
+                        <input type="text" class="space-title-input" placeholder="配置名稱" value="${flange.name}" oninput="updateFlangeField('${flange.id}', 'name', this.value)">
                         <button class="delete-btn" onclick="removeFlange('${flange.id}')">刪除</button>
                     </div>
-                    
                     <div class="input-grid">
                         <div class="input-group">
                             <label>法蘭寬度 (cm)</label>
-                            <input type="number" placeholder="輸入寬度" value="${flange.w}" 
-                                   oninput="updateFlangeField('${flange.id}', 'w', this.value)">
+                            <input type="number" placeholder="輸入寬度" value="${flange.w}" oninput="updateFlangeField('${flange.id}', 'w', this.value)">
                         </div>
                         <div class="input-group">
                             <label>法蘭高度 (cm)</label>
-                            <input type="number" placeholder="輸入高度" value="${flange.h}" 
-                                   oninput="updateFlangeField('${flange.id}', 'h', this.value)">
+                            <input type="number" placeholder="輸入高度" value="${flange.h}" oninput="updateFlangeField('${flange.id}', 'h', this.value)">
                         </div>
                         <div class="input-group">
                             <label>目標出風口數量</label>
-                            <input type="number" placeholder="可選" value="${flange.t}" 
-                                   oninput="updateFlangeField('${flange.id}', 't', this.value)">
+                            <input type="number" placeholder="可選" value="${flange.t}" oninput="updateFlangeField('${flange.id}', 't', this.value)">
                         </div>
                     </div>
-
                     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
                         <span style="font-size: 1em; color: #aaa;">法蘭截面積：</span>
                         <span id="flange_area_${flange.id}" style="color: #fff; font-size: 1.3em; font-weight: bold;">${flange.area > 0 ? flange.area.toFixed(2).replace(/\.00$/, '') : '0'}</span>
                         <span style="color: #aaa;"> cm²</span>
                     </div>
-
                     <div class="result-box" id="flange_res_${flange.id}" style="margin-top: 15px;">
                         ${flange.resultHtml.includes("授權") || flange.resultHtml.includes("異常") ? `<span style="color:#ff4c4c;">${flange.resultHtml}</span>` : flange.resultHtml}
                     </div>
@@ -632,23 +699,15 @@
 
         function resetFlanges() {
             if (confirm("警告：確定要清除所有法蘭配管資料嗎？")) {
-                appState.flanges = [];
-                appState.flangeCounter = 1;
-                document.getElementById('flange-master-pwd').value = ''; // 一併清除密碼
-                addFlange();
+                appState.flanges = []; appState.flangeCounter = 1; addFlange();
             }
         }
 
         function exportFlangePDF() {
-            let pwd = document.getElementById('flange-master-pwd').value;
-            let hasError = appState.flanges.some(f => f.resultHtml.includes("授權") || f.resultHtml.includes("異常"));
-
-            // ★ 匯出前嚴格把關：沒密碼或畫面上有錯誤紅字，一律擋下！
-            if (!pwd || hasError) {
+            if (!isLoggedIn) {
                 alert("系統尚未解鎖！\n請先輸入正確的授權碼並確認運算無誤後，再匯出表單。");
                 return;
             }
-
             const hasData = appState.flanges.some(f => parseFloat(f.w) > 0 && parseFloat(f.h) > 0);
             if (!hasData) { alert("目前沒有任何配管資料！"); return; }
             const btn = document.getElementById('btn-export-flange');
@@ -662,8 +721,7 @@
                 let dimText = (f.w && f.h) ? `${f.w} × ${f.h} cm` : '未填寫尺寸';
                 let areaText = f.area > 0 ? `${f.area.toFixed(2).replace(/\.00$/, '')} cm²` : '0 cm²';
                 let targetText = f.t ? `${f.t} 個` : '未指定';
-                
-                let pureResult = f.resultHtml.replace(/<br>/g, " ").replace(/<[^>]+>/g, '');
+                let pureResult = f.resultHtml.replace(/<br>/g, " ").replace(/<[^>]+>/g, '').replace(/⚠️|❌/g, '');
 
                 textBlocks += `
                     <div style="border-bottom: 1px dashed #ccc; padding: 15px 0; page-break-inside: avoid;">
@@ -699,39 +757,28 @@
             printArea.style.padding = '30px';
             printArea.style.minHeight = '100vh';
             printArea.style.fontFamily = "'Microsoft JhengHei', sans-serif";
-            
             const today = new Date();
             const dateString = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
-            
             printArea.innerHTML = `
                 <div style="border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center;">
                     <h1 style="margin: 0; font-size: 26px; flex-grow: 1;">${title}</h1>
                     <div style="font-size: 14px; color: #666;">列印日期：${dateString}</div>
-                </div>
-            `;
+                </div>`;
             document.body.appendChild(printArea);
             window.scrollTo(0, 0);
             return printArea;
         }
 
         function getPdfFooter(remarkText) {
-            return `
-                <div style="margin-top: 30px; font-size: 13px; color: #888;">
-                    * 備註：${remarkText}
-                </div>
-            `;
+            return `<div style="margin-top: 30px; font-size: 13px; color: #888;">* 備註：${remarkText}</div>`;
         }
 
         function executePdfExport(printArea, btnElement, filename) {
             let pdfWindow;
             try {
                 pdfWindow = window.open('', '_blank');
-                if (pdfWindow) {
-                    pdfWindow.document.write('<div style="text-align:center; margin-top:50px; font-family:sans-serif; font-size: 1.2em; color: #333;">PDF 產生中，請稍候...</div>');
-                }
-            } catch (e) {
-                console.warn("無法開啟新分頁", e);
-            }
+                if (pdfWindow) pdfWindow.document.write('<div style="text-align:center; margin-top:50px; font-family:sans-serif; font-size: 1.2em; color: #333;">PDF 產生中，請稍候...</div>');
+            } catch (e) { console.warn("無法開啟新分頁", e); }
 
             let opt = {
                 margin: 0.5, filename: filename,
@@ -743,17 +790,9 @@
             html2pdf().set(opt).from(printArea).output('bloburl').then(function(pdfUrl) {
                 document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
-                btnElement.innerText = "匯出 PDF 表單"; 
-                btnElement.disabled = false;
-
-                if (pdfWindow) {
-                    pdfWindow.location.href = pdfUrl;
-                } else {
-                    let a = document.createElement('a');
-                    a.href = pdfUrl;
-                    a.download = filename;
-                    a.click();
-                }
+                btnElement.innerText = "匯出 PDF 表單"; btnElement.disabled = false;
+                if (pdfWindow) { pdfWindow.location.href = pdfUrl; } 
+                else { let a = document.createElement('a'); a.href = pdfUrl; a.download = filename; a.click(); }
             }).catch((err) => {
                 if(document.getElementById('print-area')) document.body.removeChild(printArea);
                 document.getElementById('main-ui').style.display = 'block';
